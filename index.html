@@ -5,6 +5,21 @@
     <?!= HtmlService.createHtmlOutputFromFile('css').getContent(); ?>
   </head>
   <body>
+    <div id="v-model-radiobutton">
+      <p>
+      <input type="radio" id="one" value="One" v-model="picked" /><label for="one">One</label>
+      <input type="radio" id="two" value="Two" v-model="picked" /><label for="two">Two</label><br>
+      <span>Picked: {{ picked }}</span>
+      </p>
+      <p>
+      <input type="radio" id="one" value="One" v-model="picked" /><label for="one">One</label>
+      <input type="radio" id="two" value="Two" v-model="picked" /><label for="two">Two</label><br>
+      <span>Picked: {{ picked }}</span>
+      </p>
+    </div>
+    <div id="app1">
+    </div>
+    <div id="app2">{{ message }}</div>
     <a href="<?= getAppUrl_() ?>?page=quote">見積実行</a>
     <?!= HtmlService.createHtmlOutputFromFile('js').getContent(); ?>
   </body>

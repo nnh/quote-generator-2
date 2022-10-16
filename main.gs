@@ -18,4 +18,13 @@ function doGet(e) {
 function getAppUrl_() {
   return ScriptApp.getService().getUrl();
 }
+class SetInputForm{
+  constructor(arg){
+    this.arg = arg;
+  }
+  setRadio(){
+    
+  }
+
+}
 

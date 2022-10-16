@@ -2,9 +2,11 @@
 <html>
   <head>
     <base target="_top">
+    <?!= HtmlService.createHtmlOutputFromFile('css').getContent(); ?>
   </head>
   <body>
     見積の結果test<br>
     <a href="<?= getAppUrl_() ?>?page=index">INDEXへ</a>
+    <?!= HtmlService.createHtmlOutputFromFile('js').getContent(); ?>
   </body>
 </html>
