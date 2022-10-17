@@ -5,50 +5,16 @@
     }
   }
 </script>
-<!--
-<div id="app">{{ message }}</div>
--->
 <script type="module">
   import { createApp } from 'vue'
-  const test = ['aiu', 'eo', 'kakiku'];
-  const inputItems = [
-    {name: 'test1',
-     category: 'option'},
-    {name: 'test2',
-     category: 'list'},
-    {name: 'test3',
-     category: 'textbox'}
-  ];
-  const radioYesNo = [
-    {id: 0, name: 'yes', value: true},
-    {id: 1, name: 'no', value: false} 
-  ];
   createApp({
     data() {
       return {
-        inputItems: inputItems
+        list: [
+          {code: 'A01', name: 'proA'},
+          {code: 'B01', name: 'proB'}
+        ]
       }
     }
-  }).mount('#app1')
-  createApp({
-    data() {
-      return {
-        picked: ''
-      }
-    }
-  }).mount('#v-model-radiobutton')
-  createApp({
-    data() {
-      return {
-        message: test[0]
-      }
-    }
-  }).mount('#app2')
-  createApp({
-    data() {
-      return {
-        loggedInButton: false
-      }
-    }
-  }).mount('#b-button')
+  }).mount('#app')
 </script>

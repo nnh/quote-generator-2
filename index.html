@@ -2,24 +2,177 @@
 <html>
   <head>
     <base target="_top">
-    <?!= HtmlService.createHtmlOutputFromFile('css').getContent(); ?>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css' rel='stylesheet'>
   </head>
   <body>
-    <div id="v-model-radiobutton">
-      <p>
-      <input type="radio" id="one" value="One" v-model="picked" /><label for="one">One</label>
-      <input type="radio" id="two" value="Two" v-model="picked" /><label for="two">Two</label><br>
-      <span>Picked: {{ picked }}</span>
-      </p>
-      <p>
-      <input type="radio" id="one" value="One" v-model="picked" /><label for="one">One</label>
-      <input type="radio" id="two" value="Two" v-model="picked" /><label for="two">Two</label><br>
-      <span>Picked: {{ picked }}</span>
-      </p>
+    <div id='app'>
+      <div class='container bg-dark text-white p-4'>
+        <h1 class='text-center border-bottom pb-3 mb-4'>
+          概算見積算定フォーム
+        </h1>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            試験種別
+          </label>
+          <div class='col-md-9'>
+            <div class='row'>
+              <div class='col-md-5'>
+                <div class='form-check form-check-inline'>
+                  <input class='form-check-input' type='radio' name='trial_type' id='type1' value='observationalTrial'>
+                  <label class='form-check-label' for='type1'>観察研究・レジストリ</label>
+                </div>
+              </div>
+              <div class='col-md-5'>
+                <div class='form-check form-check-inline'>
+                  <input class='form-check-input' type='radio' name='trial_type' id='type2' value='investigatorInitiatedTrial'>
+                  <label class='form-check-label' for='type2'>医師主導治験</label>
+                </div>
+              </div>
+              <div class='col-md-5'>
+                <div class='form-check form-check-inline'>
+                  <input class='form-check-input' type='radio' name='trial_type' id='type3' value='interventionTrial'>
+                  <label class='form-check-label' for='type3'>介入研究（特定臨床研究以外）</label>
+                </div>
+              </div>
+              <div class='col-md-5'>
+                <div class='form-check form-check-inline'>
+                  <input class='form-check-input' type='radio' name='trial_type' id='type4' value='specifiedClinicalTrial'>
+                  <label class='form-check-label' for='type4'>特定臨床研究</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label' for='start_date'>
+            症例登録開始年月
+          </label>
+          <div class='col-md-9'>
+            <input class='form-control' type='date' id='start_date' placeholder='日付をお選びください。'>
+          </div>
+          <div class='form-text text-white'>4/1か10/1かを入力してもらう</div>
+        </div>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label' for='end_date'>
+            試験終了年月
+          </label>
+          <div class='col-md-9'>
+            <input class='form-control' type='date' id='end_date' placeholder='日付をお選びください。'>
+          </div>
+          <div class='form-text text-white'>9/30か3/31かを入力してもらう</div>
+        </div>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            目標症例数
+          </label>
+          <div class='col-md-9'>
+            <div class='input-group'>
+              <input type='text' class='form-control text-end' id='number_of_cases'>
+              <span class='input-group-text'>症例</span>
+            </div>
+          </div>
+        </div>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            実施施設数
+          </label>
+          <div class='col-md-9'>
+            <div class='input-group'>
+              <input type='text' class='form-control text-end' id='facilities'>
+              <span class='input-group-text'>施設</span>
+            </div>
+          </div>
+        </div>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            CRF項目数
+          </label>
+          <div class='col-md-9'>
+            <div class='input-group'>
+              <input type='text' class='form-control text-end' id='crf_items' value='1000'>
+              <span class='input-group-text'>項目</span>
+            </div>
+          </div>
+        </div>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            統計解析に必要な図表数
+          </label>
+          <div class='col-md-9'>
+            <div class='input-group'>
+              <input type='text' class='form-control text-end' id='final_analysis_tables' value='50'>
+              <span class='input-group-text'>項目</span>
+            </div>
+          </div>
+        </div>
+<!--
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            1例あたりの実地モニタリング回数
+          </label>
+          <div class='col-md-9'>
+            <div class='input-group'>
+              <input type='text' class='form-control text-end' id='onsite_monitoring' value='2'>
+              <span class='input-group-text'>回／年</span>
+            </div>
+          </div>
+        </div>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            年間1施設あたりの必須文書実地モニタリング回数
+          </label>
+          <div class='col-md-9'>
+            <div class='input-group'>
+              <input type='text' class='form-control text-end' id='onsite_monitoring' value='1'>
+              <span class='input-group-text'>回／年</span>
+            </div>
+          </div>
+        </div>
+-->
+<!-- 
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            ***
+          </label>
+          <div class='col-md-9'>
+          </div>
+        </div>
+-->
+        <table class="table table-dark table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">First</th>
+              <th scope="col">Last</th>
+              <th scope="col">Handle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">1</th>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+            </tr>
+            <tr>
+              <th scope="row">2</th>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+            </tr>
+            <tr>
+              <th scope="row">3</th>
+              <td>Mark</td>
+              <td>Otto</td>
+              <td>@mdo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div id="app1">
-    </div>
-    <div id="app2">{{ message }}</div>
+
+
+
     <a href="<?= getAppUrl_() ?>?page=quote">見積実行</a>
     <?!= HtmlService.createHtmlOutputFromFile('js').getContent(); ?>
   </body>
