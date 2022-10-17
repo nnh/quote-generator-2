@@ -8,7 +8,7 @@
     <div id='app'>
       <div class='container bg-dark text-white p-4'>
         <h1 class='text-center border-bottom pb-3 mb-4'>
-          概算見積算定フォーム
+          {{ title }}
         </h1>
         <div class='row mb-3'>
           <label class='col-md-3 col-form-label'>
@@ -100,7 +100,7 @@
           </label>
           <div class='col-md-9'>
             <div class='input-group'>
-              <input type='text' class='form-control text-end' id='final_analysis_tables' value='50'>
+              <input type='text' v-model='outputValues.finalAnalysisTables' class='form-control text-end' id='final_analysis_tables'>
               <span class='input-group-text'>項目</span>
             </div>
           </div>
@@ -129,6 +129,9 @@
           </div>
         </div>
 -->
+        <div class='d-grid gap-2'>
+          <button class='btn btn-secondary' type='button' v-on:click='onSubmitApproximateQuote'>概算見積出力</button>
+        </div>
 <!-- 
         <div class='row mb-3'>
           <label class='col-md-3 col-form-label'>
@@ -142,29 +145,26 @@
           <thead>
             <tr>
               <th scope="col">#</th>
-              <th scope="col">First</th>
-              <th scope="col">Last</th>
-              <th scope="col">Handle</th>
+              <th scope="col">【見積明細：総期間】</th>
+              <th scope="col"></th>
+              <th scope="col">テスト年度</th>
+              <th scope="col">テスト合計</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <th scope="row">1</th>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
+              <td>プロトコル等作成支援</td>
+              <td></td>
+              <td></td>
+              <td></td>
             </tr>
             <tr>
               <th scope="row">2</th>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
-            </tr>
-            <tr>
-              <th scope="row">3</th>
-              <td>Mark</td>
-              <td>Otto</td>
-              <td>@mdo</td>
+              <td></td>
+              <td>プロトコルレビュー・作成支援（図表案、統計解析計画書案を含む）</td>
+              <td>{{ taxRate }}</td>
+              <td>{{ outputValues.finalAnalysisTables }}</td>
             </tr>
           </tbody>
         </table>
@@ -172,8 +172,7 @@
     </div>
 
 
-
-    <a href="<?= getAppUrl_() ?>?page=quote">見積実行</a>
     <?!= HtmlService.createHtmlOutputFromFile('js').getContent(); ?>
+
   </body>
 </html>
