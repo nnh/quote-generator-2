@@ -31,6 +31,8 @@ function getItemsList(){
   let targetIndex = {};
   targetIndex.itemValueHeading = 0;
   targetIndex.itemValueItem = 1;
+  targetIndex.itemValuePrice = 2;
+  targetIndex.itemValueUnit = 3;
   const ss = SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty('inputSsId'));
   const itemSheet = ss.getSheetByName('Items');
   const itemValues = itemSheet.getDataRange().getValues();
@@ -43,7 +45,14 @@ function getItemsList(){
     itemHeadingAndPrice.push(res);
     return res;
   });
-  itemHeadingAndPrice = itemHeadingAndPrice.filter(x => x[targetIndex.itemValueItem] !== '').map(x => x.splice(0, 4));
-  return itemHeadingAndPrice;
+  const res = itemHeadingAndPrice.filter(x => x[targetIndex.itemValueItem] !== '').map(x => {
+    let res = {};
+    res.heading = x[targetIndex.itemValueHeading];
+    res.item = x[targetIndex.itemValueItem];
+    res.price = x[targetIndex.itemValuePrice];
+    res.unit = x[targetIndex.itemValueUnit];
+    return res;
+  });
+  return res;
 }
 

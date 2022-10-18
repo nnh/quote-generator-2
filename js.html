@@ -1,12 +1,4 @@
 <script type="text/javascript">
-  function test2() {
-    // ボタンクリックされたらテーブルに結果を表示する
-     google.script.run.withSuccessHandler(function(temp){
-      alert(temp);
-    }).getItemsList();
-  }
-  
-  
 </script>
 <script type="importmap">
   {
@@ -29,14 +21,27 @@
         test:9999,
         outputValues:{
           finalAnalysisTables:defaultFinalAnalysisTables
-        }
+        },
+        itemsList:8888
       }
     },
+    created() {
+      this.getItems;
+    },
     methods: {
+      async editOutputTable() {
+        const items = await new Promise(resolve => { google.script.run.withSuccessHandler(resolve).getItemsList() });
+        this.test6(items);
+      }, 
+      test6(arg){
+        this.itemsList = arg;
+        this.title = this.itemsList[10].heading;
+      },
       onSubmitApproximateQuote() {
-        test2();
-        this.title = 'test';
+        this.editOutputTable();
       }
+    },
+    computed: {
     }
   }).mount('#app')
 </script>
