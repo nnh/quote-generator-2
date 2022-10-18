@@ -27,4 +27,23 @@ class SetInputForm{
   }
 
 }
+function getItemsList(){
+  let targetIndex = {};
+  targetIndex.itemValueHeading = 0;
+  targetIndex.itemValueItem = 1;
+  const ss = SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty('inputSsId'));
+  const itemSheet = ss.getSheetByName('Items');
+  const itemValues = itemSheet.getDataRange().getValues();
+  let itemHeadingAndPrice = [];
+  const _dummy = itemValues.reduce((x, currentValue) => {
+    let res = currentValue;
+    if (res[targetIndex.itemValueHeading] === ''){
+      res[targetIndex.itemValueHeading] = x[targetIndex.itemValueHeading];
+    }
+    itemHeadingAndPrice.push(res);
+    return res;
+  });
+  itemHeadingAndPrice = itemHeadingAndPrice.filter(x => x[targetIndex.itemValueItem] !== '').map(x => x.splice(0, 4));
+  return itemHeadingAndPrice;
+}
 

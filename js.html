@@ -1,7 +1,12 @@
 <script type="text/javascript">
-  function test(){
-    return 0.3;
+  function test2() {
+    // ボタンクリックされたらテーブルに結果を表示する
+     google.script.run.withSuccessHandler(function(temp){
+      alert(temp);
+    }).getItemsList();
   }
+  
+  
 </script>
 <script type="importmap">
   {
@@ -19,7 +24,7 @@
   createApp({
     data() {
       return {
-        title: '概算見積算定フォーム',
+        title: defaultTitle,
         taxRate: taxRate,
         test:9999,
         outputValues:{
@@ -29,7 +34,8 @@
     },
     methods: {
       onSubmitApproximateQuote() {
-        this.title = 'ボタンが押された';
+        test2();
+        this.title = 'test';
       }
     }
   }).mount('#app')
