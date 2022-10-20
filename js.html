@@ -43,6 +43,7 @@
     },
     created() {
       this.editOutputTable();
+      alert(this.getYearList);
     },
     methods: {
       async editOutputTable() {
@@ -61,6 +62,11 @@
       }
     },
     computed: {
+      getYearList: function() {
+        const thisYear = new Date().getFullYear();
+        const pastYears = [...Array(5).keys()].map(x => thisYear - x - 1) //=> [ 1, 2, 3, 4, 5 ]
+        return pastYears;
+      }
     }
   }).mount('#app')
 </script>
