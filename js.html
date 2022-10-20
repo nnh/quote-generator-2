@@ -12,6 +12,7 @@
   const taxRate = 0.2;
   const defaultFinalAnalysisTables = 50;
   const defaultTitle = '概算見積算定フォーム';
+  const defaultTrialType = {value: 'observationalTrial', label: '観察研究・レジストリ'};
   let outputValues = [1,2,3,4];
   createApp({
     data() {
@@ -22,7 +23,19 @@
           finalAnalysisTables:defaultFinalAnalysisTables
         },
         itemsList: '',
-        radioTrialType: 'observationalTrial'
+        radioTrialType: [
+          defaultTrialType, 
+          {value: 'investigatorInitiatedTrial', label:'医師主導治験'}, 
+          {value: 'interventionTrial', label:'介入研究（特定臨床研究以外）'}, 
+          {value: 'specifiedClinicalTrial', label:'特定臨床研究'} 
+        ],
+        checkTrialType: defaultTrialType.value,
+        textBoxCommon: [
+          {id:'number_of_cases', label:'目標症例数', unit:'症例', value: ''},
+          {id:'facilities', label:'実施施設数', unit:'施設', value: ''},
+          {id:'numbercrf_items_of_cases', label:'CRF項目数', unit:'項目', value: 1000},
+          {id:'final_analysis_tables', label:'統計解析に必要な図表数', unit:'項目', value: 50}
+        ]
       }
     },
     created() {
@@ -38,7 +51,6 @@
       },
       onSubmitApproximateQuote() {
 //        this.editOutputTable();
-        this.title = this.radioTrialType;
       }
     },
     computed: {
