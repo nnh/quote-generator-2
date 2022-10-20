@@ -51,6 +51,7 @@ function getItemsList(){
     res.item = x[targetIndex.itemValueItem];
     res.price = x[targetIndex.itemValuePrice];
     res.unit = x[targetIndex.itemValueUnit];
+    res.costs = [{cost:0}, {cost:0}]; //test
     return res;
   });
   return res;

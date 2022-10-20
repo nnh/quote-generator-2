@@ -129,6 +129,30 @@
           </div>
         </div>
 -->
+        <table class="table table-dark table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">【見積明細：総期間】</th>
+              <th scope="col"></th>
+              <th scope="col">テスト年度</th>
+              <th scope="col">テスト合計</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for='(item, idx) in itemsList'>
+              <tr v-for='(item, idx) in itemsList'>
+                <th scope="row">{{ idx + 1 }}</th>
+                <td>{{ item.heading }}</td>
+                <td>{{ item.item }}</td>
+                <template v-for='(cost, idx) in item.costs'>          
+                  <td>{{ cost.cost }}</td>
+                </template>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
         <div class='d-grid gap-2'>
           <button class='btn btn-secondary' type='button' v-on:click='onSubmitApproximateQuote'>概算見積出力</button>
         </div>
