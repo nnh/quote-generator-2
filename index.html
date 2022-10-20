@@ -12,6 +12,23 @@
         </h1>
         <div class='row mb-3'>
           <label class='col-md-3 col-form-label'>
+            原資
+          </label>
+          <div class='col-md-9'>
+            <div class='row'>
+              <div class='col-md-5'>
+                <template v-for='item in radioCoefficient'>
+                  <div class='form-check form-check-inline'>
+                    <input class='form-check-input' type='radio' name='coefficient' v-bind:id='item.value' v-bind:value='item.value' v-model='checkCoefficient'>
+                    <label class='form-check-label' v-bind:for='item.value'>{{ item.label }}</label>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
             試験種別
           </label>
           <div class='col-md-9'>
@@ -52,8 +69,9 @@
             </label>
             <div class='col-md-9'>
               <div class='input-group'>
-                <input type='text' class='form-control text-end' v-bind:id='item.id' v-model='item.value'>
+                <input type='text' class='form-control text-end' v-bind:id='item.id' v-model.number='item.value' v-bind:type='item.type'>
                 <span class='input-group-text'>{{ item.unit }}</span>
+                <p v-show='checkNumber(item.value)'>整数を入力してください</p>
               </div>
             </div>
           </div>
