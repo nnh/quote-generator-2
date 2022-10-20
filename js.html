@@ -18,27 +18,27 @@
       return {
         title: defaultTitle,
         taxRate: taxRate,
-        test:9999,
         outputValues:{
           finalAnalysisTables:defaultFinalAnalysisTables
         },
-        itemsList:[{heading:8888, item:9999, costs:[{testcost:1}, {testcost:2}, {testcost:3}]}]
+        itemsList: '',
+        radioTrialType: 'observationalTrial'
       }
     },
     created() {
-      this.getItems;
+      this.editOutputTable();
     },
     methods: {
       async editOutputTable() {
         const items = await new Promise(resolve => { google.script.run.withSuccessHandler(resolve).getItemsList() });
-        this.test6(items);
+        this.setItems(items);
       }, 
-      test6(arg){
+      setItems(arg){
         this.itemsList = arg;
-        this.title = this.itemsList[10].heading;
       },
       onSubmitApproximateQuote() {
-        this.editOutputTable();
+//        this.editOutputTable();
+        this.title = this.radioTrialType;
       }
     },
     computed: {
