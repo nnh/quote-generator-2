@@ -44,7 +44,8 @@
         dateYmList: [
           {id: 'start', label: '症例登録開始年月', year: '', month: '', labelMonth:[4, 10]},
           {id: 'end', label: '試験終了年月', year: '', month: '', labelMonth:[3, 9]}
-        ]
+        ],
+        valueList: [{numberOfCrfItems: ''}]
       }
     },
     created() {
@@ -68,7 +69,9 @@
           alert('年月チェックNG');
           return;
         }
-        alert(this.itemsList);
+        this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
+        const test = this.itemsList.map(x => this.calculateBaseUnitPrice(x));
+        alert(test);
       },
       checkNumber(target) {
         return !Number.isNaN(Number(target));
@@ -80,10 +83,28 @@
                 ((startDate.year < endDate.year) || 
                 (startDate.year === endDate.year && startDate.month <= endDate.month)));
       },
-      calculateStandardUnitPrice() {
+      calculateUnitPrice(x) {
+        // 単価の算出
+        const test = /^=Round\(/i.test(x.price) ? x.baseUnitPrice * this.checkCoefficient.coefficient :
+                     /^=[A-Z][0-9]*$/i.test(x.price) ? x.baseUnitPrice: null;
+        return test;
+
+      },               
+      calculateBaseUnitPrice(x) {
         // 基準単価の算出
-        
-      }               
+        const test = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? Math.round(x.unitPrice * x.days * x.numberOfPeople, -3) :
+                     x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 'roundしない';
+        return test;
+
+      },
+      calculateBaseUnitPriceCreateDb() {
+        const crfItems = this.valueList.numberOfCrfItems;
+        return crfItems < 100 ? 4500 * crfItems :
+               crfItems < 1000 ? 4500 * 100 + 2250 * (crfItems - 100) : 4500 * 100 + 2250 * 900 + 1100 * (crfItems - 1000);
+      },
+      getTextBoxValue (id) {
+        return this.textBoxCommon.filter(x => x.id === id)[0].value;
+      }         
     },
     computed: {
       getThisYear: function() {
@@ -94,6 +115,9 @@
         const pastYears = [...Array(2).keys()].map(x => thisYear - x - 1).reverse();
         const nextYears = [...Array(10).keys()].map(x => thisYear + x);
         return pastYears.concat(nextYears);
+      },
+      getNumberOfCrfItemsValue: function() {
+        return this.getTextBoxValue('number_of_crf_items');
       }
     }
   }).mount('#app')

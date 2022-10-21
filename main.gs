@@ -54,7 +54,6 @@ function getItemsList() {
     }
     // Set the calculation formula.
     res[targetIndex.itemValuePrice] = itemFormulas[idx][targetIndex.itemValuePrice];
-    console.log(res[targetIndex.itemValuePrice]);
     res[targetIndex.itemValueBaseUnitPrice] = itemFormulas[idx][targetIndex.itemValueBaseUnitPrice];
     itemHeadingAndPrice.push(res);
     return res;
