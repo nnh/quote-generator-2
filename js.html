@@ -38,12 +38,15 @@
           {id:'facilities', label:'実施施設数', unit:'施設', value: 0, type:'number'},
           {id:'number_of_crf_items', label:'CRF項目数', unit:'項目', value: defaultCrfItems, type:'number'},
           {id:'final_analysis_tables', label:'統計解析に必要な図表数', unit:'項目', value: defaultFinalAnalysisTables, type:'number'}
+        ],
+        dateYm: [
+          {id: 'start', label: '症例登録開始年月', year: '', month: '', labelMonth:[4, 10]},
+          {id: 'end', label: '試験終了年月', year: '', month: '', labelMonth:[3, 9]}
         ]
       }
     },
     created() {
       this.editOutputTable();
-      alert(this.getYearList);
     },
     methods: {
       async editOutputTable() {
@@ -55,17 +58,21 @@
       },
       onSubmitApproximateQuote() {
 //        this.editOutputTable();
-        this.title = this.textBoxCommon;
+        this.title = this.targetYears;
       },
       checkNumber(target) {
         return Number.isNaN(Number(target));
       }
     },
     computed: {
+      getThisYear: function() {
+        return new Date().getFullYear();
+      },
       getYearList: function() {
-        const thisYear = new Date().getFullYear();
-        const pastYears = [...Array(5).keys()].map(x => thisYear - x - 1) //=> [ 1, 2, 3, 4, 5 ]
-        return pastYears;
+        const thisYear = this.getThisYear;
+        const pastYears = [...Array(2).keys()].map(x => thisYear - x - 1).reverse();
+        const nextYears = [...Array(10).keys()].map(x => thisYear + x);
+        return pastYears.concat(nextYears);
       }
     }
   }).mount('#app')

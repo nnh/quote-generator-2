@@ -46,17 +46,22 @@
         </div>
         <div class='row mb-3'>
           <label class='col-md-3 col-form-label'>
-            症例登録開始年月
+            症例登録開始年月{{dateYm[0].year}}
           </label>
           <div class='col-md-9'>
-            <select>
-              <option disabled value = ''>tukioerande</option>
-              <option value='hajimete'>test1</option>
-              <option value='nikaime'>test2</option>
-            </select>
+            <div class='row'>
+              <div class='col-md-5'>
+                <select v-model='dateYm[0].year'>
+                  <option disabled value = ''>選択してください</option>
+                  <template v-for='item in getYearList'>
+                    <option v-bind:value='item'>{{ item }}</option>
+                  </template>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
-
+<!--
         <div class='row mb-3'>
           <label class='col-md-3 col-form-label' for='start_date'>
             症例登録開始年月
@@ -75,6 +80,7 @@
           </div>
           <div class='form-text text-white'>9/30か3/31かを入力してもらう</div>
         </div>
+-->
         <template v-for='(item, idx) in textBoxCommon'>
           <div class='row mb-3'>
             <label class='col-md-3 col-form-label'>
