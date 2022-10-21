@@ -15,6 +15,8 @@
   const defaultTitle = '概算見積算定フォーム';
   const defaultCoefficient = {value: 'publicFund', label:'公的資金（税金由来）', coefficient: 1};
   const defaultTrialType = {value: 'observationalTrial', label: '観察研究・レジストリ', coefficient: 1};
+  const TrialTypeInvestigatorInitiatedTrial = {value: 'investigatorInitiatedTrial', label:'医師主導治験', coefficient: 5};
+  const TrialTypeSpecifiedClinicalTrial = {value: 'specifiedClinicalTrial', label:'特定臨床研究', coefficient: 3};
   createApp({
     data() {
       return {
@@ -28,9 +30,9 @@
         checkCoefficient:defaultCoefficient.value,
         radioTrialType: [
           defaultTrialType, 
-          {value: 'investigatorInitiatedTrial', label:'医師主導治験', coefficient: 5}, 
+          TrialTypeInvestigatorInitiatedTrial, 
           {value: 'interventionTrial', label:'介入研究（特定臨床研究以外）', coefficient: 2}, 
-          {value: 'specifiedClinicalTrial', label:'特定臨床研究', coefficient: 3} 
+          TrialTypeSpecifiedClinicalTrial 
         ],
         checkTrialType: defaultTrialType.value,
         textBoxCommon: [
@@ -46,10 +48,10 @@
       }
     },
     created() {
-      this.editOutputTable();
+      this.getItemsTable();
     },
     methods: {
-      async editOutputTable() {
+      async getItemsTable() {
         const items = await new Promise(resolve => { google.script.run.withSuccessHandler(resolve).getItemsList() });
         this.setItems(items);
       }, 
@@ -66,7 +68,7 @@
           alert('年月チェックNG');
           return;
         }
-
+        alert(this.itemsList);
       },
       checkNumber(target) {
         return !Number.isNaN(Number(target));
@@ -77,6 +79,10 @@
         return ((startDate.year !== '' && startDate.month !== '' && endDate.year !== '' && endDate.month !== '') &&
                 ((startDate.year < endDate.year) || 
                 (startDate.year === endDate.year && startDate.month <= endDate.month)));
+      },
+      calculateStandardUnitPrice() {
+        // 基準単価の算出
+        
       }               
     },
     computed: {

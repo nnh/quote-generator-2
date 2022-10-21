@@ -35,20 +35,27 @@ function getItemsList() {
   const itemSheet = ss.getSheetByName('Items');
   const ColInfo = new ColumnInfo(itemSheet);
   const targetIndex = {
-    itemValueHeading: 0,
-    itemValueItem: 1,
-    itemValueUnit: 3,
+    itemValueHeading: ColInfo.getColumnIndex('A'),
+    itemValueItem: ColInfo.getColumnIndex('B'),
+    itemValuePrice: ColInfo.getColumnIndex('C'),
+    itemValueUnit: ColInfo.getColumnIndex('D'),
+    itemValueBaseUnitPrice: ColInfo.getColumnIndex('R'), 
     itemValueUnitPrice: ColInfo.getColumnIndex('S'),
     itemValueDays: ColInfo.getColumnIndex('T'),
     itemValueNumberOfPeople: ColInfo.getColumnIndex('U')
   };
+  const itemFormulas = itemSheet.getDataRange().getFormulas();
   const itemValues = itemSheet.getDataRange().getValues();
   let itemHeadingAndPrice = [];
-  const _dummy = itemValues.reduce((x, currentValue) => {
+  const _dummy = itemValues.reduce((x, currentValue, idx) => {
     let res = currentValue;
     if (res[targetIndex.itemValueHeading] === ''){
       res[targetIndex.itemValueHeading] = x[targetIndex.itemValueHeading];
     }
+    // Set the calculation formula.
+    res[targetIndex.itemValuePrice] = itemFormulas[idx][targetIndex.itemValuePrice];
+    console.log(res[targetIndex.itemValuePrice]);
+    res[targetIndex.itemValueBaseUnitPrice] = itemFormulas[idx][targetIndex.itemValueBaseUnitPrice];
     itemHeadingAndPrice.push(res);
     return res;
   });
@@ -56,7 +63,9 @@ function getItemsList() {
     return {
       heading: x[targetIndex.itemValueHeading],
       item: x[targetIndex.itemValueItem],
+      price: x[targetIndex.itemValuePrice],
       unit: x[targetIndex.itemValueUnit],
+      baseUnitPrice: x[targetIndex.itemValueBaseUnitPrice],
       unitPrice: x[targetIndex.itemValueUnitPrice],
       days: x[targetIndex.itemValueDays],
       numberOfPeople: x[targetIndex.itemValueNumberOfPeople]
@@ -90,14 +99,3 @@ class ColumnInfo {
     return this.getColumnNumber(columnName) - 1;
   }
 } 
-
-/**
-* 列名から列番号を返す
-* @param {string} column_name 列名（'A'など）
-* @return Aなら1、のような列番号
-*/
-function getColumnNumber(column_name){ 
-  const temp_sheet = SpreadsheetApp.getActiveSheet();
-  const temp_range = temp_sheet.getRange(column_name + '1').getColumn();
-  return(temp_range);
-}
