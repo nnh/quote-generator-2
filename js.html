@@ -13,8 +13,8 @@
   const defaultFinalAnalysisTables = 50;
   const defaultCrfItems = 1000;
   const defaultTitle = '概算見積算定フォーム';
-  const defaultCoefficient = {value: 'publicFund', label:'公的資金（税金由来）'};
-  const defaultTrialType = {value: 'observationalTrial', label: '観察研究・レジストリ'};
+  const defaultCoefficient = {value: 'publicFund', label:'公的資金（税金由来）', coefficient: 1};
+  const defaultTrialType = {value: 'observationalTrial', label: '観察研究・レジストリ', coefficient: 1};
   createApp({
     data() {
       return {
@@ -23,14 +23,14 @@
         itemsList: '',
         radioCoefficient: [
           defaultCoefficient,
-          {value: 'commercialCompanyCoefficient', label:'営利企業原資（製薬企業等）'}
+          {value: 'commercialCompanyCoefficient', label:'営利企業原資（製薬企業等）', coefficient: 1.5}
         ],
         checkCoefficient:defaultCoefficient.value,
         radioTrialType: [
           defaultTrialType, 
-          {value: 'investigatorInitiatedTrial', label:'医師主導治験'}, 
-          {value: 'interventionTrial', label:'介入研究（特定臨床研究以外）'}, 
-          {value: 'specifiedClinicalTrial', label:'特定臨床研究'} 
+          {value: 'investigatorInitiatedTrial', label:'医師主導治験', coefficient: 5}, 
+          {value: 'interventionTrial', label:'介入研究（特定臨床研究以外）', coefficient: 2}, 
+          {value: 'specifiedClinicalTrial', label:'特定臨床研究', coefficient: 3} 
         ],
         checkTrialType: defaultTrialType.value,
         textBoxCommon: [
@@ -57,12 +57,27 @@
         this.itemsList = target;
       },
       onSubmitApproximateQuote() {
-//        this.editOutputTable();
-        this.title = this.targetYears;
+        const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
+        if (!checkTextBoxCommon.every(x => x)){
+          alert('必須入力チェックNG');
+          return;
+        }
+        if (!this.checkConsistencyYm(this.dateYmList)){
+          alert('年月チェックNG');
+          return;
+        }
+
       },
       checkNumber(target) {
-        return Number.isNaN(Number(target));
-      }
+        return !Number.isNaN(Number(target));
+      },
+      checkConsistencyYm(dateList) {
+        const startDate = dateList.filter(x => x.id === 'start')[0];
+        const endDate = dateList.filter(x => x.id === 'end')[0];
+        return ((startDate.year !== '' && startDate.month !== '' && endDate.year !== '' && endDate.month !== '') &&
+                ((startDate.year < endDate.year) || 
+                (startDate.year === endDate.year && startDate.month <= endDate.month)));
+      }               
     },
     computed: {
       getThisYear: function() {

@@ -44,6 +44,7 @@
             </div>
           </div>
         </div>
+        <!-- 試験開始、終了日セレクトボックス -->
         <template v-for='dateYm in dateYmList'>
           <div class='row mb-3'>
             <label class='col-md-3 col-form-label'>
@@ -71,26 +72,6 @@
             </div>
           </div>
         </template>
-<!--
-        <div class='row mb-3'>
-          <label class='col-md-3 col-form-label' for='start_date'>
-            症例登録開始年月
-          </label>
-          <div class='col-md-9'>
-            <input class='form-control' type='date' id='start_date' placeholder='日付をお選びください。'>
-          </div>
-          <div class='form-text text-white'>4/1か10/1かを入力してもらう</div>
-        </div>
-        <div class='row mb-3'>
-          <label class='col-md-3 col-form-label' for='end_date'>
-            試験終了年月
-          </label>
-          <div class='col-md-9'>
-            <input class='form-control' type='date' id='end_date' placeholder='日付をお選びください。'>
-          </div>
-          <div class='form-text text-white'>9/30か3/31かを入力してもらう</div>
-        </div>
--->
         <template v-for='(item, idx) in textBoxCommon'>
           <div class='row mb-3'>
             <label class='col-md-3 col-form-label'>
@@ -100,57 +81,11 @@
               <div class='input-group'>
                 <input type='text' class='form-control text-end' v-bind:id='item.id' v-model.number='item.value' v-bind:type='item.type'>
                 <span class='input-group-text'>{{ item.unit }}</span>
-                <p v-show='checkNumber(item.value)'>整数を入力してください</p>
+                <p v-show='!checkNumber(item.value)'>整数を入力してください</p>
               </div>
             </div>
           </div>
         </template>
-        <!--
-        <div class='row mb-3'>
-          <label class='col-md-3 col-form-label'>
-            目標症例数
-          </label>
-          <div class='col-md-9'>
-            <div class='input-group'>
-              <input type='text' class='form-control text-end' id='number_of_cases'>
-              <span class='input-group-text'>症例</span>
-            </div>
-          </div>
-        </div>
-        <div class='row mb-3'>
-          <label class='col-md-3 col-form-label'>
-            実施施設数
-          </label>
-          <div class='col-md-9'>
-            <div class='input-group'>
-              <input type='text' class='form-control text-end' id='facilities'>
-              <span class='input-group-text'>施設</span>
-            </div>
-          </div>
-        </div>
-        <div class='row mb-3'>
-          <label class='col-md-3 col-form-label'>
-            CRF項目数
-          </label>
-          <div class='col-md-9'>
-            <div class='input-group'>
-              <input type='text' class='form-control text-end' id='crf_items' value='1000'>
-              <span class='input-group-text'>項目</span>
-            </div>
-          </div>
-        </div>
-        <div class='row mb-3'>
-          <label class='col-md-3 col-form-label'>
-            統計解析に必要な図表数
-          </label>
-          <div class='col-md-9'>
-            <div class='input-group'>
-              <input type='text' v-model='outputValues.finalAnalysisTables' class='form-control text-end' id='final_analysis_tables'>
-              <span class='input-group-text'>項目</span>
-            </div>
-          </div>
-        </div>
-        -->
         <div class='d-grid gap-2'>
           <button class='btn btn-secondary' type='button' v-on:click='onSubmitApproximateQuote'>概算見積出力</button>
         </div>
