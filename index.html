@@ -44,23 +44,33 @@
             </div>
           </div>
         </div>
-        <div class='row mb-3'>
-          <label class='col-md-3 col-form-label'>
-            症例登録開始年月{{dateYm[0].year}}
-          </label>
-          <div class='col-md-9'>
-            <div class='row'>
-              <div class='col-md-5'>
-                <select v-model='dateYm[0].year'>
-                  <option disabled value = ''>選択してください</option>
-                  <template v-for='item in getYearList'>
-                    <option v-bind:value='item'>{{ item }}</option>
-                  </template>
-                </select>
+        <template v-for='dateYm in dateYmList'>
+          <div class='row mb-3'>
+            <label class='col-md-3 col-form-label'>
+              {{ dateYm.label }}{{dateYm.year}}
+            </label>
+            <div class='col-md-9'>
+              <div class='row'>
+                <div class='col-md-5'>
+                  <select v-model='dateYm.year'>
+                    <option disabled value = ''>選択してください</option>
+                    <template v-for='item in getYearList'>
+                      <option v-bind:value='item'>{{ item }}</option>
+                    </template>
+                  </select>
+                  年
+                  <select v-model='dateYm.month'>
+                    <option disabled value = ''>選択してください</option>
+                    <template v-for='item in dateYm.labelMonth'>
+                      <option v-bind:value='item'>{{ item }}</option>
+                    </template>
+                  </select>
+                  月
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
 <!--
         <div class='row mb-3'>
           <label class='col-md-3 col-form-label' for='start_date'>
