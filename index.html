@@ -108,7 +108,7 @@
                 <th scope="row">{{ idx + 1 }}</th>
                 <td>{{ item.heading }}</td>
                 <td>{{ item.item }}</td>
-                <td>{{ item.unitPriceValue}}</td>
+                <td>{{ formatPrice(item.unitPriceValue) }}</td>
                 <td> x </td>
                 <td>{{ item.unit}}</td>
                 <template v-for='(cost, idx) in item.costs'>          
