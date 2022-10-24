@@ -95,6 +95,9 @@
               <th scope="col">#</th>
               <th scope="col">【見積明細：総期間】</th>
               <th scope="col"></th>
+              <th scope="col">摘要</th>
+              <th scope="col"></th>
+              <th scope="col"></th>
               <th scope="col">テスト年度</th>
               <th scope="col">テスト合計</th>
             </tr>
@@ -105,6 +108,9 @@
                 <th scope="row">{{ idx + 1 }}</th>
                 <td>{{ item.heading }}</td>
                 <td>{{ item.item }}</td>
+                <td>{{ item.unitPriceValue}}</td>
+                <td> x </td>
+                <td>{{ item.unit}}</td>
                 <template v-for='(cost, idx) in item.costs'>          
                   <td>{{ cost.cost }}</td>
                 </template>

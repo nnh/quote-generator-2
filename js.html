@@ -74,8 +74,13 @@
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
         this.valueList.numberOfCases = this.getNumberOfCaseItemsValue;
-        const test = this.itemsList.map(x => this.calculateBaseUnitPrice(x));
-        alert(test);
+        const recalculationItemList = this.itemsList.map(x => {
+          let res = x;
+          x.baseUnitPriceValue = this.calculateBaseUnitPrice(x);
+          x.unitPriceValue = this.calculateUnitPrice(x)
+          return res;
+        });
+        this.itemsList = recalculationItemList;
       },
       checkNumber(target) {
         //return Number.isInteger(Number(target));
@@ -94,20 +99,19 @@
       calculateUnitPrice(x) {
         // 単価の算出
         const coefficient = this.valueList.sourceOfFundsCoefficient;
-        const test = /^=Round\(/i.test(x.price) ? x.baseUnitPrice * coefficient :
-                     /^=[A-Z][0-9]*$/i.test(x.price) ? x.baseUnitPrice: null;
+        const test = /^=Round\(/i.test(x.price) ? x.baseUnitPriceValue * coefficient :
+                     /^=[A-Z][0-9]*$/i.test(x.price) ? x.baseUnitPriceValue: null;
         return test;
 
       },               
       calculateBaseUnitPrice(x) {
-        // 基準単価の算出
-        const test = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? Math.round(x.unitPrice * x.days * x.numberOfPeople, -3) :
-                     x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 
-                     x.baseUnitPrice === '=Trial!$B$30*250' ? this.valueList.numberOfCrfItems * 250: 
-                     x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :
-                     '=round(log(Trial!$B$28,10)*log(Trial!$B$30,10)*Trial!$C$27*75000,-3)' ? this.calculateBaseUnitPriceDataCleaning() : 'roundしない';
-        return test;
-
+        // Calculate the base unit price.
+        const res = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? Math.round(x.unitPrice * x.days * x.numberOfPeople, -3) :
+                    x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 
+                    x.baseUnitPrice === '=Trial!$B$30*250' ? this.valueList.numberOfCrfItems * 250: 
+                    x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :
+                    '=round(log(Trial!$B$28,10)*log(Trial!$B$30,10)*Trial!$C$27*75000,-3)' ? this.calculateBaseUnitPriceDataCleaning() : 'roundしない';
+        return res;
       },
       calculateBaseUnitPriceCreateDb() {
         const crfItems = this.valueList.numberOfCrfItems;

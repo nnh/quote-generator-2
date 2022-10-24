@@ -66,6 +66,7 @@ function getItemsList() {
       unit: x[targetIndex.itemValueUnit],
       baseUnitPrice: x[targetIndex.itemValueBaseUnitPrice],
       unitPrice: x[targetIndex.itemValueUnitPrice],
+      unitPriceValue: '',
       days: x[targetIndex.itemValueDays],
       numberOfPeople: x[targetIndex.itemValueNumberOfPeople]
     }
