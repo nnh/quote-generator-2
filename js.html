@@ -93,7 +93,8 @@
       },
       calculateUnitPrice(x) {
         // 単価の算出
-        const test = /^=Round\(/i.test(x.price) ? x.baseUnitPrice * this.checkSourceOfFunds.coefficient :
+        const coefficient = this.valueList.sourceOfFundsCoefficient;
+        const test = /^=Round\(/i.test(x.price) ? x.baseUnitPrice * coefficient :
                      /^=[A-Z][0-9]*$/i.test(x.price) ? x.baseUnitPrice: null;
         return test;
 
@@ -116,9 +117,10 @@
         const coefficient = this.valueList.trialTypeCoefficient;
         const caseItems = this.valueList.numberOfCases;
         const crfItems = this.valueList.numberOfCrfItems;
-        const test = this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000;
-        alert(test);
-        //=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)
+        const temp = this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000;
+        // Rounded to the nearest thousand yen.
+        const res = temp > 1000 ? Math.round(temp / 1000) * 1000 : temp; 
+        return res;
       },
       getTextBoxValue(id, targetItem) {
         return this.textBoxCommon.filter(x => x.id === id)[0][targetItem];
