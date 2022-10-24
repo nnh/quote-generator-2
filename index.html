@@ -104,7 +104,7 @@
           </thead>
           <tbody>
             <template v-for='(item, idx) in itemsList'>
-              <tr v-for='(item, idx) in itemsList'>
+              <tr v-show='showTable'>
                 <th scope="row">{{ idx + 1 }}</th>
                 <td>{{ item.heading }}</td>
                 <td>{{ item.item }}</td>

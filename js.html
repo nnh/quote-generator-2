@@ -1,4 +1,8 @@
 <script type="text/javascript">
+  function roundLower3Digits(target) {
+   // Rounded to the nearest thousand yen.
+   return target > 1000 ? Math.round(target / 1000) * 1000 : target;
+  }
 </script>
 <script type="importmap">
   {
@@ -46,7 +50,8 @@
           {id: 'end', label: '試験終了年月', year: '', month: '', labelMonth:[3, 9]}
         ],
         valueList: [{numberOfCrfItems: ''}, {numberOfFacilities: ''}, {numberOfCases: ''}, {numberOfFinalAnalysisTables: ''}, 
-                    {trialTypeCoefficient: ''}, {sourceOfFundsCoefficient: ''}]
+                    {trialTypeCoefficient: ''}, {sourceOfFundsCoefficient: ''}],
+        showTable: false
       }
     },
     created() {
@@ -70,6 +75,7 @@
           alert('年月チェックNG');
           return;
         }
+        this.showTable = true;
         this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
@@ -80,7 +86,7 @@
           x.unitPriceValue = this.calculateUnitPrice(x)
           return res;
         });
-        this.itemsList = recalculationItemList;
+        this.setItems(recalculationItemList);
       },
       checkNumber(target) {
         //return Number.isInteger(Number(target));
@@ -104,7 +110,7 @@
       },               
       calculateBaseUnitPrice(x) {
         // Calculate the base unit price.
-        const res = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? this.roundLower3Digits(x.unitPrice * x.days * x.numberOfPeople) :
+        const res = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? roundLower3Digits(x.unitPrice * x.days * x.numberOfPeople) :
                     x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 
                     x.baseUnitPrice === '=Trial!$B$30*250' ? this.valueList.numberOfCrfItems * 250: 
                     x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :
@@ -120,17 +126,13 @@
         const coefficient = this.valueList.trialTypeCoefficient;
         const caseItems = this.valueList.numberOfCases;
         const crfItems = this.valueList.numberOfCrfItems;
-        return this.roundLower3Digits(this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000);
+        return roundLower3Digits(this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000);
       },
       calculateBaseUnitPriceDataCleaning() {
         const coefficient = this.valueList.trialTypeCoefficient;
         const caseItems = this.valueList.numberOfCases;
         const crfItems = this.valueList.numberOfCrfItems;
-        return this.roundLower3Digits(Math.log10(caseItems) * Math.log10(crfItems) * coefficient * 75000);
-      },
-      roundLower3Digits(target) {
-        // Rounded to the nearest thousand yen.
-        return target > 1000 ? Math.round(target / 1000) * 1000 : target;
+        return roundLower3Digits(Math.log10(caseItems) * Math.log10(crfItems) * coefficient * 75000);
       },
       getTextBoxValue(id, targetItem) {
         return this.textBoxCommon.filter(x => x.id === id)[0][targetItem];
