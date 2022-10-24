@@ -13,7 +13,7 @@
   const defaultFinalAnalysisTables = 50;
   const defaultCrfItems = 1000;
   const defaultTitle = '概算見積算定フォーム';
-  const defaultCoefficient = {value: 'publicFund', label:'公的資金（税金由来）', coefficient: 1};
+  const defaultSourceOfFunds = {value: 'publicFund', label:'公的資金（税金由来）', coefficient: 1};
   const defaultTrialType = {value: 'observationalTrial', label: '観察研究・レジストリ', coefficient: 1};
   const TrialTypeInvestigatorInitiatedTrial = {value: 'investigatorInitiatedTrial', label:'医師主導治験', coefficient: 5};
   const TrialTypeSpecifiedClinicalTrial = {value: 'specifiedClinicalTrial', label:'特定臨床研究', coefficient: 3};
@@ -23,11 +23,11 @@
         title: defaultTitle,
         taxRate: taxRate,
         itemsList: '',
-        radioCoefficient: [
-          defaultCoefficient,
+        radioSourceOfFunds: [
+          defaultSourceOfFunds,
           {value: 'commercialCompanyCoefficient', label:'営利企業原資（製薬企業等）', coefficient: 1.5}
         ],
-        checkCoefficient:defaultCoefficient.value,
+        checkSourceOfFunds:defaultSourceOfFunds.value,
         radioTrialType: [
           defaultTrialType, 
           TrialTypeInvestigatorInitiatedTrial, 
@@ -36,8 +36,8 @@
         ],
         checkTrialType: defaultTrialType.value,
         textBoxCommon: [
-          {id:'number_of_cases', label:'目標症例数', unit:'症例', value: 0, type:'number'},
-          {id:'facilities', label:'実施施設数', unit:'施設', value: 0, type:'number'},
+          {id:'number_of_cases', label:'目標症例数', unit:'症例', value: 1, type:'number'},
+          {id:'facilities', label:'実施施設数', unit:'施設', value: 1, type:'number'},
           {id:'number_of_crf_items', label:'CRF項目数', unit:'項目', value: defaultCrfItems, type:'number'},
           {id:'final_analysis_tables', label:'統計解析に必要な図表数', unit:'項目', value: defaultFinalAnalysisTables, type:'number'}
         ],
@@ -45,7 +45,8 @@
           {id: 'start', label: '症例登録開始年月', year: '', month: '', labelMonth:[4, 10]},
           {id: 'end', label: '試験終了年月', year: '', month: '', labelMonth:[3, 9]}
         ],
-        valueList: [{numberOfCrfItems: ''}]
+        valueList: [{numberOfCrfItems: ''}, {numberOfFacilities: ''}, {numberOfCases: ''}, {numberOfFinalAnalysisTables: ''}, 
+                    {trialTypeCoefficient: ''}, {sourceOfFundsCoefficient: ''}]
       }
     },
     created() {
@@ -69,12 +70,19 @@
           alert('年月チェックNG');
           return;
         }
+        this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
+        this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
+        this.valueList.numberOfCases = this.getNumberOfCaseItemsValue;
         const test = this.itemsList.map(x => this.calculateBaseUnitPrice(x));
         alert(test);
       },
       checkNumber(target) {
-        return !Number.isNaN(Number(target));
+        //return Number.isInteger(Number(target));
+        if (Number.isInteger(Number(target))){
+          return target > 0;
+        }
+        return false;
       },
       checkConsistencyYm(dateList) {
         const startDate = dateList.filter(x => x.id === 'start')[0];
@@ -85,7 +93,7 @@
       },
       calculateUnitPrice(x) {
         // 単価の算出
-        const test = /^=Round\(/i.test(x.price) ? x.baseUnitPrice * this.checkCoefficient.coefficient :
+        const test = /^=Round\(/i.test(x.price) ? x.baseUnitPrice * this.checkSourceOfFunds.coefficient :
                      /^=[A-Z][0-9]*$/i.test(x.price) ? x.baseUnitPrice: null;
         return test;
 
@@ -93,7 +101,9 @@
       calculateBaseUnitPrice(x) {
         // 基準単価の算出
         const test = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? Math.round(x.unitPrice * x.days * x.numberOfPeople, -3) :
-                     x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 'roundしない';
+                     x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 
+                     x.baseUnitPrice === '=Trial!$B$30*250' ? this.valueList.numberOfCrfItems * 250: 
+                     x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :'roundしない';
         return test;
 
       },
@@ -102,8 +112,22 @@
         return crfItems < 100 ? 4500 * crfItems :
                crfItems < 1000 ? 4500 * 100 + 2250 * (crfItems - 100) : 4500 * 100 + 2250 * 900 + 1100 * (crfItems - 1000);
       },
-      getTextBoxValue (id) {
-        return this.textBoxCommon.filter(x => x.id === id)[0].value;
+      calculateBaseUnitPriceCentralMonitoring() {
+        const coefficient = this.valueList.trialTypeCoefficient;
+        const caseItems = this.valueList.numberOfCases;
+        const crfItems = this.valueList.numberOfCrfItems;
+        const test = this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000;
+        alert(test);
+        //=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)
+      },
+      getTextBoxValue(id, targetItem) {
+        return this.textBoxCommon.filter(x => x.id === id)[0][targetItem];
+      },
+      getRadioValue(radio, checkValue, targetItem) {
+        return radio.filter(x => x.value === checkValue)[0][targetItem];
+      },
+      getBaseLog(x, y) {
+        return Math.log(y) / Math.log(x);
       }         
     },
     computed: {
@@ -117,7 +141,16 @@
         return pastYears.concat(nextYears);
       },
       getNumberOfCrfItemsValue: function() {
-        return this.getTextBoxValue('number_of_crf_items');
+        return this.getTextBoxValue('number_of_crf_items', 'value');
+      },
+      getNumberOfCaseItemsValue: function() {
+        return this.getTextBoxValue('number_of_cases', 'value');
+      },
+      getTrialTypeCofficient: function() {
+        return this.getRadioValue(this.radioTrialType, this.checkTrialType, 'coefficient');
+      },
+      getSourceOfFundsCofficient: function() {
+        return this.getRadioValue(this.radioSourceOfFunds, this.checkSourceOfFunds, 'coefficient');
       }
     }
   }).mount('#app')

@@ -17,9 +17,9 @@
           <div class='col-md-9'>
             <div class='row'>
               <div class='col-md-5'>
-                <template v-for='item in radioCoefficient'>
+                <template v-for='item in radioSourceOfFunds'>
                   <div class='form-check form-check-inline'>
-                    <input class='form-check-input' type='radio' name='coefficient' v-bind:id='item.value' v-bind:value='item.value' v-model='checkCoefficient'>
+                    <input class='form-check-input' type='radio' name='source_of_funds' v-bind:id='item.value' v-bind:value='item.value' v-model='checkSourceOfFunds'>
                     <label class='form-check-label' v-bind:for='item.value'>{{ item.label }}</label>
                   </div>
                 </template>
