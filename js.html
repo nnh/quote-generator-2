@@ -104,7 +104,8 @@
         const test = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? Math.round(x.unitPrice * x.days * x.numberOfPeople, -3) :
                      x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 
                      x.baseUnitPrice === '=Trial!$B$30*250' ? this.valueList.numberOfCrfItems * 250: 
-                     x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :'roundしない';
+                     x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :
+                     '=round(log(Trial!$B$28,10)*log(Trial!$B$30,10)*Trial!$C$27*75000,-3)' ? this.calculateBaseUnitPriceDataCleaning() : 'roundしない';
         return test;
 
       },
@@ -117,10 +118,17 @@
         const coefficient = this.valueList.trialTypeCoefficient;
         const caseItems = this.valueList.numberOfCases;
         const crfItems = this.valueList.numberOfCrfItems;
-        const temp = this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000;
+        return this.roundLower3Digits(this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000);
+      },
+      calculateBaseUnitPriceDataCleaning() {
+        const coefficient = this.valueList.trialTypeCoefficient;
+        const caseItems = this.valueList.numberOfCases;
+        const crfItems = this.valueList.numberOfCrfItems;
+        return this.roundLower3Digits(Math.log10(caseItems) * Math.log10(crfItems) * coefficient * 75000);
+      },
+      roundLower3Digits(target) {
         // Rounded to the nearest thousand yen.
-        const res = temp > 1000 ? Math.round(temp / 1000) * 1000 : temp; 
-        return res;
+        return target > 1000 ? Math.round(target / 1000) * 1000 : target;
       },
       getTextBoxValue(id, targetItem) {
         return this.textBoxCommon.filter(x => x.id === id)[0][targetItem];
