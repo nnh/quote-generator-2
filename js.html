@@ -67,8 +67,6 @@
         this.itemsList = target;
       },
       onSubmitApproximateQuote() {
-this.replaceItemNameByTrialType();
-return;
         const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
         if (!checkTextBoxCommon.every(x => x)){
           alert('必須入力チェックNG');
@@ -82,6 +80,7 @@ return;
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
         this.valueList.numberOfCases = this.getNumberOfCaseItemsValue;
+        this.replaceItemNameByTrialType();
         const recalculationItemList = this.itemsList.map(x => {
           let res = x;
           x.baseUnitPriceValue = this.calculateBaseUnitPrice(x);
@@ -149,8 +148,12 @@ return;
       formatPrice(price) {
         return price.toLocaleString()
       },
+      /**
+        If the study type is investigator-initiated clinical trial, replace the item name.
+        @param none.
+        @return none.
+      */
       replaceItemNameByTrialType() {
-        // 医師主導治験の場合項目名を置き換えないといけない
         const investigatorInitiatedTrialItemNames = new Map([
           ['irb', 'IRB承認確認、施設管理'],
           ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
