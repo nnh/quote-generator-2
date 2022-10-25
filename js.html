@@ -1,34 +1,8 @@
 <script type="text/javascript">
   function roundLower3Digits(target) {
-   // Rounded to the nearest thousand yen.
-   return target > 1000 ? Math.round(target / 1000) * 1000 : target;
+    // Rounded to the nearest thousand yen.
+    return target > 1000 ? Math.round(target / 1000) * 1000 : target;
   }
-  /*
-  class ReplaceItemByTrialType{
-    constructor(appThis, investigatorInitiatedTrialValue) {
-      this.appThis = appThis;
-      this.investigatorInitiatedTrialValue = investigatorInitiatedTrialValue;
-    }
-    getProperties() {
-      alert(this.investigatorInitiatedTrialValue);
-      alert(this.appThis.checkTrialType);
-    }
-    replaceItem(inputItems) {
-      const test = this.appThis.itemsList;
-      console.log(test.0);
-      return;
-      const inputItem = this.appThis.checkTrialType === this.investigatorInitiatedTrialValue ? inputItems.othersItem : inputItems.investigatorInitiatedTrialItem;
-      const outputItem = this.appThis.checkTrialType !== this.investigatorInitiatedTrialValue ? inputItems.othersItem : inputItems.investigatorInitiatedTrialItem;
-      inputItem.forEach((value, key) => {
-        const targetIdx = this.appThis.itemsList.map((x, idx) => x[inputItems.targetItem] === value ? idx : null).filter(x => x);
-        console.log(targetIdx);
-        //if (targetIdx.length > 0){
-          //this.appThis.itemsList[targetIdx].item = outputItem.get(key);
-        //};
-      });
-    }
-
-  }*/
 </script>
 <script type="importmap">
   {
@@ -106,7 +80,7 @@
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
         this.valueList.numberOfCases = this.getNumberOfCaseItemsValue;
-        this.replaceItemNameByTrialType();
+        this.replaceItemNameAndDaysByTrialType();
         const recalculationItemList = this.itemsList.map(x => {
           let res = x;
           x.days = this.calculateDays(x);
@@ -114,7 +88,6 @@
           x.unitPriceValue = this.calculateUnitPrice(x);
           return res;
         });
-        console.log(recalculationItemList);
         this.setItems(recalculationItemList);
         this.showTable = true;
       },
@@ -180,11 +153,11 @@
         return price.toLocaleString()
       },
       /**
-        If the study type is investigator-initiated clinical trial, replace the item name.
+        If the study type is investigator-initiated clinical trial, replace the item name and days.
         @param none.
         @return none.
       */
-      testReplace() {
+      replaceItemNameAndDaysByTrialType() {
         const investigatorInitiatedTrialItemNames = new Map([
           ['irb', 'IRB承認確認、施設管理'],
           ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
@@ -231,57 +204,7 @@
             this.itemsList[targetIdx].days = outputDays.get(key);
           };
         });
-      },
-      replaceItemNameByTrialType() {
-        const investigatorInitiatedTrialItemNames = new Map([
-          ['irb', 'IRB承認確認、施設管理'],
-          ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
-          ['centralMonitoring', '中央モニタリング'],
-          ['interimAnalysis', '中間解析プログラム作成、解析実施（ダブル）'],
-          ['finalAnalysis', '最終解析プログラム作成、解析実施（ダブル）'],
-          ['csr', 'CSRの作成支援']
-        ]);
-        const othersItemNames = new Map([
-          ['irb', 'IRB準備・承認確認'],
-          ['accountSettings', '初期アカウント設定（施設・ユーザー）、IRB承認確認'],
-          ['centralMonitoring', '中央モニタリング、定期モニタリングレポート作成'],
-          ['interimAnalysis', '中間解析プログラム作成、解析実施（シングル）'],
-          ['finalAnalysis', '最終解析プログラム作成、解析実施（シングル）'],
-          ['csr', '研究結果報告書の作成']
-        ]);
-        const itemsList = {
-          investigatorInitiatedTrialItem: investigatorInitiatedTrialItemNames,
-          othersItem: othersItemNames,
-          targetItem: 'item'
-        }
-        this.testReplace();
-        /*
-        const investigatorInitiatedTrialDays = new Map([
-          ['irb', null],
-          ['accountSettings', 0.23],
-          ['centralMonitoring', null],
-          ['interimAnalysis', 0.7],
-          ['finalAnalysis', 0.7],
-          ['csr', 20]
-        ]);
-        const otherDays = new Map([
-          ['irb', null],
-          ['accountSettings', 0.5],
-          ['centralMonitoring', null],
-          ['interimAnalysis', 0.4],
-          ['finalAnalysis', 0.4],
-          ['csr', 10]
-        ]);
-        const inputItemNames = this.checkTrialType === investigatorInitiatedTrialValue ? othersItemsName : investigatorInitiatedTrialItemNames;
-        const outputItemNames = this.checkTrialType !== investigatorInitiatedTrialValue ? othersItemsName : investigatorInitiatedTrialItemNames;
-        inputItemNames.forEach((value, key) => {
-          const targetIdx = this.itemsList.map((x, idx) => x.item === value ? idx : null).filter(x => x);
-          if (targetIdx.length > 0){
-            this.itemsList[targetIdx].item = outputItemNames.get(key);
-          };
-        });
-        */
-      }       
+      }
     },
     computed: {
       getThisYear: function() {
