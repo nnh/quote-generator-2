@@ -83,11 +83,12 @@
         this.replaceItemNameAndDaysByTrialType();
         const recalculationItemList = this.itemsList.map(x => {
           let res = x;
+          x.days = this.calculateDays(x);
           x.baseUnitPriceValue = this.calculateBaseUnitPrice(x);
           x.unitPriceValue = this.calculateUnitPrice(x);
-          x.days = this.calculateDays(x);
           return res;
         });
+        console.log(recalculationItemList);
         this.setItems(recalculationItemList);
         this.showTable = true;
       },
@@ -197,10 +198,9 @@
           const targetIdx = this.itemsList.map((x, idx) => x.item === value ? idx : null).filter(x => x);
           if (targetIdx.length > 0){
             this.itemsList[targetIdx].item = outputItemNames.get(key);
-//            if (days.get(key)){
-//              this.itemsList[targetIdx].days = days.get(key);
-//            }
-//            alert(this.itemsList[targetIdx].days);
+            if (days.get(key)){
+              this.itemsList[targetIdx].days = days.get(key);
+            }
           };
         });
       }       

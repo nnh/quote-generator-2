@@ -44,7 +44,18 @@ function getItemsList() {
     itemValueDays: ColInfo.getColumnIndex('T'),
     itemValueNumberOfPeople: ColInfo.getColumnIndex('U')
   };
-  const itemFormulas = itemSheet.getDataRange().getFormulas();
+  const daysExcludedFormulas = [
+    '=if($B$20="CTR登録案",50000, 65000)',
+    '=if($B$20="CTR登録案",4,7.5)',
+    '=if(B51="統計解析計画書作成",5,if(B51="統計解析計画書・出力計画書作成",10,20))'
+  ];
+  const itemFormulas = itemSheet.getDataRange().getFormulas().map(x => {
+    let res = x;
+    if (daysExcludedFormulas.includes(res[targetIndex.itemValueDays])){
+      res[targetIndex.itemValueDays] = '';
+    }
+    return res;
+  });
   const itemValues = itemSheet.getDataRange().getValues();
   let itemHeadingAndPrice = [];
   const _dummy = itemValues.reduce((x, currentValue, idx) => {
