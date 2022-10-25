@@ -113,3 +113,26 @@ class ColumnInfo {
     return this.getColumnNumber(columnName) - 1;
   }
 } 
+  class test{
+    constructor(itemList) {
+      this.appThis = itemList.this;
+      this.itemList = itemList.itemList;
+      this.targetItem = itemList.targetItem;
+      this.investigatorInitiatedTrialItem = itemList.investigatorInitiatedTrial;
+      this.othersItem = itemList.others;
+      this.investigatorInitiatedTrial = itemList.investigatorInitiatedTrialString;
+      this.checkTrialType = itemList.checkTrialType;
+    }
+    replaceItem() {
+      const inputItem = this.checkTrialType === this.investigatorInitiatedTrialValue ? othersItem : investigatorInitiatedTrialItem;
+      const outputItem = this.checkTrialType !== this.investigatorInitiatedTrialValue ? othersItem : investigatorInitiatedTrialItem;
+      inputItem.forEach((value, key) => {
+        const targetIdx = this.itemsList.map((x, idx) => x[this.targetItem] === value ? idx : null).filter(x => x);
+        if (targetIdx.length > 0){
+          this.appThis.itemsList[targetIdx].item = outputItem.get(key);
+        };
+      });
+
+    }
+    
+  }
