@@ -151,34 +151,30 @@ return;
       },
       replaceItemNameByTrialType() {
         // 医師主導治験の場合項目名を置き換えないといけない
-        // 表裏の項目名をコンスタントでセット
-        const itemNames = {
-          investigatorInitiatedTrial: {
-            irb: 'IRB承認確認、施設管理',
-            accountSettings: '初期アカウント設定（施設・ユーザー）',
-            centralMonitoring: '中央モニタリング',
-            interimAnalysis: '中間解析プログラム作成、解析実施（ダブル）',
-            finalAnalysis: '最終解析プログラム作成、解析実施（ダブル）',
-            csr: 'CSRの作成支援'
-          },
-          others: {
-            irb: 'IRB準備・承認確認',
-            accountSettings: '初期アカウント設定（施設・ユーザー）、IRB承認確認',
-            centralMonitoring: '中央モニタリング、定期モニタリングレポート作成',
-            interimAnalysis: '中間解析プログラム作成、解析実施（シングル）',
-            finalAnalysis: '最終解析プログラム作成、解析実施（シングル）',
-            csr: '研究結果報告書の作成'
-          }
-        };
-        // 種別を見て、出力すべき項目名を配列で出す
-        const outputItemNames = this.checkTrialType === investigatorInitiatedTrialValue ? Object.entries(itemNames.investigatorInitiatedTrial) : Object.entries(itemNames.others);
-        // 裏
-        const checkItemNames = this.checkTrialType !== investigatorInitiatedTrialValue ? Object.entries(itemNames.investigatorInitiatedTrial) : Object.entries(itemNames.others);      
-        // 今の項目名を取得し、出力すべき項目名と同じものは削除して無視。残ったのを裏の項目名と照らし合わせてヒットしたら出力すべき項目名に置き換える。
-        alert(outputItemNames[1]);
-        const test0 = this.itemsList;
-        alert(test0);
-        const test = outputItemNames.filter(x => x);
+        const investigatorInitiatedTrialItemNames = new Map([
+          ['irb', 'IRB承認確認、施設管理'],
+          ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
+          ['centralMonitoring', '中央モニタリング'],
+          ['interimAnalysis', '中間解析プログラム作成、解析実施（ダブル）'],
+          ['finalAnalysis', '最終解析プログラム作成、解析実施（ダブル）'],
+          ['csr', 'CSRの作成支援']
+        ]);
+        const othersItemsName = new Map([
+          ['irb', 'IRB準備・承認確認'],
+          ['accountSettings', '初期アカウント設定（施設・ユーザー）、IRB承認確認'],
+          ['centralMonitoring', '中央モニタリング、定期モニタリングレポート作成'],
+          ['interimAnalysis', '中間解析プログラム作成、解析実施（シングル）'],
+          ['finalAnalysis', '最終解析プログラム作成、解析実施（シングル）'],
+          ['csr', '研究結果報告書の作成']
+        ]);
+        const inputItemNames = this.checkTrialType === investigatorInitiatedTrialValue ? othersItemsName : investigatorInitiatedTrialItemNames;
+        const outputItemNames = this.checkTrialType !== investigatorInitiatedTrialValue ? othersItemsName : investigatorInitiatedTrialItemNames;
+        inputItemNames.forEach((value, key) => {
+          const targetIdx = this.itemsList.map((x, idx) => x.item === value ? idx : null).filter(x => x);
+          if (targetIdx.length > 0){
+            this.itemsList[targetIdx].item = outputItemNames.get(key);
+          };
+        });
       }       
     },
     computed: {
