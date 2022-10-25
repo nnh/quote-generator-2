@@ -55,6 +55,9 @@ function getItemsList() {
     // Set the calculation formula.
     res[targetIndex.itemValuePrice] = itemFormulas[idx][targetIndex.itemValuePrice];
     res[targetIndex.itemValueBaseUnitPrice] = itemFormulas[idx][targetIndex.itemValueBaseUnitPrice];
+    if (itemFormulas[idx][targetIndex.itemValueDays] !== ''){
+      res[targetIndex.itemValueDays] = itemFormulas[idx][targetIndex.itemValueDays];   
+    }
     itemHeadingAndPrice.push(res);
     return res;
   });

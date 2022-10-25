@@ -80,11 +80,12 @@
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
         this.valueList.numberOfCases = this.getNumberOfCaseItemsValue;
-        this.replaceItemNameByTrialType();
+        this.replaceItemNameAndDaysByTrialType();
         const recalculationItemList = this.itemsList.map(x => {
           let res = x;
           x.baseUnitPriceValue = this.calculateBaseUnitPrice(x);
-          x.unitPriceValue = this.calculateUnitPrice(x)
+          x.unitPriceValue = this.calculateUnitPrice(x);
+          x.days = this.calculateDays(x);
           return res;
         });
         this.setItems(recalculationItemList);
@@ -116,7 +117,7 @@
                     x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 
                     x.baseUnitPrice === '=Trial!$B$30*250' ? this.valueList.numberOfCrfItems * 250: 
                     x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :
-                    '=round(log(Trial!$B$28,10)*log(Trial!$B$30,10)*Trial!$C$27*75000,-3)' ? this.calculateBaseUnitPriceDataCleaning() : 'roundしない';
+                    '=round(log(Trial!$B$28,10)*log(Trial!$B$30,10)*Trial!$C$27*75000,-3)' ? this.calculateBaseUnitPriceDataCleaning() : null;
         return res;
       },
       calculateBaseUnitPriceCreateDb() {
@@ -136,6 +137,9 @@
         const crfItems = this.valueList.numberOfCrfItems;
         return roundLower3Digits(Math.log10(caseItems) * Math.log10(crfItems) * coefficient * 75000);
       },
+      calculateDays(x) {
+        return /=R[0-9]*\/S[0-9]*\/U[0-9]*/i.test(x) ? x.baseUnitPriceValue / x.unitPriceValue / x.numberOfPeople : x.days;
+      },
       getTextBoxValue(id, targetItem) {
         return this.textBoxCommon.filter(x => x.id === id)[0][targetItem];
       },
@@ -149,11 +153,11 @@
         return price.toLocaleString()
       },
       /**
-        If the study type is investigator-initiated clinical trial, replace the item name.
+        If the study type is investigator-initiated clinical trial, replace the item name and days.
         @param none.
         @return none.
       */
-      replaceItemNameByTrialType() {
+      replaceItemNameAndDaysByTrialType() {
         const investigatorInitiatedTrialItemNames = new Map([
           ['irb', 'IRB承認確認、施設管理'],
           ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
@@ -170,12 +174,33 @@
           ['finalAnalysis', '最終解析プログラム作成、解析実施（シングル）'],
           ['csr', '研究結果報告書の作成']
         ]);
+        const investigatorInitiatedTrialDays = new Map([
+          ['irb', null],
+          ['accountSettings', 0.23],
+          ['centralMonitoring', null],
+          ['interimAnalysis', 0.7],
+          ['finalAnalysis', 0.7],
+          ['csr', 20]
+        ]);
+        const otherDays = new Map([
+          ['irb', null],
+          ['accountSettings', 0.5],
+          ['centralMonitoring', null],
+          ['interimAnalysis', 0.4],
+          ['finalAnalysis', 0.4],
+          ['csr', 10]
+        ]);
         const inputItemNames = this.checkTrialType === investigatorInitiatedTrialValue ? othersItemsName : investigatorInitiatedTrialItemNames;
         const outputItemNames = this.checkTrialType !== investigatorInitiatedTrialValue ? othersItemsName : investigatorInitiatedTrialItemNames;
+        const days = this.checkTrialType === investigatorInitiatedTrialValue ? investigatorInitiatedTrialDays : otherDays;
         inputItemNames.forEach((value, key) => {
           const targetIdx = this.itemsList.map((x, idx) => x.item === value ? idx : null).filter(x => x);
           if (targetIdx.length > 0){
             this.itemsList[targetIdx].item = outputItemNames.get(key);
+//            if (days.get(key)){
+//              this.itemsList[targetIdx].days = days.get(key);
+//            }
+//            alert(this.itemsList[targetIdx].days);
           };
         });
       }       
