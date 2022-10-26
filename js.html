@@ -52,8 +52,16 @@
         ],
         valueList: [
           {numberOfCrfItems: ''}, {numberOfFacilities: ''}, {numberOfCases: ''}, {numberOfFinalAnalysisTables: ''}, 
-          {trialTypeCoefficient: ''}, {sourceOfFundsCoefficient: ''},
-          {trialDate: ''} 
+          {trialTypeCoefficient: ''}, {sourceOfFundsCoefficient: ''}
+        ],
+        setupDate: [
+          {start: ''}, {end: ''}
+        ],
+        trialDate: [
+          {start: ''}, {end: ''}
+        ],
+        closingDate: [
+          {start: ''}, {end: ''}
         ],
         showTable: false
       }
@@ -70,8 +78,6 @@
         this.itemsList = target;
       },
       onSubmitApproximateQuote() {
-      this.getSetupStartYm;
-      return;
         const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
         if (!checkTextBoxCommon.every(x => x)){
           alert('必須入力チェックNG');
@@ -81,6 +87,7 @@
           alert('年月チェックNG');
           return;
         }
+        this.setStartEndYm;
         this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
@@ -233,21 +240,19 @@
       getSourceOfFundsCofficient: function() {
         return this.getRadioValue(this.radioSourceOfFunds, this.checkSourceOfFunds, 'coefficient');
       },
-      getSetupStartYm: function() {
-      /*
-      - 開始が4月ならばセットアップ期間は前年度の9~3月
-      - 開始が10月ならばセットアップ期間はその年度の4~9月
-      */
+      setStartEndYm: function() {
         const startYm = this.dateYmList.filter(x => x.id === 'start')[0];
-        if (startYm.month === 4){
-          this.valueList.trialDate = startYm.year - 1;
-          //this.valueList.trialDate.setup.start.month = 9;
-        } else {
-          //this.valueList.trialDate.setup.start.year = startYm.year;
-          //this.valueList.trialDate.setup.start.month = 4;
-        }
-        console.log(this.valueList);
-//        const test = this.
+        const endYm = this.dateYmList.filter(x => x.id === 'end')[0];
+        const setupYear = startYm.month === 4 ? startYm.year - 1 : startYm.year;
+        const setupStartMonth = startYm.month === 4 ? 9 : 4;
+        const closingEndYear = endYm.month === 9 ? endYm.year + 1 : endYm.year;
+        const closingEndMonth = endYm.month === 3 ? 9 : 3;
+        this.setupDate.start = new Date(setupYear, setupStartMonth - 1, 1);
+        this.setupDate.end = new Date(startYm.year, startYm.month - 1, 0);
+        this.trialDate.start = new Date(startYm.year, startYm.month - 1, 1);
+        this.trialDate.end = new Date(endYm.year, startYm.month - 1, 0);
+        this.closingDate.start = new Date(endYm.year, startYm.month - 1, 1);
+        this.closingDate.end = new Date(closingEndYear, closingEndMonth, 0);
       }
     }
   }).mount('#app')
