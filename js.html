@@ -3,6 +3,10 @@
     // Rounded to the nearest thousand yen.
     return target > 1000 ? Math.round(target / 1000) * 1000 : target;
   }
+  function* testGen(inputMap){
+    yield 0;
+    return 0;
+  }
 </script>
 <script type="importmap">
   {
@@ -78,6 +82,9 @@
         this.itemsList = target;
       },
       onSubmitApproximateQuote() {
+const testtestgen = testGen();
+console.log(testtestgen.next());
+return;
         const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
         if (!checkTextBoxCommon.every(x => x)){
           alert('必須入力チェックNG');
@@ -90,6 +97,12 @@
         this.setStartEndYm;
         const monthsEachFiscalYear = this.dispatchPeriodPerFiscalYear();
         console.log(monthsEachFiscalYear);
+        const trialYearsCountList = Array(monthsEachFiscalYear.trial.size);
+        console.log(monthsEachFiscalYear.trial[0]);
+return;
+        monthsEachFiscalYear.trialYears.forEach((month, year) => {
+
+        });
 return;
         this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
@@ -248,6 +261,44 @@ return;
           closing: closingYear,
           trial: trialYears
         };
+      },
+      setuptest() {
+        const setItemsList = new Map(
+          [
+            ['プロトコルレビュー・作成支援（図表案、統計解析計画書案を含む）', 1],
+            ['検討会実施（TV会議等）', 4],
+          //  ['PMDA相談資料作成支援', get_count(get_quotation_request_value(this.array_quotation_request, 'PMDA相談資料作成支援'), 'あり', 1)],
+          //  ['AMED申請資料作成支援', get_count(get_quotation_request_value(this.array_quotation_request, 'AMED申請資料作成支援'), 'あり', 1)],
+          //  ['特定臨床研究法申請資料作成支援', get_count(get_s_p.getProperty('trial_type_value'), get_s_p.getProperty('specified_clinical_trial'), get_s_p.getProperty('function_facilities'))],
+          //  ['ミーティング準備・実行', get_count(get_quotation_request_value(this.array_quotation_request, 'キックオフミーティング'), 'あり', 1)],
+          //  ['SOP一式、CTR登録案、TMF雛形', sop],
+          //  [office_irb_str, office_irb],
+          //  ['モニタリング準備業務（関連資料作成、キックオフ参加）', get_count_more_than(get_quotation_request_value(this.array_quotation_request, '1例あたりの実地モニタリング回数'), 0, 1)],
+            ['EDCライセンス・データベースセットアップ', 1],
+            ['業務分析・DM計画書の作成・CTR登録案の作成', 1],
+            ['DB作成・eCRF作成・バリデーション', 1],
+            ['バリデーション報告書', 1],
+          //  [set_accounts, dm_irb],
+            ['入力の手引作成', 1],
+          //  ['外部監査費用', get_count_more_than(get_quotation_request_value(this.array_quotation_request, '監査対象施設数'), 0, 1)],
+          //  [get_s_p.getProperty('cost_of_prepare_item'), get_count(get_quotation_request_value(this.array_quotation_request, get_s_p.getProperty('cost_of_prepare_quotation_request')), 'あり', get_s_p.getProperty('function_facilities'))],
+          //  ['保険料', get_count_more_than(get_quotation_request_value(this.array_quotation_request, '保険料'), 0, 1)],
+          //  ['治験薬管理（中央）', get_count(get_quotation_request_value(this.array_quotation_request, '治験薬管理'), 'あり', 1)]
+          ]
+        );
+//        const testtest = this.itemsList.map(x => {
+//          const value = setItemsList.has(x.item) ? setItemsList.get(x.item) : 0;
+//          return [x.item, value];
+//        });
+//        console.log(new Map(testtest));
+        return this.editItemsCount(setItemsList);
+      },
+      editItemsCount(setItemsList) {
+        const res = this.itemsList.map(x => {
+          const value = setItemsList.has(x.item) ? setItemsList.get(x.item) : 0;
+          return [x.item, value];
+        });
+        return new Map(res);
       }
     },
     computed: {
