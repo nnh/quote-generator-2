@@ -88,6 +88,9 @@
           return;
         }
         this.setStartEndYm;
+        const monthsEachFiscalYear = this.dispatchPeriodPerFiscalYear();
+        console.log(monthsEachFiscalYear);
+return;
         this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
@@ -216,6 +219,35 @@
             this.itemsList[targetIdx].days = outputDays.get(key);
           };
         });
+      },
+      dispatchPeriodPerFiscalYear() {
+        const startYear = this.setupDate.start.getFullYear();
+        const endYear = this.closingDate.end.getFullYear();
+        const yearsCount = endYear - startYear + 1;
+        const yearsList = [...Array(yearsCount)].map((_, idx) => startYear + idx);
+        // Setup
+        const setupYear = new Map([
+          [startYear, 6]
+        ]);
+        // Closing
+        const closingYear = new Map([
+          [endYear, 6]
+        ]);
+        const firstYearTrialMonth = this.setupDate.start.getMonth() + 1 === 4 ? 6 : 0;
+        const lastYearTrialMonth = this.closingDate.start.getMonth() + 1 === 10 ? 6 : 0;
+        const trialYm = yearsList.map(year => {
+          const month = startYear === endYear ? 6 :
+                        year === startYear ? firstYearTrialMonth :
+                        year === endYear ? lastYearTrialMonth :
+                        12;
+          return [year, month];
+        });
+        const trialYears = new Map(trialYm);
+        return {
+          setup: setupYear,
+          closing: closingYear,
+          trial: trialYears
+        };
       }
     },
     computed: {
@@ -245,14 +277,13 @@
         const endYm = this.dateYmList.filter(x => x.id === 'end')[0];
         const setupYear = startYm.month === 4 ? startYm.year - 1 : startYm.year;
         const setupStartMonth = startYm.month === 4 ? 9 : 4;
-        const closingEndYear = endYm.month === 9 ? endYm.year + 1 : endYm.year;
         const closingEndMonth = endYm.month === 3 ? 9 : 3;
         this.setupDate.start = new Date(setupYear, setupStartMonth - 1, 1);
         this.setupDate.end = new Date(startYm.year, startYm.month - 1, 0);
         this.trialDate.start = new Date(startYm.year, startYm.month - 1, 1);
-        this.trialDate.end = new Date(endYm.year, startYm.month - 1, 0);
-        this.closingDate.start = new Date(endYm.year, startYm.month - 1, 1);
-        this.closingDate.end = new Date(closingEndYear, closingEndMonth, 0);
+        this.trialDate.end = new Date(endYm.year, endYm.month - 1, 0);
+        this.closingDate.start = new Date(endYm.year, endYm.month, 1);
+        this.closingDate.end = new Date(endYm.year, closingEndMonth, 0);
       }
     }
   }).mount('#app')
