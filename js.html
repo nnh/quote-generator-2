@@ -107,15 +107,6 @@
         }
         this.setStartEndYm;
         const monthsEachFiscalYear = this.dispatchPeriodPerFiscalYear();
-/*
-        console.log(monthsEachFiscalYear);
-        const trialYearsCountList = Array(monthsEachFiscalYear.trial.size);
-        for (const value of monthsEachFiscalYear.trial){
-          console.log(value[0]);
-          // これで年度毎に回せるからOK
-        }
-        // 後でいいとこにおく↑
-return;*/
         this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
@@ -131,6 +122,11 @@ return;*/
         });
         const setupTest = this.createSetupItems();
         console.log(setupTest);
+        console.log(monthsEachFiscalYear);
+        for (const value of monthsEachFiscalYear.trial){
+          console.log(this.createTrialTermItems(value[0], value[1]));
+          // これで年度毎に回せるからOK
+        }
         this.setItems(recalculationItemList);
         this.showTable = true;
       },
@@ -291,6 +287,15 @@ return;*/
           return [x.item, value];
         });
         return new Map(res);
+      },
+      createTrialTermItems(targetYear, targetMonthCount) {
+        const setItemsList = new Map(
+          [
+            ['プロジェクト管理', 1],
+            ['データベース管理料', targetMonthCount]
+          ]
+        );
+        return this.editItemsCount(setItemsList);
       }
     },
     computed: {
