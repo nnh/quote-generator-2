@@ -20,8 +20,25 @@
   const defaultSourceOfFunds = {value: 'publicFund', label:'公的資金（税金由来）', coefficient: 1};
   const defaultTrialType = {value: 'observationalTrial', label: '観察研究・レジストリ', coefficient: 1};
   const investigatorInitiatedTrialValue = 'investigatorInitiatedTrial';
+  const specifiedClinicalTrialValue = 'specifiedClinicalTrial';
   const TrialTypeInvestigatorInitiatedTrial = {value: investigatorInitiatedTrialValue, label:'医師主導治験', coefficient: 5};
-  const TrialTypeSpecifiedClinicalTrial = {value: 'specifiedClinicalTrial', label:'特定臨床研究', coefficient: 3};
+  const TrialTypeSpecifiedClinicalTrial = {value: specifiedClinicalTrialValue, label:'特定臨床研究', coefficient: 3};
+  const investigatorInitiatedTrialItemNames = new Map([
+    ['irb', 'IRB承認確認、施設管理'],
+    ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
+    ['centralMonitoring', '中央モニタリング'],
+    ['interimAnalysis', '中間解析プログラム作成、解析実施（ダブル）'],
+    ['finalAnalysis', '最終解析プログラム作成、解析実施（ダブル）'],
+    ['csr', 'CSRの作成支援']
+  ]);
+  const othersItemNames = new Map([
+    ['irb', 'IRB準備・承認確認'],
+    ['accountSettings', '初期アカウント設定（施設・ユーザー）、IRB承認確認'],
+    ['centralMonitoring', '中央モニタリング、定期モニタリングレポート作成'],
+    ['interimAnalysis', '中間解析プログラム作成、解析実施（シングル）'],
+    ['finalAnalysis', '最終解析プログラム作成、解析実施（シングル）'],
+    ['csr', '研究結果報告書の作成']
+  ]);
   createApp({
     data() {
       return {
@@ -63,7 +80,8 @@
         closingDate: [
           {start: ''}, {end: ''}
         ],
-        showTable: false
+        showTable: false,
+        variableItemNameList: null
       }
     },
     created() {
@@ -89,17 +107,20 @@
         }
         this.setStartEndYm;
         const monthsEachFiscalYear = this.dispatchPeriodPerFiscalYear();
+/*
         console.log(monthsEachFiscalYear);
         const trialYearsCountList = Array(monthsEachFiscalYear.trial.size);
         for (const value of monthsEachFiscalYear.trial){
           console.log(value[0]);
           // これで年度毎に回せるからOK
         }
-return;
+        // 後でいいとこにおく↑
+return;*/
         this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
         this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
         this.valueList.numberOfCases = this.getNumberOfCaseItemsValue;
+        this.valueList.facilities = this.getNumberOfFacilitiesItemValue;
         this.replaceItemNameAndDaysByTrialType();
         const recalculationItemList = this.itemsList.map(x => {
           let res = x;
@@ -108,6 +129,8 @@ return;
           x.unitPriceValue = this.calculateUnitPrice(x);
           return res;
         });
+        const setupTest = this.createSetupItems();
+        console.log(setupTest);
         this.setItems(recalculationItemList);
         this.showTable = true;
       },
@@ -178,22 +201,6 @@ return;
         @return none.
       */
       replaceItemNameAndDaysByTrialType() {
-        const investigatorInitiatedTrialItemNames = new Map([
-          ['irb', 'IRB承認確認、施設管理'],
-          ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
-          ['centralMonitoring', '中央モニタリング'],
-          ['interimAnalysis', '中間解析プログラム作成、解析実施（ダブル）'],
-          ['finalAnalysis', '最終解析プログラム作成、解析実施（ダブル）'],
-          ['csr', 'CSRの作成支援']
-        ]);
-        const othersItemNames = new Map([
-          ['irb', 'IRB準備・承認確認'],
-          ['accountSettings', '初期アカウント設定（施設・ユーザー）、IRB承認確認'],
-          ['centralMonitoring', '中央モニタリング、定期モニタリングレポート作成'],
-          ['interimAnalysis', '中間解析プログラム作成、解析実施（シングル）'],
-          ['finalAnalysis', '最終解析プログラム作成、解析実施（シングル）'],
-          ['csr', '研究結果報告書の作成']
-        ]);
         const investigatorInitiatedTrialDays = new Map([
           ['accountSettings', 0.23],
           ['interimAnalysis', 0.7],
@@ -207,7 +214,8 @@ return;
           ['csr', 10]
         ]);
         const inputItemNames = this.checkTrialType === investigatorInitiatedTrialValue ? othersItemNames : investigatorInitiatedTrialItemNames;
-        const outputItemNames = this.checkTrialType !== investigatorInitiatedTrialValue ? othersItemNames : investigatorInitiatedTrialItemNames;
+        this.setVariableItemNameList;
+        const outputItemNames = this.variableItemNameList;
         const outputDays = this.checkTrialType === investigatorInitiatedTrialValue ? othersDays : investigatorInitiatedTrialDays;
         inputItemNames.forEach((value, key) => {
           const targetIdx = this.itemsList.map((x, idx) => x.item === value ? idx : null).filter(x => x);
@@ -254,35 +262,27 @@ return;
           trial: trialYears
         };
       },
-      setuptest() {
+      createSetupItems() {
         const setItemsList = new Map(
           [
             ['プロトコルレビュー・作成支援（図表案、統計解析計画書案を含む）', 1],
             ['検討会実施（TV会議等）', 4],
-          //  ['PMDA相談資料作成支援', get_count(get_quotation_request_value(this.array_quotation_request, 'PMDA相談資料作成支援'), 'あり', 1)],
-          //  ['AMED申請資料作成支援', get_count(get_quotation_request_value(this.array_quotation_request, 'AMED申請資料作成支援'), 'あり', 1)],
-          //  ['特定臨床研究法申請資料作成支援', get_count(get_s_p.getProperty('trial_type_value'), get_s_p.getProperty('specified_clinical_trial'), get_s_p.getProperty('function_facilities'))],
-          //  ['ミーティング準備・実行', get_count(get_quotation_request_value(this.array_quotation_request, 'キックオフミーティング'), 'あり', 1)],
-          //  ['SOP一式、CTR登録案、TMF雛形', sop],
-          //  [office_irb_str, office_irb],
-          //  ['モニタリング準備業務（関連資料作成、キックオフ参加）', get_count_more_than(get_quotation_request_value(this.array_quotation_request, '1例あたりの実地モニタリング回数'), 0, 1)],
+            ['モニタリング準備業務（関連資料作成、キックオフ参加）', 1],
             ['EDCライセンス・データベースセットアップ', 1],
             ['業務分析・DM計画書の作成・CTR登録案の作成', 1],
             ['DB作成・eCRF作成・バリデーション', 1],
             ['バリデーション報告書', 1],
-          //  [set_accounts, dm_irb],
-            ['入力の手引作成', 1],
-          //  ['外部監査費用', get_count_more_than(get_quotation_request_value(this.array_quotation_request, '監査対象施設数'), 0, 1)],
-          //  [get_s_p.getProperty('cost_of_prepare_item'), get_count(get_quotation_request_value(this.array_quotation_request, get_s_p.getProperty('cost_of_prepare_quotation_request')), 'あり', get_s_p.getProperty('function_facilities'))],
-          //  ['保険料', get_count_more_than(get_quotation_request_value(this.array_quotation_request, '保険料'), 0, 1)],
-          //  ['治験薬管理（中央）', get_count(get_quotation_request_value(this.array_quotation_request, '治験薬管理'), 'あり', 1)]
+            [this.variableItemNameList.get('accountSettings'), this.valueList.numberOfCases],
+            ['入力の手引作成', 1]
           ]
         );
-//        const testtest = this.itemsList.map(x => {
-//          const value = setItemsList.has(x.item) ? setItemsList.get(x.item) : 0;
-//          return [x.item, value];
-//        });
-//        console.log(new Map(testtest));
+        if (this.checkTrialType === investigatorInitiatedTrialValue){
+          setItemsList.set(investigatorInitiatedTrialItemNames.get('irb'), this.valueList.facilities);
+          setItemsList.set('SOP一式、CTR登録案、TMF雛形', 1);
+        }
+        if (this.checkTrialType === specifiedClinicalTrialValue) {
+          setItemsList.set('特定臨床研究法申請資料作成支援', this.valueList.facilities);
+        }
         return this.editItemsCount(setItemsList);
       },
       editItemsCount(setItemsList) {
@@ -309,6 +309,9 @@ return;
       getNumberOfCaseItemsValue: function() {
         return this.getTextBoxValue('number_of_cases', 'value');
       },
+      getNumberOfFacilitiesItemValue: function() {
+        return this.getTextBoxValue('facilities', 'value');
+      },
       getTrialTypeCofficient: function() {
         return this.getRadioValue(this.radioTrialType, this.checkTrialType, 'coefficient');
       },
@@ -327,6 +330,9 @@ return;
         this.trialDate.end = new Date(endYm.year, endYm.month - 1, 0);
         this.closingDate.start = new Date(endYm.year, endYm.month, 1);
         this.closingDate.end = new Date(endYm.year, closingEndMonth, 0);
+      },
+      setVariableItemNameList: function() {
+        this.variableItemNameList = this.checkTrialType === investigatorInitiatedTrialValue ? investigatorInitiatedTrialItemNames : othersItemNames;
       }
     }
   }).mount('#app')
