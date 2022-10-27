@@ -3,10 +3,6 @@
     // Rounded to the nearest thousand yen.
     return target > 1000 ? Math.round(target / 1000) * 1000 : target;
   }
-  function* testGen(inputMap){
-    yield 0;
-    return 0;
-  }
 </script>
 <script type="importmap">
   {
@@ -82,9 +78,6 @@
         this.itemsList = target;
       },
       onSubmitApproximateQuote() {
-const testtestgen = testGen();
-console.log(testtestgen.next());
-return;
         const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
         if (!checkTextBoxCommon.every(x => x)){
           alert('必須入力チェックNG');
@@ -98,11 +91,10 @@ return;
         const monthsEachFiscalYear = this.dispatchPeriodPerFiscalYear();
         console.log(monthsEachFiscalYear);
         const trialYearsCountList = Array(monthsEachFiscalYear.trial.size);
-        console.log(monthsEachFiscalYear.trial[0]);
-return;
-        monthsEachFiscalYear.trialYears.forEach((month, year) => {
-
-        });
+        for (const value of monthsEachFiscalYear.trial){
+          console.log(value[0]);
+          // これで年度毎に回せるからOK
+        }
 return;
         this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
         this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
