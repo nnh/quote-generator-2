@@ -115,18 +115,36 @@
         this.replaceItemNameAndDaysByTrialType();
         const recalculationItemList = this.itemsList.map(x => {
           let res = x;
-          x.days = this.calculateDays(x);
-          x.baseUnitPriceValue = this.calculateBaseUnitPrice(x);
-          x.unitPriceValue = this.calculateUnitPrice(x);
+          res.days = this.calculateDays(x);
+          res.baseUnitPriceValue = this.calculateBaseUnitPrice(x);
+          res.unitPriceValue = this.calculateUnitPrice(x);
           return res;
         });
-        const setupTest = this.createSetupItems();
-        console.log(setupTest);
         console.log(monthsEachFiscalYear);
-        for (const value of monthsEachFiscalYear.trial){
-          console.log(this.createTrialTermItems(value[0], value[1]));
-          // これで年度毎に回せるからOK
+        const setupItems = new Map();
+        const trialItems = new Map();
+        for (const [term, valueMap] of monthsEachFiscalYear){
+          if (term === 'setup'){
+            for (const [year, months] of valueMap){
+              setupItems.set(this.createSetupItems(year, months));
+            }
+          }
+          if (term === 'trial'){
+            for (const [year, months] of valueMap){
+              trialItems.set(year, this.createTrialTermItems(year, months));
+            }
+          }
         }
+        console.log(trialItems);
+        return;
+//        const trialItemValues = new Map();
+//        for (const value of monthsEachFiscalYear.trial){
+////          console.log(value[0])
+////          console.log(this.createTrialTermItems(value[0], value[1]));
+//          trialItemValues.set(value[0], this.createTrialTermItems(value[0], value[1]))
+//          // これで年度毎に回せるからOK
+//        }
+//        console.log(trialItemValues);
         this.setItems(recalculationItemList);
         this.showTable = true;
       },
@@ -177,7 +195,9 @@
         return roundLower3Digits(Math.log10(caseItems) * Math.log10(crfItems) * coefficient * 75000);
       },
       calculateDays(x) {
-        return /=R[0-9]*\/S[0-9]*\/U[0-9]*/i.test(x) ? x.baseUnitPriceValue / x.unitPriceValue / x.numberOfPeople : x.days;
+        const days = /=R[0-9]*\/S[0-9]*\/U[0-9]*/i.test(x.days) ? x.baseUnitPriceValue / x.unitPriceValue / x.numberOfPeople :
+                     /CTR登録案/.test(x.days) ? 7.5 : x.days;
+        return days;
       },
       getTextBoxValue(id, targetItem) {
         return this.textBoxCommon.filter(x => x.id === id)[0][targetItem];
@@ -252,13 +272,13 @@
           return [year, month];
         });
         const trialYears = new Map(trialYm);
-        return {
-          setup: setupYear,
-          closing: closingYear,
-          trial: trialYears
-        };
+        return new Map([
+          ['setup', setupYear],
+          ['closing', closingYear],
+          ['trial', trialYears]
+        ]);
       },
-      createSetupItems() {
+      createSetupItems(targetYear, targetMonthCount) {
         const setItemsList = new Map(
           [
             ['プロトコルレビュー・作成支援（図表案、統計解析計画書案を含む）', 1],
@@ -279,14 +299,16 @@
         if (this.checkTrialType === specifiedClinicalTrialValue) {
           setItemsList.set('特定臨床研究法申請資料作成支援', this.valueList.facilities);
         }
-        return this.editItemsCount(setItemsList);
+        return this.editItemsCount(setItemsList, targetYear);
       },
-      editItemsCount(setItemsList) {
+      editItemsCount(setItemsList, targetYear) {
         const res = this.itemsList.map(x => {
           const value = setItemsList.has(x.item) ? setItemsList.get(x.item) : 0;
           return [x.item, value];
         });
-        return new Map(res);
+        const resMap = new Map(res);
+        resMap.set('year', targetYear);
+        return resMap;
       },
       createTrialTermItems(targetYear, targetMonthCount) {
         const setItemsList = new Map(
@@ -295,7 +317,7 @@
             ['データベース管理料', targetMonthCount]
           ]
         );
-        return this.editItemsCount(setItemsList);
+        return this.editItemsCount(setItemsList, targetYear);
       }
     },
     computed: {
