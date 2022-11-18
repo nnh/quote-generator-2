@@ -98,6 +98,7 @@
               <th scope="col">摘要</th>
               <th scope="col"></th>
               <th scope="col"></th>
+              <th scope="col"></th>
               <th scope="col">金額</th>
               <th scope="col">合計</th>
             </tr>
@@ -110,10 +111,13 @@
                 <td>{{ item.item }}</td>
                 <td>{{ formatPrice(item.unitPriceValue) }}</td>
                 <td> x </td>
-                <td>{{ item.unit}}</td>
-                <template v-for='(cost, idx) in item.costs'>          
+                <td>{{ item.count }}</td> 
+                <td>{{ item.unit }}</td>
+                <td>{{ formatPrice(item.totalPrice) }}</td>
+<!--                <template v-for='(cost, idx) in item.costs'>          
                   <td>{{ cost.cost }}</td>
                 </template>
+-->
               </tr>
             </template>
           </tbody>

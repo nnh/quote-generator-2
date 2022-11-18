@@ -131,8 +131,9 @@
         }
         [this.setupYearKey, this.closingYearKey].forEach(year => {
           if (trialItems.has(year)){
-            for (const [item, count] of trialItems.get(year)){
-              trialItems.get(year).set(item, count + setupClosingItems.get(year).get(item));  
+            for (const [item, count] of setupClosingItems.get(year)){
+              const setCount = trialItems.get(year).has(item) ? trialItems.get(year).get(item) + count : count;
+              trialItems.get(year).set(item, setCount);
             }
           } else {
             trialItems.set(year, setupClosingItems.get(year));
@@ -145,10 +146,18 @@
             total1Count.set(item, setValue);
           }
         }
-        console.log(trialItems);
-        console.log(total1Count);
+        const total1Items = recalculationItemList.map(x => {
+          const res = x;
+          res['count'] = total1Count.has(x.item) ? total1Count.get(x.item) : null;
+          res['totalPrice'] = total1Count.has(x.item) ? res.unitPriceValue * total1Count.get(x.item) : null;
+          return res;
+        }).filter(x => x['count']);
+        // プロジェクト管理は再計算が必要
+        const projectManagementPrice = 999;
+        
+        console.log(total1Items);
         console.log(recalculationItemList);
-        this.setItems(recalculationItemList);
+        this.setItems(total1Items);
         this.showTable = true;
       },
       checkNumber(target) {
@@ -304,13 +313,14 @@
         if (this.checkTrialType === specifiedClinicalTrialValue) {
           setItemsList.set('特定臨床研究法申請資料作成支援', this.valueList.facilities);
         }
-        return this.editItemsCount(setItemsList);
+        return setItemsList;
+        //return this.editItemsCount(setItemsList);
       },
       editItemsCount(setItemsList) {
         const res = this.itemsList.map(x => {
-          const value = setItemsList.has(x.item) ? setItemsList.get(x.item) : 0;
+          const value = setItemsList.has(x.item) ? setItemsList.get(x.item) : null;
           return [x.item, value];
-        });
+        }).filter(x => x[1]);
         const resMap = new Map(res);
         return resMap;
       },
@@ -321,7 +331,8 @@
             ['データベース管理料', targetMonthCount]
           ]
         );
-        return this.editItemsCount(setItemsList);
+        return setItemsList;
+//        return this.editItemsCount(setItemsList);
       },
       createClosingItems(targetMonthCount) {
         const setItemsList = new Map(
@@ -330,7 +341,8 @@
             ['データベース固定作業、クロージング', 1]
           ]
         );
-        return this.editItemsCount(setItemsList);
+        return setItemsList;
+//        return this.editItemsCount(setItemsList);
       }
     },
     computed: {
