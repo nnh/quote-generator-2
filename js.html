@@ -123,11 +123,11 @@
           return res;
         });
         const setupClosingItems = new Map();
-        setupClosingItems.set(this.setupYearKey, this.createSetupItems(this.setupYearKey, monthsEachFiscalYear.get('setup').get(this.setupYearKey)));
-        setupClosingItems.set(this.closingYearKey, this.createClosingItems(this.closingYearKey, monthsEachFiscalYear.get('closing').get(this.closingYearKey)));
+        setupClosingItems.set(this.setupYearKey, this.createSetupItems(monthsEachFiscalYear.get('setup').get(this.setupYearKey)));
+        setupClosingItems.set(this.closingYearKey, this.createClosingItems(monthsEachFiscalYear.get('closing').get(this.closingYearKey)));
         const trialItems = new Map();
         for (const [year, months] of monthsEachFiscalYear.get('trial')){
-          trialItems.set(year, this.createTrialTermItems(year, months));
+          trialItems.set(year, this.createTrialTermItems(months));
         }
         [this.setupYearKey, this.closingYearKey].forEach(year => {
           if (trialItems.has(year)){
@@ -138,8 +138,16 @@
             trialItems.set(year, setupClosingItems.get(year));
           }
         });
+        const total1Count = new Map();
+        for (const [year, items] of trialItems){
+          for (const [item, value] of items){
+            const setValue = total1Count.has(item) ? total1Count.get(item) + value : value;
+            total1Count.set(item, setValue);
+          }
+        }
         console.log(trialItems);
-return;
+        console.log(total1Count);
+        console.log(recalculationItemList);
         this.setItems(recalculationItemList);
         this.showTable = true;
       },
@@ -275,7 +283,7 @@ return;
           ['trial', trialYears]
         ]);
       },
-      createSetupItems(targetYear, targetMonthCount) {
+      createSetupItems(targetMonthCount) {
         const setItemsList = new Map(
           [
             ['プロトコルレビュー・作成支援（図表案、統計解析計画書案を含む）', 1],
@@ -296,34 +304,33 @@ return;
         if (this.checkTrialType === specifiedClinicalTrialValue) {
           setItemsList.set('特定臨床研究法申請資料作成支援', this.valueList.facilities);
         }
-        return this.editItemsCount(setItemsList, targetYear);
+        return this.editItemsCount(setItemsList);
       },
-      editItemsCount(setItemsList, targetYear) {
+      editItemsCount(setItemsList) {
         const res = this.itemsList.map(x => {
           const value = setItemsList.has(x.item) ? setItemsList.get(x.item) : 0;
           return [x.item, value];
         });
         const resMap = new Map(res);
-        resMap.set('year', targetYear);
         return resMap;
       },
-      createTrialTermItems(targetYear, targetMonthCount) {
+      createTrialTermItems(targetMonthCount) {
         const setItemsList = new Map(
           [
             ['プロジェクト管理', 1],
             ['データベース管理料', targetMonthCount]
           ]
         );
-        return this.editItemsCount(setItemsList, targetYear);
+        return this.editItemsCount(setItemsList);
       },
-      createClosingItems(targetYear, targetMonthCount) {
+      createClosingItems(targetMonthCount) {
         const setItemsList = new Map(
           [
             ['データクリーニング', 1],
             ['データベース固定作業、クロージング', 1]
           ]
         );
-        return this.editItemsCount(setItemsList, targetYear);
+        return this.editItemsCount(setItemsList);
       }
     },
     computed: {
