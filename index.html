@@ -115,7 +115,7 @@
                 <td v-else=>  </td>
                 <td>{{ item.count }}</td> 
                 <td>{{ item.unit }}</td>
-                <td v-if='item.item !== ""'>{{ formatPrice(item.totalPrice) }}</td>
+                <td v-if='item.item !== "" || item.heading === "合計（税抜）"'>{{ formatPrice(item.totalPrice) }}</td>
                 <td v-else=>  </td>
                 <td v-if='item.item === ""'>{{ formatPrice(item.totalSumPrice) }}</td>
                 <td v-else=>  </td>

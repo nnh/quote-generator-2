@@ -162,10 +162,13 @@
           const insertTargetItem = total1HeadingAndItems.find(x => x.heading === heading);
           let insertIdx = total1HeadingAndItems.map((x, idx) => x.heading === insertTargetItem.heading && x.items === insertTargetItem.items ?idx :null).filter(x => x)[0];
           insertIdx = insertIdx > 1 ? insertIdx : 0; 
-          const test1 = total1HeadingAndItems.filter((_, idx) => idx < insertIdx);
-          const test2 = total1HeadingAndItems.filter((_, idx) => idx >= insertIdx);
-          total1HeadingAndItems = [...test1, {heading: heading, item: '', unitPriceValue: '', count: '', unit: '', totalPrice: '', totalSumPrice: totalByHeading}, ...test2];
+          const insertBefore = total1HeadingAndItems.filter((_, idx) => idx < insertIdx);
+          const insertAfter = total1HeadingAndItems.filter((_, idx) => idx >= insertIdx);
+          total1HeadingAndItems = [...insertBefore, {heading: heading, item: '', unitPriceValue: '', count: '', unit: '', totalPrice: '', totalSumPrice: totalByHeading}, ...insertAfter];
         }
+        // 合計をセット
+        const totalSum = total1Items.map(x => x.totalPrice).reduce((totalValue, currentValue) => totalValue + currentValue);
+        total1HeadingAndItems.push({heading: '合計（税抜）', item: '', unitPriceValue: '', count: '', unit: '', totalPrice: totalSum, totalSumPrice: ''});
         console.log(total1HeadingAndItems);
 
         console.log(total1Items);
