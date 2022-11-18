@@ -107,13 +107,18 @@
             <template v-for='(item, idx) in itemsList'>
               <tr v-show='showTable'>
                 <th scope="row">{{ idx + 1 }}</th>
-                <td>{{ item.heading }}</td>
+                <td v-if='item.item === ""'>{{ item.heading }}</td>
+                <td v-else=>  </td>
                 <td>{{ item.item }}</td>
                 <td>{{ formatPrice(item.unitPriceValue) }}</td>
-                <td> x </td>
+                <td v-if='item.item !== ""'> x </td>
+                <td v-else=>  </td>
                 <td>{{ item.count }}</td> 
                 <td>{{ item.unit }}</td>
-                <td>{{ formatPrice(item.totalPrice) }}</td>
+                <td v-if='item.item !== ""'>{{ formatPrice(item.totalPrice) }}</td>
+                <td v-else=>  </td>
+                <td v-if='item.item === ""'>{{ formatPrice(item.totalSumPrice) }}</td>
+                <td v-else=>  </td>
 <!--                <template v-for='(cost, idx) in item.costs'>          
                   <td>{{ cost.cost }}</td>
                 </template>

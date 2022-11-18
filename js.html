@@ -146,7 +146,7 @@
             total1Count.set(item, setValue);
           }
         }
-        const total1Items = recalculationItemList.map(x => {
+        let total1Items = recalculationItemList.map(x => {
           const res = x;
           res['count'] = total1Count.has(x.item) ? total1Count.get(x.item) : null;
           res['totalPrice'] = total1Count.has(x.item) ? res.unitPriceValue * total1Count.get(x.item) : null;
@@ -154,10 +154,23 @@
         }).filter(x => x['count']);
         // プロジェクト管理は再計算が必要
         const projectManagementPrice = 999;
-        
+        const headingItems = new Set(total1Items.map(x => x.heading));
+        let total1HeadingAndItems = [...total1Items];
+        console.log(total1HeadingAndItems);
+        for (const heading of headingItems){
+          const totalByHeading = total1Items.filter(x => x.heading === heading).map(x => x.totalPrice).reduce((totalValue, currentValue) => totalValue + currentValue);
+          const insertTargetItem = total1HeadingAndItems.find(x => x.heading === heading);
+          let insertIdx = total1HeadingAndItems.map((x, idx) => x.heading === insertTargetItem.heading && x.items === insertTargetItem.items ?idx :null).filter(x => x)[0];
+          insertIdx = insertIdx > 1 ? insertIdx : 0; 
+          const test1 = total1HeadingAndItems.filter((_, idx) => idx < insertIdx);
+          const test2 = total1HeadingAndItems.filter((_, idx) => idx >= insertIdx);
+          total1HeadingAndItems = [...test1, {heading: heading, item: '', unitPriceValue: '', count: '', unit: '', totalPrice: '', totalSumPrice: totalByHeading}, ...test2];
+        }
+        console.log(total1HeadingAndItems);
+
         console.log(total1Items);
-        console.log(recalculationItemList);
-        this.setItems(total1Items);
+        //console.log(recalculationItemList);
+        this.setItems(total1HeadingAndItems);
         this.showTable = true;
       },
       checkNumber(target) {
