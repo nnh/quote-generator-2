@@ -81,7 +81,9 @@
           {start: ''}, {end: ''}
         ],
         showTable: false,
-        variableItemNameList: null
+        variableItemNameList: null,
+        setupYearKey: null,
+        closingYearKey: null
       }
     },
     created() {
@@ -120,31 +122,24 @@
           res.unitPriceValue = this.calculateUnitPrice(x);
           return res;
         });
-        console.log(monthsEachFiscalYear);
-        const setupItems = new Map();
+        const setupClosingItems = new Map();
+        setupClosingItems.set(this.setupYearKey, this.createSetupItems(this.setupYearKey, monthsEachFiscalYear.get('setup').get(this.setupYearKey)));
+        setupClosingItems.set(this.closingYearKey, this.createClosingItems(this.closingYearKey, monthsEachFiscalYear.get('closing').get(this.closingYearKey)));
         const trialItems = new Map();
-        for (const [term, valueMap] of monthsEachFiscalYear){
-          if (term === 'setup'){
-            for (const [year, months] of valueMap){
-              setupItems.set(this.createSetupItems(year, months));
-            }
-          }
-          if (term === 'trial'){
-            for (const [year, months] of valueMap){
-              trialItems.set(year, this.createTrialTermItems(year, months));
-            }
-          }
+        for (const [year, months] of monthsEachFiscalYear.get('trial')){
+          trialItems.set(year, this.createTrialTermItems(year, months));
         }
+        [this.setupYearKey, this.closingYearKey].forEach(year => {
+          if (trialItems.has(year)){
+            for (const [item, count] of trialItems.get(year)){
+              trialItems.get(year).set(item, count + setupClosingItems.get(year).get(item));  
+            }
+          } else {
+            trialItems.set(year, setupClosingItems.get(year));
+          }
+        });
         console.log(trialItems);
-        return;
-//        const trialItemValues = new Map();
-//        for (const value of monthsEachFiscalYear.trial){
-////          console.log(value[0])
-////          console.log(this.createTrialTermItems(value[0], value[1]));
-//          trialItemValues.set(value[0], this.createTrialTermItems(value[0], value[1]))
-//          // これで年度毎に回せるからOK
-//        }
-//        console.log(trialItemValues);
+return;
         this.setItems(recalculationItemList);
         this.showTable = true;
       },
@@ -272,6 +267,8 @@
           return [year, month];
         });
         const trialYears = new Map(trialYm);
+        this.setupYearKey = startYear;
+        this.closingYearKey = endYear;
         return new Map([
           ['setup', setupYear],
           ['closing', closingYear],
@@ -315,6 +312,15 @@
           [
             ['プロジェクト管理', 1],
             ['データベース管理料', targetMonthCount]
+          ]
+        );
+        return this.editItemsCount(setItemsList, targetYear);
+      },
+      createClosingItems(targetYear, targetMonthCount) {
+        const setItemsList = new Map(
+          [
+            ['データクリーニング', 1],
+            ['データベース固定作業、クロージング', 1]
           ]
         );
         return this.editItemsCount(setItemsList, targetYear);
