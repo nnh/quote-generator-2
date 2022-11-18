@@ -97,6 +97,15 @@
       setItems(target) {
         this.itemsList = target;
       },
+      test20221118buttonclick() {
+        this.getQuoteHtml();
+      },
+      async getQuoteHtml(){
+        const baseUrl = await new Promise(resolve => { google.script.run.withSuccessHandler(resolve).getAppUrl() });
+        const url = baseUrl.replace(/$/, '?page=quote');
+        console.log(url);
+        window.top.location.href = url;
+      },
       onSubmitApproximateQuote() {
         const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
         if (!checkTextBoxCommon.every(x => x)){

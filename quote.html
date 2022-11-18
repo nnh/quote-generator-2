@@ -2,11 +2,58 @@
 <html>
   <head>
     <base target="_top">
-    <?!= HtmlService.createHtmlOutputFromFile('css').getContent(); ?>
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css' rel='stylesheet'>
   </head>
   <body>
-    見積の結果test<br>
-    <a href="<?= getAppUrl_() ?>?page=index">INDEXへ</a>
+    <div id='app'>
+      <div class='container bg-dark text-white p-4'>
+        <h1 class='text-center border-bottom pb-3 mb-4'>
+          {{ title }}
+        </h1>
+        <table class="table table-dark table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">【見積明細：総期間】</th>
+              <th scope="col"></th>
+              <th scope="col">摘要</th>
+              <th scope="col"></th>
+              <th scope="col"></th>
+              <th scope="col"></th>
+              <th scope="col">金額</th>
+              <th scope="col">合計</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for='(item, idx) in itemsList'>
+              <tr v-show='showTable'>
+                <th scope="row">{{ idx + 1 }}</th>
+                <td v-if='item.item === ""'>{{ item.heading }}</td>
+                <td v-else=>  </td>
+                <td>{{ item.item }}</td>
+                <td>{{ formatPrice(item.unitPriceValue) }}</td>
+                <td v-if='item.item !== ""'> x </td>
+                <td v-else=>  </td>
+                <td>{{ item.count }}</td> 
+                <td>{{ item.unit }}</td>
+                <td v-if='item.item !== "" || item.heading === "合計（税抜）"'>{{ formatPrice(item.totalPrice) }}</td>
+                <td v-else=>  </td>
+                <td v-if='item.item === ""'>{{ formatPrice(item.totalSumPrice) }}</td>
+                <td v-else=>  </td>
+<!--                <template v-for='(cost, idx) in item.costs'>          
+                  <td>{{ cost.cost }}</td>
+                </template>
+-->
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+
+
     <?!= HtmlService.createHtmlOutputFromFile('js').getContent(); ?>
+
   </body>
 </html>

@@ -22,7 +22,7 @@ function doGet(e) {
 /**
  * @return {String} Returns the URL for this web application.
  */
-function getAppUrl_() {
+function getAppUrl() {
   return ScriptApp.getService().getUrl();
 }
 /**
