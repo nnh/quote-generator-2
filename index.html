@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link href='https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css' rel='stylesheet'>
+  </head>
+  <body>
+    <div id='app'>
+      <div class='container bg-dark text-white p-4'>
+        <h1 class='text-center border-bottom pb-3 mb-4'>
+          {{ title }}
+        </h1>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            原資
+          </label>
+          <div class='col-md-9'>
+            <div class='row'>
+              <div class='col-md-5'>
+                <template v-for='item in radioSourceOfFunds'>
+                  <div class='form-check form-check-inline'>
+                    <input class='form-check-input' type='radio' name='source_of_funds' v-bind:id='item.value' v-bind:value='item.value' v-model='checkSourceOfFunds'>
+                    <label class='form-check-label' v-bind:for='item.value'>{{ item.label }}</label>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class='row mb-3'>
+          <label class='col-md-3 col-form-label'>
+            試験種別
+          </label>
+          <div class='col-md-9'>
+            <div class='row'>
+              <div class='col-md-5'>
+                <template v-for='item in radioTrialType'>
+                  <div class='form-check form-check-inline'>
+                    <input class='form-check-input' type='radio' name='trial_type' v-bind:id='item.value' v-bind:value='item.value' v-model='checkTrialType'>
+                    <label class='form-check-label' v-bind:for='item.value'>{{ item.label }}</label>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 試験開始、終了日セレクトボックス -->
+        <template v-for='dateYm in dateYmList'>
+          <div class='row mb-3'>
+            <label class='col-md-3 col-form-label'>
+              {{ dateYm.label }}
+            </label>
+            <div class='col-md-9'>
+              <div class='row'>
+                <div class='col-md-5'>
+                  <select v-model='dateYm.year'>
+                    <option disabled value = ''>選択してください</option>
+                    <template v-for='item in getYearList'>
+                      <option v-bind:value='item'>{{ item }}</option>
+                    </template>
+                  </select>
+                  年
+                  <select v-model='dateYm.month'>
+                    <option disabled value = ''>選択してください</option>
+                    <template v-for='item in dateYm.labelMonth'>
+                      <option v-bind:value='item'>{{ item }}</option>
+                    </template>
+                  </select>
+                  月
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+        <template v-for='(item, idx) in textBoxCommon'>
+          <div class='row mb-3'>
+            <label class='col-md-3 col-form-label'>
+              {{ item.label }}
+            </label>
+            <div class='col-md-9'>
+              <div class='input-group'>
+                <input type='text' class='form-control text-end' v-bind:id='item.id' v-model.number='item.value' v-bind:type='item.type'>
+                <span class='input-group-text'>{{ item.unit }}</span>
+                <p v-show='!checkNumber(item.value)'>整数を入力してください</p>
+              </div>
+            </div>
+          </div>
+        </template>
+        <div class='d-grid gap-2'>
+          <button class='btn btn-secondary' type='button' v-on:click='onSubmitApproximateQuote'>概算見積出力</button>
+        </div>
+        <div class='d-grid gap-2'>
+          <button class='btn btn-secondary' type='button' v-on:click='test20221118buttonclick'>test</button>
+        </div>
+        <table class="table table-dark table-striped">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">【見積明細：総期間】</th>
+              <th scope="col"></th>
+              <th scope="col">摘要</th>
+              <th scope="col"></th>
+              <th scope="col"></th>
+              <th scope="col"></th>
+              <th scope="col">金額</th>
+              <th scope="col">合計</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for='(item, idx) in itemsList'>
+              <tr v-show='showTable'>
+                <th scope="row">{{ idx + 1 }}</th>
+                <td v-if='item.item === ""'>{{ item.heading }}</td>
+                <td v-else=>  </td>
+                <td>{{ item.item }}</td>
+                <td>{{ formatPrice(item.unitPriceValue) }}</td>
+                <td v-if='item.item !== ""'> x </td>
+                <td v-else=>  </td>
+                <td>{{ item.count }}</td> 
+                <td>{{ item.unit }}</td>
+                <td v-if='item.item !== "" || item.heading === "合計（税抜）"'>{{ formatPrice(item.totalPrice) }}</td>
+                <td v-else=>  </td>
+                <td v-if='item.item === ""'>{{ formatPrice(item.totalSumPrice) }}</td>
+                <td v-else=>  </td>
+<!--                <template v-for='(cost, idx) in item.costs'>          
+                  <td>{{ cost.cost }}</td>
+                </template>
+-->
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+
+
+    <?!= HtmlService.createHtmlOutputFromFile('js').getContent(); ?>
+
+  </body>
+</html>

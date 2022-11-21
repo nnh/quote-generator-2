@@ -1,0 +1,416 @@
+<script type="text/javascript">
+  function roundLower3Digits(target) {
+    // Rounded to the nearest thousand yen.
+    return target > 1000 ? Math.round(target / 1000) * 1000 : target;
+  }
+</script>
+<script type="importmap">
+  {
+    "imports": {
+      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+    }
+  }
+</script>
+<script type="module">
+  import { createApp } from 'vue'
+  const taxRate = 0.1;
+  const defaultFinalAnalysisTables = 50;
+  const defaultCrfItems = 1000;
+  const defaultTitle = '概算見積算定フォーム';
+  const defaultSourceOfFunds = {value: 'publicFund', label:'公的資金（税金由来）', coefficient: 1};
+  const defaultTrialType = {value: 'observationalTrial', label: '観察研究・レジストリ', coefficient: 1};
+  const investigatorInitiatedTrialValue = 'investigatorInitiatedTrial';
+  const specifiedClinicalTrialValue = 'specifiedClinicalTrial';
+  const TrialTypeInvestigatorInitiatedTrial = {value: investigatorInitiatedTrialValue, label:'医師主導治験', coefficient: 5};
+  const TrialTypeSpecifiedClinicalTrial = {value: specifiedClinicalTrialValue, label:'特定臨床研究', coefficient: 3};
+  const investigatorInitiatedTrialItemNames = new Map([
+    ['irb', 'IRB承認確認、施設管理'],
+    ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
+    ['centralMonitoring', '中央モニタリング'],
+    ['interimAnalysis', '中間解析プログラム作成、解析実施（ダブル）'],
+    ['finalAnalysis', '最終解析プログラム作成、解析実施（ダブル）'],
+    ['csr', 'CSRの作成支援']
+  ]);
+  const othersItemNames = new Map([
+    ['irb', 'IRB準備・承認確認'],
+    ['accountSettings', '初期アカウント設定（施設・ユーザー）、IRB承認確認'],
+    ['centralMonitoring', '中央モニタリング、定期モニタリングレポート作成'],
+    ['interimAnalysis', '中間解析プログラム作成、解析実施（シングル）'],
+    ['finalAnalysis', '最終解析プログラム作成、解析実施（シングル）'],
+    ['csr', '研究結果報告書の作成']
+  ]);
+  createApp({
+    data() {
+      return {
+        title: defaultTitle,
+        taxRate: taxRate,
+        itemsList: '',
+        radioSourceOfFunds: [
+          defaultSourceOfFunds,
+          {value: 'commercialCompanyCoefficient', label:'営利企業原資（製薬企業等）', coefficient: 1.5}
+        ],
+        checkSourceOfFunds:defaultSourceOfFunds.value,
+        radioTrialType: [
+          defaultTrialType, 
+          TrialTypeInvestigatorInitiatedTrial, 
+          {value: 'interventionTrial', label:'介入研究（特定臨床研究以外）', coefficient: 2}, 
+          TrialTypeSpecifiedClinicalTrial 
+        ],
+        checkTrialType: defaultTrialType.value,
+        textBoxCommon: [
+          {id:'number_of_cases', label:'目標症例数', unit:'症例', value: 1, type:'number'},
+          {id:'facilities', label:'実施施設数', unit:'施設', value: 1, type:'number'},
+          {id:'number_of_crf_items', label:'CRF項目数', unit:'項目', value: defaultCrfItems, type:'number'},
+          {id:'final_analysis_tables', label:'統計解析に必要な図表数', unit:'項目', value: defaultFinalAnalysisTables, type:'number'}
+        ],
+        dateYmList: [
+          {id: 'start', label: '症例登録開始年月', year: '', month: '', labelMonth:[4, 10]},
+          {id: 'end', label: '試験終了年月', year: '', month: '', labelMonth:[3, 9]}
+        ],
+        valueList: [
+          {numberOfCrfItems: ''}, {numberOfFacilities: ''}, {numberOfCases: ''}, {numberOfFinalAnalysisTables: ''}, 
+          {trialTypeCoefficient: ''}, {sourceOfFundsCoefficient: ''}
+        ],
+        setupDate: [
+          {start: ''}, {end: ''}
+        ],
+        trialDate: [
+          {start: ''}, {end: ''}
+        ],
+        closingDate: [
+          {start: ''}, {end: ''}
+        ],
+        showTable: false,
+        variableItemNameList: null,
+        setupYearKey: null,
+        closingYearKey: null
+      }
+    },
+    created() {
+      this.getItemsTable();
+    },
+    methods: {
+      async getItemsTable() {
+        const items = await new Promise(resolve => { google.script.run.withSuccessHandler(resolve).getItemsList() });
+        this.setItems(items);
+      }, 
+      setItems(target) {
+        this.itemsList = target;
+      },
+      test20221118buttonclick() {
+        this.getQuoteHtml();
+      },
+      async getQuoteHtml(){
+        const baseUrl = await new Promise(resolve => { google.script.run.withSuccessHandler(resolve).getAppUrl() });
+        const url = baseUrl.replace(/$/, '?page=quote');
+        console.log(url);
+        window.top.location.href = url;
+      },
+      onSubmitApproximateQuote() {
+        const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
+        if (!checkTextBoxCommon.every(x => x)){
+          alert('必須入力チェックNG');
+          return;
+        }
+        if (!this.checkConsistencyYm(this.dateYmList)){
+          alert('年月チェックNG');
+          return;
+        }
+        this.setStartEndYm;
+        const monthsEachFiscalYear = this.dispatchPeriodPerFiscalYear();
+        this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
+        this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
+        this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
+        this.valueList.numberOfCases = this.getNumberOfCaseItemsValue;
+        this.valueList.facilities = this.getNumberOfFacilitiesItemValue;
+        this.replaceItemNameAndDaysByTrialType();
+        const recalculationItemList = this.itemsList.map(x => {
+          let res = x;
+          res.days = this.calculateDays(x);
+          res.baseUnitPriceValue = this.calculateBaseUnitPrice(x);
+          res.unitPriceValue = this.calculateUnitPrice(x);
+          return res;
+        });
+        const setupClosingItems = new Map();
+        setupClosingItems.set(this.setupYearKey, this.createSetupItems(monthsEachFiscalYear.get('setup').get(this.setupYearKey)));
+        setupClosingItems.set(this.closingYearKey, this.createClosingItems(monthsEachFiscalYear.get('closing').get(this.closingYearKey)));
+        const trialItems = new Map();
+        for (const [year, months] of monthsEachFiscalYear.get('trial')){
+          trialItems.set(year, this.createTrialTermItems(months));
+        }
+        [this.setupYearKey, this.closingYearKey].forEach(year => {
+          if (trialItems.has(year)){
+            for (const [item, count] of setupClosingItems.get(year)){
+              const setCount = trialItems.get(year).has(item) ? trialItems.get(year).get(item) + count : count;
+              trialItems.get(year).set(item, setCount);
+            }
+          } else {
+            trialItems.set(year, setupClosingItems.get(year));
+          }
+        });
+        const total1Count = new Map();
+        for (const [year, items] of trialItems){
+          for (const [item, value] of items){
+            const setValue = total1Count.has(item) ? total1Count.get(item) + value : value;
+            total1Count.set(item, setValue);
+          }
+        }
+        let total1Items = recalculationItemList.map(x => {
+          const res = x;
+          res['count'] = total1Count.has(x.item) ? total1Count.get(x.item) : null;
+          res['totalPrice'] = total1Count.has(x.item) ? res.unitPriceValue * total1Count.get(x.item) : null;
+          return res;
+        }).filter(x => x['count']);
+        // プロジェクト管理は再計算が必要
+        const projectManagementPrice = 999;
+        const headingItems = new Set(total1Items.map(x => x.heading));
+        let total1HeadingAndItems = [...total1Items];
+        console.log(total1HeadingAndItems);
+        for (const heading of headingItems){
+          const totalByHeading = total1Items.filter(x => x.heading === heading).map(x => x.totalPrice).reduce((totalValue, currentValue) => totalValue + currentValue);
+          const insertTargetItem = total1HeadingAndItems.find(x => x.heading === heading);
+          let insertIdx = total1HeadingAndItems.map((x, idx) => x.heading === insertTargetItem.heading && x.items === insertTargetItem.items ?idx :null).filter(x => x)[0];
+          insertIdx = insertIdx > 1 ? insertIdx : 0; 
+          const insertBefore = total1HeadingAndItems.filter((_, idx) => idx < insertIdx);
+          const insertAfter = total1HeadingAndItems.filter((_, idx) => idx >= insertIdx);
+          total1HeadingAndItems = [...insertBefore, {heading: heading, item: '', unitPriceValue: '', count: '', unit: '', totalPrice: '', totalSumPrice: totalByHeading}, ...insertAfter];
+        }
+        // 合計をセット
+        const totalSum = total1Items.map(x => x.totalPrice).reduce((totalValue, currentValue) => totalValue + currentValue);
+        total1HeadingAndItems.push({heading: '合計（税抜）', item: '', unitPriceValue: '', count: '', unit: '', totalPrice: totalSum, totalSumPrice: ''});
+        console.log(total1HeadingAndItems);
+
+        console.log(total1Items);
+        //console.log(recalculationItemList);
+        this.setItems(total1HeadingAndItems);
+        this.showTable = true;
+      },
+      checkNumber(target) {
+        //return Number.isInteger(Number(target));
+        if (Number.isInteger(Number(target))){
+          return target > 0;
+        }
+        return false;
+      },
+      checkConsistencyYm(dateList) {
+        const startDate = dateList.filter(x => x.id === 'start')[0];
+        const endDate = dateList.filter(x => x.id === 'end')[0];
+        return ((startDate.year !== '' && startDate.month !== '' && endDate.year !== '' && endDate.month !== '') &&
+                ((startDate.year < endDate.year) || 
+                (startDate.year === endDate.year && startDate.month <= endDate.month)));
+      },
+      calculateUnitPrice(x) {
+        // Calculate the unit price.
+        const coefficient = this.valueList.sourceOfFundsCoefficient;
+        return /^=Round\(/i.test(x.price) ? x.baseUnitPriceValue * coefficient :
+               /^=[A-Z][0-9]*$/i.test(x.price) ? x.baseUnitPriceValue: null;
+      },               
+      calculateBaseUnitPrice(x) {
+        // Calculate the base unit price.
+        const res = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? roundLower3Digits(x.unitPrice * x.days * x.numberOfPeople) :
+                    x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 
+                    x.baseUnitPrice === '=Trial!$B$30*250' ? this.valueList.numberOfCrfItems * 250: 
+                    x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :
+                    '=round(log(Trial!$B$28,10)*log(Trial!$B$30,10)*Trial!$C$27*75000,-3)' ? this.calculateBaseUnitPriceDataCleaning() : null;
+        return res;
+      },
+      calculateBaseUnitPriceCreateDb() {
+        const crfItems = this.valueList.numberOfCrfItems;
+        return crfItems < 100 ? 4500 * crfItems :
+               crfItems < 1000 ? 4500 * 100 + 2250 * (crfItems - 100) : 4500 * 100 + 2250 * 900 + 1100 * (crfItems - 1000);
+      },
+      calculateBaseUnitPriceCentralMonitoring() {
+        const coefficient = this.valueList.trialTypeCoefficient;
+        const caseItems = this.valueList.numberOfCases;
+        const crfItems = this.valueList.numberOfCrfItems;
+        return roundLower3Digits(this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000);
+      },
+      calculateBaseUnitPriceDataCleaning() {
+        const coefficient = this.valueList.trialTypeCoefficient;
+        const caseItems = this.valueList.numberOfCases;
+        const crfItems = this.valueList.numberOfCrfItems;
+        return roundLower3Digits(Math.log10(caseItems) * Math.log10(crfItems) * coefficient * 75000);
+      },
+      calculateDays(x) {
+        const days = /=R[0-9]*\/S[0-9]*\/U[0-9]*/i.test(x.days) ? x.baseUnitPriceValue / x.unitPriceValue / x.numberOfPeople :
+                     /CTR登録案/.test(x.days) ? 7.5 : x.days;
+        return days;
+      },
+      getTextBoxValue(id, targetItem) {
+        return this.textBoxCommon.filter(x => x.id === id)[0][targetItem];
+      },
+      getRadioValue(radio, checkValue, targetItem) {
+        return radio.filter(x => x.value === checkValue)[0][targetItem];
+      },
+      getBaseLog(x, y) {
+        return Math.log(y) / Math.log(x);
+      },
+      formatPrice(price) {
+        return price.toLocaleString()
+      },
+      /**
+        If the study type is investigator-initiated clinical trial, replace the item name and days.
+        @param none.
+        @return none.
+      */
+      replaceItemNameAndDaysByTrialType() {
+        const investigatorInitiatedTrialDays = new Map([
+          ['accountSettings', 0.23],
+          ['interimAnalysis', 0.7],
+          ['finalAnalysis', 0.7],
+          ['csr', 20]
+        ]);
+        const othersDays = new Map([
+          ['accountSettings', 0.5],
+          ['interimAnalysis', 0.4],
+          ['finalAnalysis', 0.4],
+          ['csr', 10]
+        ]);
+        const inputItemNames = this.checkTrialType === investigatorInitiatedTrialValue ? othersItemNames : investigatorInitiatedTrialItemNames;
+        this.setVariableItemNameList;
+        const outputItemNames = this.variableItemNameList;
+        const outputDays = this.checkTrialType === investigatorInitiatedTrialValue ? othersDays : investigatorInitiatedTrialDays;
+        inputItemNames.forEach((value, key) => {
+          const targetIdx = this.itemsList.map((x, idx) => x.item === value ? idx : null).filter(x => x);
+          if (targetIdx.length > 0){
+            this.itemsList[targetIdx].item = outputItemNames.get(key);
+          };
+        });
+        let daysTargetItemNames = new Map();
+        outputDays.forEach((_, key) => daysTargetItemNames.set(key, outputItemNames.get(key)));
+        // Set the number of days from the item name.
+        daysTargetItemNames.forEach((value, key) => {
+          const targetIdx = this.itemsList.map((x, idx) => x.item === value ? idx : null).filter(x => x);
+          if (targetIdx.length > 0){
+            this.itemsList[targetIdx].days = outputDays.get(key);
+          };
+        });
+      },
+      dispatchPeriodPerFiscalYear() {
+        const startYear = this.setupDate.start.getFullYear();
+        const endYear = this.closingDate.end.getFullYear();
+        const yearsCount = endYear - startYear + 1;
+        const yearsList = [...Array(yearsCount)].map((_, idx) => startYear + idx);
+        // Setup
+        const setupYear = new Map([
+          [startYear, 6]
+        ]);
+        // Closing
+        const closingYear = new Map([
+          [endYear, 6]
+        ]);
+        const firstYearTrialMonth = this.setupDate.start.getMonth() + 1 === 4 ? 6 : 0;
+        const lastYearTrialMonth = this.closingDate.start.getMonth() + 1 === 10 ? 6 : 0;
+        const trialYm = yearsList.map(year => {
+          const month = startYear === endYear ? 6 :
+                        year === startYear ? firstYearTrialMonth :
+                        year === endYear ? lastYearTrialMonth :
+                        12;
+          return [year, month];
+        });
+        const trialYears = new Map(trialYm);
+        this.setupYearKey = startYear;
+        this.closingYearKey = endYear;
+        return new Map([
+          ['setup', setupYear],
+          ['closing', closingYear],
+          ['trial', trialYears]
+        ]);
+      },
+      createSetupItems(targetMonthCount) {
+        const setItemsList = new Map(
+          [
+            ['プロトコルレビュー・作成支援（図表案、統計解析計画書案を含む）', 1],
+            ['検討会実施（TV会議等）', 4],
+            ['モニタリング準備業務（関連資料作成、キックオフ参加）', 1],
+            ['EDCライセンス・データベースセットアップ', 1],
+            ['業務分析・DM計画書の作成・CTR登録案の作成', 1],
+            ['DB作成・eCRF作成・バリデーション', 1],
+            ['バリデーション報告書', 1],
+            [this.variableItemNameList.get('accountSettings'), this.valueList.numberOfCases],
+            ['入力の手引作成', 1]
+          ]
+        );
+        if (this.checkTrialType === investigatorInitiatedTrialValue){
+          setItemsList.set(investigatorInitiatedTrialItemNames.get('irb'), this.valueList.facilities);
+          setItemsList.set('SOP一式、CTR登録案、TMF雛形', 1);
+        }
+        if (this.checkTrialType === specifiedClinicalTrialValue) {
+          setItemsList.set('特定臨床研究法申請資料作成支援', this.valueList.facilities);
+        }
+        return setItemsList;
+        //return this.editItemsCount(setItemsList);
+      },
+      editItemsCount(setItemsList) {
+        const res = this.itemsList.map(x => {
+          const value = setItemsList.has(x.item) ? setItemsList.get(x.item) : null;
+          return [x.item, value];
+        }).filter(x => x[1]);
+        const resMap = new Map(res);
+        return resMap;
+      },
+      createTrialTermItems(targetMonthCount) {
+        const setItemsList = new Map(
+          [
+            ['プロジェクト管理', 1],
+            ['データベース管理料', targetMonthCount]
+          ]
+        );
+        return setItemsList;
+//        return this.editItemsCount(setItemsList);
+      },
+      createClosingItems(targetMonthCount) {
+        const setItemsList = new Map(
+          [
+            ['データクリーニング', 1],
+            ['データベース固定作業、クロージング', 1]
+          ]
+        );
+        return setItemsList;
+//        return this.editItemsCount(setItemsList);
+      }
+    },
+    computed: {
+      getThisYear: function() {
+        return new Date().getFullYear();
+      },
+      getYearList: function() {
+        const thisYear = this.getThisYear;
+        const pastYears = [...Array(2).keys()].map(x => thisYear - x - 1).reverse();
+        const nextYears = [...Array(10).keys()].map(x => thisYear + x);
+        return pastYears.concat(nextYears);
+      },
+      getNumberOfCrfItemsValue: function() {
+        return this.getTextBoxValue('number_of_crf_items', 'value');
+      },
+      getNumberOfCaseItemsValue: function() {
+        return this.getTextBoxValue('number_of_cases', 'value');
+      },
+      getNumberOfFacilitiesItemValue: function() {
+        return this.getTextBoxValue('facilities', 'value');
+      },
+      getTrialTypeCofficient: function() {
+        return this.getRadioValue(this.radioTrialType, this.checkTrialType, 'coefficient');
+      },
+      getSourceOfFundsCofficient: function() {
+        return this.getRadioValue(this.radioSourceOfFunds, this.checkSourceOfFunds, 'coefficient');
+      },
+      setStartEndYm: function() {
+        const startYm = this.dateYmList.filter(x => x.id === 'start')[0];
+        const endYm = this.dateYmList.filter(x => x.id === 'end')[0];
+        const setupYear = startYm.month === 4 ? startYm.year - 1 : startYm.year;
+        const setupStartMonth = startYm.month === 4 ? 9 : 4;
+        const closingEndMonth = endYm.month === 3 ? 9 : 3;
+        this.setupDate.start = new Date(setupYear, setupStartMonth - 1, 1);
+        this.setupDate.end = new Date(startYm.year, startYm.month - 1, 0);
+        this.trialDate.start = new Date(startYm.year, startYm.month - 1, 1);
+        this.trialDate.end = new Date(endYm.year, endYm.month - 1, 0);
+        this.closingDate.start = new Date(endYm.year, endYm.month, 1);
+        this.closingDate.end = new Date(endYm.year, closingEndMonth, 0);
+      },
+      setVariableItemNameList: function() {
+        this.variableItemNameList = this.checkTrialType === investigatorInitiatedTrialValue ? investigatorInitiatedTrialItemNames : othersItemNames;
+      }
+    }
+  }).mount('#app')
+</script>
