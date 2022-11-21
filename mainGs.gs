@@ -6,16 +6,18 @@ function doGet(e) {
   const param = e.parameter;
   const page = param.page ? param.page : 'index';
   let htmlOutput = HtmlService.createTemplateFromFile(page).evaluate();
+  let commonJs = HtmlService.createTemplateFromFile('commonJs').evaluate().getContent();
   if (page === 'index'){
     htmlOutput
       .setTitle('title_index')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .append(commonJs)
     return htmlOutput;
   } 
-  if (page === 'quote'){
+  if (page === 'total1'){
     htmlOutput
       .setTitle('title_quote')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')     
     return htmlOutput;
   }
 }
@@ -113,26 +115,3 @@ class ColumnInfo {
     return this.getColumnNumber(columnName) - 1;
   }
 } 
-  class test{
-    constructor(itemList) {
-      this.appThis = itemList.this;
-      this.itemList = itemList.itemList;
-      this.targetItem = itemList.targetItem;
-      this.investigatorInitiatedTrialItem = itemList.investigatorInitiatedTrial;
-      this.othersItem = itemList.others;
-      this.investigatorInitiatedTrial = itemList.investigatorInitiatedTrialString;
-      this.checkTrialType = itemList.checkTrialType;
-    }
-    replaceItem() {
-      const inputItem = this.checkTrialType === this.investigatorInitiatedTrialValue ? othersItem : investigatorInitiatedTrialItem;
-      const outputItem = this.checkTrialType !== this.investigatorInitiatedTrialValue ? othersItem : investigatorInitiatedTrialItem;
-      inputItem.forEach((value, key) => {
-        const targetIdx = this.itemsList.map((x, idx) => x[this.targetItem] === value ? idx : null).filter(x => x);
-        if (targetIdx.length > 0){
-          this.appThis.itemsList[targetIdx].item = outputItem.get(key);
-        };
-      });
-
-    }
-    
-  }

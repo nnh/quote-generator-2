@@ -1,0 +1,148 @@
+<script type="importmap">
+  {
+    "imports": {
+      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+    }
+  }
+</script>
+<script type="module">
+  import { createApp } from 'vue'
+  const cst = setConst();
+  const appIndex = createApp({
+    data(){
+      return {
+        title: cst.get('defaultTitle'),
+        taxRate: cst.get('taxRate'),
+        itemsList: '',
+        radioSourceOfFunds: [
+          cst.get('defaultSourceOfFunds'),
+          {value: 'commercialCompanyCoefficient', label:'営利企業原資（製薬企業等）', coefficient: 1.5}
+        ],
+        checkSourceOfFunds: cst.get('defaultSourceOfFunds').value,
+        radioTrialType: [
+          cst.get('defaultTrialType'), 
+          cst.get('TrialTypeInvestigatorInitiatedTrial'), 
+          {value: 'interventionTrial', label:'介入研究（特定臨床研究以外）', coefficient: 2}, 
+          cst.get('TrialTypeSpecifiedClinicalTrial') 
+        ],
+        checkTrialType: cst.get('defaultTrialType').value,
+        textBoxCommon: [
+          {id:'number_of_cases', label:'目標症例数', unit:'症例', value: 1, type:'number'},
+          {id:'facilities', label:'実施施設数', unit:'施設', value: 1, type:'number'},
+          {id:'number_of_crf_items', label:'CRF項目数', unit:'項目', value: cst.get('defaultCrfItems'), type:'number'},
+          {id:'final_analysis_tables', label:'統計解析に必要な図表数', unit:'項目', value: cst.get('defaultFinalAnalysisTables'), type:'number'}
+        ],
+        dateYmList: [
+          {id: 'start', label: '症例登録開始年月', year: '', month: '', labelMonth:[4, 10]},
+          {id: 'end', label: '試験終了年月', year: '', month: '', labelMonth:[3, 9]}
+        ],
+        valueList: [
+          {numberOfCrfItems: ''}, {numberOfFacilities: ''}, {numberOfCases: ''}, {numberOfFinalAnalysisTables: ''}, 
+          {trialTypeCoefficient: ''}, {sourceOfFundsCoefficient: ''}
+        ],
+        setupDate: [
+          {start: ''}, {end: ''}
+        ],
+        trialDate: [
+          {start: ''}, {end: ''}
+        ],
+        closingDate: [
+          {start: ''}, {end: ''}
+        ],
+        showTable: false,
+        variableItemNameList: null,
+        setupYearKey: null,
+        closingYearKey: null
+      }
+    },
+    created() {
+      this.getItemsTable();
+    },
+    methods: {
+      async getItemsTable() {
+        const items = await new Promise(resolve => { google.script.run.withSuccessHandler(resolve).getItemsList() });
+        this.setItems(items);
+      }, 
+      setItems(target) {
+        this.itemsList = target;
+      },
+      onSubmitApproximateQuote() {
+        const param = {
+          pageName: 'total1'
+        };
+        doGetHtml(param);
+        return;
+        // 入力チェックから出力回数とかとるあたりまではTotal, Total2で共通になるはず
+        const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
+        if (!checkTextBoxCommon.every(x => x)){
+          alert('必須入力チェックNG');
+          return;
+        }
+        if (!this.checkConsistencyYm(this.dateYmList)){
+          alert('年月チェックNG');
+          return;
+        }
+      },
+      checkNumber(target) {
+        if (Number.isInteger(Number(target))){
+          return target > 0;
+        }
+        return false;
+      },
+      formatPrice(price) {
+        return price.toLocaleString()
+      }
+    },
+    computed: {
+      getThisYear: function() {
+        return new Date().getFullYear();
+      },
+      getYearList: function() {
+        const thisYear = this.getThisYear;
+        const pastYears = [...Array(2).keys()].map(x => thisYear - x - 1).reverse();
+        const nextYears = [...Array(10).keys()].map(x => thisYear + x);
+        return pastYears.concat(nextYears);
+      },
+      getNumberOfCrfItemsValue: function() {
+        return this.getTextBoxValue('number_of_crf_items', 'value');
+      },
+      getNumberOfCaseItemsValue: function() {
+        return this.getTextBoxValue('number_of_cases', 'value');
+      },
+      getNumberOfFacilitiesItemValue: function() {
+        return this.getTextBoxValue('facilities', 'value');
+      },
+      getTrialTypeCofficient: function() {
+        return this.getRadioValue(this.radioTrialType, this.checkTrialType, 'coefficient');
+      },
+      getSourceOfFundsCofficient: function() {
+        return this.getRadioValue(this.radioSourceOfFunds, this.checkSourceOfFunds, 'coefficient');
+      },
+      setStartEndYm: function() {
+        const startYm = this.dateYmList.filter(x => x.id === 'start')[0];
+        const endYm = this.dateYmList.filter(x => x.id === 'end')[0];
+        const setupYear = startYm.month === 4 ? startYm.year - 1 : startYm.year;
+        const setupStartMonth = startYm.month === 4 ? 9 : 4;
+        const closingEndMonth = endYm.month === 3 ? 9 : 3;
+        this.setupDate.start = new Date(setupYear, setupStartMonth - 1, 1);
+        this.setupDate.end = new Date(startYm.year, startYm.month - 1, 0);
+        this.trialDate.start = new Date(startYm.year, startYm.month - 1, 1);
+        this.trialDate.end = new Date(endYm.year, endYm.month - 1, 0);
+        this.closingDate.start = new Date(endYm.year, endYm.month, 1);
+        this.closingDate.end = new Date(endYm.year, closingEndMonth, 0);
+      },
+      setVariableItemNameList: function() {
+        this.variableItemNameList = this.checkTrialType === investigatorInitiatedTrialValue ? investigatorInitiatedTrialItemNames : othersItemNames;
+      }
+    } 
+  });
+  appIndex.mount('#appIndex');
+//  const appTotal = createApp({
+//    data(){
+//      return {
+//        titletest: 'testdayo'
+//      }
+//    }
+//  });
+//  appTotal.mount('#appTotal');
+</script>

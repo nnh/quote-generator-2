@@ -1,0 +1,55 @@
+<script type="text/javascript">
+  function testJs() {
+    // Rounded to the nearest thousand yen.
+    return 'test js';
+  }
+  function setConst(){
+    const mapConst = new Map();
+    mapConst.set('taxRate', 0.1);
+    mapConst.set('defaultFinalAnalysisTables', 50); 
+    mapConst.set('defaultCrfItems', 1000);
+    mapConst.set('defaultTitle', '概算見積算定フォーム');
+    mapConst.set('defaultSourceOfFunds', {value: 'publicFund', label:'公的資金（税金由来）', coefficient: 1});
+    mapConst.set('defaultTrialType', {value: 'observationalTrial', label: '観察研究・レジストリ', coefficient: 1});
+    mapConst.set('investigatorInitiatedTrialValue', 'investigatorInitiatedTrial');
+    mapConst.set('specifiedClinicalTrialValue', 'specifiedClinicalTrial');
+    mapConst.set('TrialTypeInvestigatorInitiatedTrial', {value: mapConst.get('investigatorInitiatedTrialValue'), label:'医師主導治験', coefficient: 5});
+    mapConst.set('TrialTypeSpecifiedClinicalTrial', {value: mapConst.get('specifiedClinicalTrialValue'), label:'特定臨床研究', coefficient: 3});
+    mapConst.set('investigatorInitiatedTrialItemNames', 
+      new Map([
+        ['irb', 'IRB承認確認、施設管理'],
+        ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
+        ['centralMonitoring', '中央モニタリング'],
+        ['interimAnalysis', '中間解析プログラム作成、解析実施（ダブル）'],
+        ['finalAnalysis', '最終解析プログラム作成、解析実施（ダブル）'],
+        ['csr', 'CSRの作成支援']
+      ])
+    );
+    mapConst.set('othersItemNames',
+      new Map([
+        ['irb', 'IRB準備・承認確認'],
+        ['accountSettings', '初期アカウント設定（施設・ユーザー）、IRB承認確認'],
+        ['centralMonitoring', '中央モニタリング、定期モニタリングレポート作成'],
+        ['interimAnalysis', '中間解析プログラム作成、解析実施（シングル）'],
+        ['finalAnalysis', '最終解析プログラム作成、解析実施（シングル）'],
+        ['csr', '研究結果報告書の作成']
+      ])
+    );
+    return mapConst;
+  }
+  function roundLower3Digits(target) {
+  // Rounded to the nearest thousand yen.
+    return target > 1000 ? Math.round(target / 1000) * 1000 : target;
+  }
+  async function doGetHtml(param = null){
+    const baseUrl = await new Promise(resolve => google.script.run.withSuccessHandler(resolve).getAppUrl());
+    const pageName = param !== null ? param.pageName : 'index';  
+    console.log(pageName);
+    const paramPageName = param.pageName !== null ? `?page=${param.pageName}` : '';
+    const urlParam = paramPageName;
+    const url = baseUrl.replace(/$/, urlParam);
+    window.open(url, '_blank');
+
+  }
+</script>
+<b>helloworld</b>
