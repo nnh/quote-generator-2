@@ -27,10 +27,10 @@
         ],
         checkTrialType: cst.get('defaultTrialType').value,
         textBoxCommon: [
-          {id:'number_of_cases', label:'目標症例数', unit:'症例', value: 1, type:'number'},
-          {id:'facilities', label:'実施施設数', unit:'施設', value: 1, type:'number'},
-          {id:'number_of_crf_items', label:'CRF項目数', unit:'項目', value: cst.get('defaultCrfItems'), type:'number'},
-          {id:'final_analysis_tables', label:'統計解析に必要な図表数', unit:'項目', value: cst.get('defaultFinalAnalysisTables'), type:'number'}
+          {id: 'number_of_cases', label: '目標症例数', unit: '症例', value: 1, type: 'number'},
+          {id: 'facilities', label: '実施施設数', unit: '施設', value: 1, type: 'number'},
+          {id: 'number_of_crf_items', label: 'CRF項目数', unit: '項目', value: cst.get('defaultCrfItems'), type: 'number'},
+          {id: 'final_analysis_tables', label: '統計解析に必要な図表数', unit: '項目', value: cst.get('defaultFinalAnalysisTables'), type: 'number'}
         ],
         dateYmList: [
           {id: 'start', label: '症例登録開始年月', year: '', month: '', labelMonth:[4, 10]},
@@ -87,8 +87,6 @@
           res.unitPriceValue = this.calculateUnitPrice(x);
           return res;
         });
-        console.log(recalculationItemList);
-        return;
         const setupClosingItems = new Map();
         setupClosingItems.set(this.setupYearKey, this.createSetupItems(monthsEachFiscalYear.get('setup').get(this.setupYearKey)));
         setupClosingItems.set(this.closingYearKey, this.createClosingItems(monthsEachFiscalYear.get('closing').get(this.closingYearKey)));
@@ -106,6 +104,8 @@
             trialItems.set(year, setupClosingItems.get(year));
           }
         });
+        console.log(trialItems);
+return;
 
         const param = new Map([
           ['page', pageName]
@@ -260,6 +260,47 @@
       },
       getBaseLog(x, y) {
         return Math.log(y) / Math.log(x);
+      },
+      createSetupItems(targetMonthCount) {
+        const setItemsList = new Map(
+          [
+            ['プロトコルレビュー・作成支援（図表案、統計解析計画書案を含む）', 1],
+            ['検討会実施（TV会議等）', 4],
+            ['モニタリング準備業務（関連資料作成、キックオフ参加）', 1],
+            ['EDCライセンス・データベースセットアップ', 1],
+            ['業務分析・DM計画書の作成・CTR登録案の作成', 1],
+            ['DB作成・eCRF作成・バリデーション', 1],
+            ['バリデーション報告書', 1],
+            [this.variableItemNameList.get('accountSettings'), this.valueList.numberOfCases],
+            ['入力の手引作成', 1]
+          ]
+        );
+        if (this.checkTrialType === cst.get('investigatorInitiatedTrialValue')){
+          setItemsList.set(cst.get('investigatorInitiatedTrialItemNames').get('irb'), this.valueList.facilities);
+          setItemsList.set('SOP一式、CTR登録案、TMF雛形', 1);
+        }
+        if (this.checkTrialType === cst.get('specifiedClinicalTrialValue')) {
+          setItemsList.set('特定臨床研究法申請資料作成支援', this.valueList.facilities);
+        }
+        return setItemsList;
+      },
+      createClosingItems(targetMonthCount) {
+        const setItemsList = new Map(
+          [
+            ['データクリーニング', 1],
+            ['データベース固定作業、クロージング', 1]
+          ]
+        );
+        return setItemsList;
+      },
+      createTrialTermItems(targetMonthCount) {
+        const setItemsList = new Map(
+          [
+            ['プロジェクト管理', 1],
+            ['データベース管理料', targetMonthCount]
+          ]
+        );
+        return setItemsList;
       }
     },
     computed: {
