@@ -41,10 +41,7 @@
           {trialTypeCoefficient: ''}, {sourceOfFundsCoefficient: ''}
         ],
         setupDate: [
-          {start: ''}, {end: ''}
-        ],
-        trialDate: [
-          {start: ''}, {end: ''}
+          {start: ''}
         ],
         closingDate: [
           {start: ''}, {end: ''}
@@ -66,23 +63,68 @@
       setItems(target) {
         this.itemsList = target;
       },
-      onSubmitApproximateQuote() {
+      onSubmitApproximateQuote(pageName) {
+        // 入力チェックから出力回数とかとるあたりまではTotal, Total2で共通になるはず
+        if (!this.checkInputValue()){
+          return;
+        }
+        // 開始年月の設定
+        this.setupDate.start = this.getSetupDateStart;
+        this.setupYearKey = this.setupDate.start.getFullYear();
+        this.setClosingDate();
+        this.closingYearKey = this.closingDate.end.getFullYear();
+        const monthsEachFiscalYear = this.dispatchPeriodPerFiscalYear();
+        this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
+        this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
+        this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
+        this.valueList.numberOfCases = this.getNumberOfCaseItemsValue;
+        this.valueList.facilities = this.getNumberOfFacilitiesItemValue;
+        this.replaceItemNameAndDaysByTrialType();
+        const recalculationItemList = this.itemsList.map(x => {
+          let res = x;
+          res.days = this.calculateDays(x);
+          res.baseUnitPriceValue = this.calculateBaseUnitPrice(x);
+          res.unitPriceValue = this.calculateUnitPrice(x);
+          return res;
+        });
+        console.log(recalculationItemList);
+        return;
+        const setupClosingItems = new Map();
+        setupClosingItems.set(this.setupYearKey, this.createSetupItems(monthsEachFiscalYear.get('setup').get(this.setupYearKey)));
+        setupClosingItems.set(this.closingYearKey, this.createClosingItems(monthsEachFiscalYear.get('closing').get(this.closingYearKey)));
+        const trialItems = new Map();
+        for (const [year, months] of monthsEachFiscalYear.get('trial')){
+          trialItems.set(year, this.createTrialTermItems(months));
+        }
+        [this.setupYearKey, this.closingYearKey].forEach(year => {
+          if (trialItems.has(year)){
+            for (const [item, count] of setupClosingItems.get(year)){
+              const setCount = trialItems.get(year).has(item) ? trialItems.get(year).get(item) + count : count;
+              trialItems.get(year).set(item, setCount);
+            }
+          } else {
+            trialItems.set(year, setupClosingItems.get(year));
+          }
+        });
+
         const param = new Map([
-          ['page', 'total1'],
-          ['title', 'taitoru']
+          ['page', pageName]
         ]);
         doGetHtml(param);
         return;
-        // 入力チェックから出力回数とかとるあたりまではTotal, Total2で共通になるはず
+      },
+      // 入力チェック
+      checkInputValue() {
         const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
         if (!checkTextBoxCommon.every(x => x)){
           alert('必須入力チェックNG');
-          return;
+          return false;
         }
         if (!this.checkConsistencyYm(this.dateYmList)){
           alert('年月チェックNG');
-          return;
+          return false;
         }
+        return true;
       },
       checkNumber(target) {
         if (Number.isInteger(Number(target))){
@@ -92,6 +134,132 @@
       },
       formatPrice(price) {
         return price.toLocaleString()
+      },
+      checkConsistencyYm(dateList) {
+        const startDate = dateList.filter(x => x.id === 'start')[0];
+        const endDate = dateList.filter(x => x.id === 'end')[0];
+        return ((startDate.year !== '' && startDate.month !== '' && endDate.year !== '' && endDate.month !== '') &&
+                ((startDate.year < endDate.year) || 
+                (startDate.year === endDate.year && startDate.month <= endDate.month)));
+      },
+      setClosingDate() {
+        const endYm = getTargetYear(this.dateYmList, 'end');
+        const closingEndMonth = endYm.month === 3 ? 9 : 3;
+        this.closingDate.start = getMonthFirstDay(endYm.year, endYm.month);
+        this.closingDate.end = getPreviousMonthLastDate(endYm.year, closingEndMonth + 1);
+      },
+      dispatchPeriodPerFiscalYear() {
+        const startYear = this.setupYearKey;
+        const endYear = this.closingYearKey;
+        const yearsCount = endYear - startYear + 1;
+        const yearsList = [...Array(yearsCount)].map((_, idx) => startYear + idx);
+        // Setup
+        const setupYear = new Map([
+          [startYear, 6]
+        ]);
+        // Closing
+        const closingYear = new Map([
+          [endYear, 6]
+        ]);
+        const firstYearTrialMonth = this.setupDate.start.getMonth() + 1 === 4 ? 6 : 0;
+        const lastYearTrialMonth = this.closingDate.start.getMonth() + 1 === 10 ? 6 : 0;
+        const trialYm = yearsList.map(year => {
+          const month = startYear === endYear ? 6 :
+                        year === startYear ? firstYearTrialMonth :
+                        year === endYear ? lastYearTrialMonth :
+                        12;
+          return [year, month];
+        });
+        const trialYears = new Map(trialYm);
+        return new Map([
+          ['setup', setupYear],
+          ['closing', closingYear],
+          ['trial', trialYears]
+        ]);
+      },
+      getTextBoxValue(id, targetItem) {
+        return this.textBoxCommon.filter(x => x.id === id)[0][targetItem];
+      },
+      getRadioValue(radio, checkValue, targetItem) {
+        return radio.filter(x => x.value === checkValue)[0][targetItem];
+      },
+      /**
+        If the study type is investigator-initiated clinical trial, replace the item name and days.
+        @param none.
+        @return none.
+      */
+      replaceItemNameAndDaysByTrialType() {
+        const investigatorInitiatedTrialDays = new Map([
+          ['accountSettings', 0.23],
+          ['interimAnalysis', 0.7],
+          ['finalAnalysis', 0.7],
+          ['csr', 20]
+        ]);
+        const othersDays = new Map([
+          ['accountSettings', 0.5],
+          ['interimAnalysis', 0.4],
+          ['finalAnalysis', 0.4],
+          ['csr', 10]
+        ]);
+        const inputItemNames = this.checkTrialType === cst.get('investigatorInitiatedTrialValue') ? cst.get('othersItemNames') : cst.get('investigatorInitiatedTrialItemNames');
+        this.setVariableItemNameList;
+        const outputItemNames = this.variableItemNameList;
+        const outputDays = this.checkTrialType === cst.get('investigatorInitiatedTrialValue') ? othersDays : investigatorInitiatedTrialDays;
+        inputItemNames.forEach((value, key) => {
+          const targetIdx = this.itemsList.map((x, idx) => x.item === value ? idx : null).filter(x => x);
+          if (targetIdx.length > 0){
+            this.itemsList[targetIdx].item = outputItemNames.get(key);
+          };
+        });
+        let daysTargetItemNames = new Map();
+        outputDays.forEach((_, key) => daysTargetItemNames.set(key, outputItemNames.get(key)));
+        // Set the number of days from the item name.
+        daysTargetItemNames.forEach((value, key) => {
+          const targetIdx = this.itemsList.map((x, idx) => x.item === value ? idx : null).filter(x => x);
+          if (targetIdx.length > 0){
+            this.itemsList[targetIdx].days = outputDays.get(key);
+          };
+        });
+      },
+      calculateDays(x) {
+        const days = /=R[0-9]*\/S[0-9]*\/U[0-9]*/i.test(x.days) ? x.baseUnitPriceValue / x.unitPriceValue / x.numberOfPeople :
+                     /CTR登録案/.test(x.days) ? 7.5 : x.days;
+        return days;
+      },
+      calculateBaseUnitPrice(x) {
+        // Calculate the base unit price.
+        const res = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? roundLower3Digits(x.unitPrice * x.days * x.numberOfPeople) :
+                    x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 
+                    x.baseUnitPrice === '=Trial!$B$30*250' ? this.valueList.numberOfCrfItems * 250: 
+                    x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :
+                    '=round(log(Trial!$B$28,10)*log(Trial!$B$30,10)*Trial!$C$27*75000,-3)' ? this.calculateBaseUnitPriceDataCleaning() : null;
+        return res;
+      },
+      calculateUnitPrice(x) {
+        // Calculate the unit price.
+        const coefficient = this.valueList.sourceOfFundsCoefficient;
+        return /^=Round\(/i.test(x.price) ? x.baseUnitPriceValue * coefficient :
+               /^=[A-Z][0-9]*$/i.test(x.price) ? x.baseUnitPriceValue: null;
+      },
+      calculateBaseUnitPriceDataCleaning() {
+        const coefficient = this.valueList.trialTypeCoefficient;
+        const caseItems = this.valueList.numberOfCases;
+        const crfItems = this.valueList.numberOfCrfItems;
+        return roundLower3Digits(Math.log10(caseItems) * Math.log10(crfItems) * coefficient * 75000);
+      },
+      calculateBaseUnitPriceCreateDb() {
+        const crfItems = this.valueList.numberOfCrfItems;
+        return crfItems < 100 ? 4500 * crfItems :
+               crfItems < 1000 ? 4500 * 100 + 2250 * (crfItems - 100) : 4500 * 100 + 2250 * 900 + 1100 * (crfItems - 1000);
+      },
+      calculateBaseUnitPriceCentralMonitoring() {
+        const coefficient = this.valueList.trialTypeCoefficient;
+        const caseItems = this.valueList.numberOfCases;
+        const crfItems = this.valueList.numberOfCrfItems;
+        return roundLower3Digits(this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000);
+      },
+      getBaseLog(x, y) {
+        return Math.log(y) / Math.log(x);
       }
     },
     computed: {
@@ -119,21 +287,14 @@
       getSourceOfFundsCofficient: function() {
         return this.getRadioValue(this.radioSourceOfFunds, this.checkSourceOfFunds, 'coefficient');
       },
-      setStartEndYm: function() {
-        const startYm = this.dateYmList.filter(x => x.id === 'start')[0];
-        const endYm = this.dateYmList.filter(x => x.id === 'end')[0];
+      setVariableItemNameList: function() {
+        this.variableItemNameList = this.checkTrialType === cst.get('investigatorInitiatedTrialValue') ? cst.get('investigatorInitiatedTrialItemNames') : cst.get('othersItemNames');
+      },
+      getSetupDateStart: function() {
+        const startYm = getTargetYear(this.dateYmList, 'start');
         const setupYear = startYm.month === 4 ? startYm.year - 1 : startYm.year;
         const setupStartMonth = startYm.month === 4 ? 9 : 4;
-        const closingEndMonth = endYm.month === 3 ? 9 : 3;
-        this.setupDate.start = new Date(setupYear, setupStartMonth - 1, 1);
-        this.setupDate.end = new Date(startYm.year, startYm.month - 1, 0);
-        this.trialDate.start = new Date(startYm.year, startYm.month - 1, 1);
-        this.trialDate.end = new Date(endYm.year, endYm.month - 1, 0);
-        this.closingDate.start = new Date(endYm.year, endYm.month, 1);
-        this.closingDate.end = new Date(endYm.year, closingEndMonth, 0);
-      },
-      setVariableItemNameList: function() {
-        this.variableItemNameList = this.checkTrialType === investigatorInitiatedTrialValue ? investigatorInitiatedTrialItemNames : othersItemNames;
+        return getMonthFirstDay(setupYear, setupStartMonth - 1);
       }
     } 
   });

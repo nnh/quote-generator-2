@@ -1,8 +1,4 @@
 <script type="text/javascript">
-  function testJs() {
-    // Rounded to the nearest thousand yen.
-    return 'test js';
-  }
   function setConst(){
     const mapConst = new Map();
     mapConst.set('taxRate', 0.1);
@@ -52,5 +48,14 @@
     }
     const url = baseUrl.replace(/$/, paramString);
     window.open(url, '_blank');
+  }
+  function getTargetYear(targetArray, targetId) {
+    return targetArray.filter(x => x.id === targetId)[0];
+  }
+  function getMonthFirstDay(year, month) {
+    return new Date(year, month, 1);
+  }
+  function getPreviousMonthLastDate(year, month) {
+    return new Date(year, month - 1, 0);
   }
 </script>
