@@ -18,6 +18,7 @@ function doGet(e) {
     htmlOutput
       .setTitle('title_quote')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')     
+      .append(commonJs)
     return htmlOutput;
   }
 }

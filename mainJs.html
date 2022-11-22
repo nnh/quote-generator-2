@@ -67,9 +67,10 @@
         this.itemsList = target;
       },
       onSubmitApproximateQuote() {
-        const param = {
-          pageName: 'total1'
-        };
+        const param = new Map([
+          ['page', 'total1'],
+          ['title', 'taitoru']
+        ]);
         doGetHtml(param);
         return;
         // 入力チェックから出力回数とかとるあたりまではTotal, Total2で共通になるはず
@@ -137,12 +138,12 @@
     } 
   });
   appIndex.mount('#appIndex');
-//  const appTotal = createApp({
-//    data(){
-//      return {
-//        titletest: 'testdayo'
-//      }
-//    }
-//  });
-//  appTotal.mount('#appTotal');
+  const appTotal = createApp({
+    data(){
+      return {
+        title: 'maindayo'
+      }
+    }
+  });
+  appTotal.mount('#appTotal');
 </script>

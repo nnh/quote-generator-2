@@ -43,13 +43,14 @@
   }
   async function doGetHtml(param = null){
     const baseUrl = await new Promise(resolve => google.script.run.withSuccessHandler(resolve).getAppUrl());
-    const pageName = param !== null ? param.pageName : 'index';  
-    console.log(pageName);
-    const paramPageName = param.pageName !== null ? `?page=${param.pageName}` : '';
-    const urlParam = paramPageName;
-    const url = baseUrl.replace(/$/, urlParam);
+    let paramString = '';
+    if (param !== null){
+      param.forEach((value, key) => {
+        const combiningCharacter = paramString.length > 0 ? '&' : '?';
+        paramString = paramString + `${combiningCharacter}${key}=${value}`
+      });
+    }
+    const url = baseUrl.replace(/$/, paramString);
     window.open(url, '_blank');
-
   }
 </script>
-<b>helloworld</b>
