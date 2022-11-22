@@ -14,31 +14,14 @@
         title: cst.get('defaultTitle'),
         taxRate: cst.get('taxRate'),
         itemsList: '',
-        radioSourceOfFunds: [
-          cst.get('defaultSourceOfFunds'),
-          {value: 'commercialCompanyCoefficient', label:'営利企業原資（製薬企業等）', coefficient: 1.5}
-        ],
-        checkSourceOfFunds: cst.get('defaultSourceOfFunds').value,
-        radioTrialType: [
-          cst.get('defaultTrialType'), 
-          cst.get('TrialTypeInvestigatorInitiatedTrial'), 
-          {value: 'interventionTrial', label:'介入研究（特定臨床研究以外）', coefficient: 2}, 
-          cst.get('TrialTypeSpecifiedClinicalTrial') 
-        ],
-        checkTrialType: cst.get('defaultTrialType').value,
-        textBoxCommon: [
-          {id: 'number_of_cases', label: '目標症例数', unit: '症例', value: 1, type: 'number'},
-          {id: 'facilities', label: '実施施設数', unit: '施設', value: 1, type: 'number'},
-          {id: 'number_of_crf_items', label: 'CRF項目数', unit: '項目', value: cst.get('defaultCrfItems'), type: 'number'},
-          {id: 'final_analysis_tables', label: '統計解析に必要な図表数', unit: '項目', value: cst.get('defaultFinalAnalysisTables'), type: 'number'}
-        ],
+        radioSourceOfFunds: mapToArray(cst.get('mapRadioSourceOfFunds'), 'value'),
+        checkSourceOfFunds: cst.get('mapRadioSourceOfFunds').get('publicFund').value,
+        radioTrialType: mapToArray(cst.get('mapRadioTrialType'), 'value'),
+        checkTrialType: cst.get('mapRadioTrialType').get('observationalTrial').value,
+        textBoxCommon: mapToArray(cst.get('mapTextBoxCommon'), 'id'),
         dateYmList: [
-          {id: 'start', label: '症例登録開始年月', year: '', month: '', labelMonth:[4, 10]},
-          {id: 'end', label: '試験終了年月', year: '', month: '', labelMonth:[3, 9]}
-        ],
-        valueList: [
-          {numberOfCrfItems: ''}, {numberOfFacilities: ''}, {numberOfCases: ''}, {numberOfFinalAnalysisTables: ''}, 
-          {trialTypeCoefficient: ''}, {sourceOfFundsCoefficient: ''}
+          {id: 'start', label: '症例登録開始年月', year: '', month: '', labelMonth: [4, 10]},
+          {id: 'end', label: '試験終了年月', year: '', month: '', labelMonth: [3, 9]}
         ],
         setupDate: [
           {start: ''}
@@ -74,11 +57,6 @@
         this.setClosingDate();
         this.closingYearKey = this.closingDate.end.getFullYear();
         const monthsEachFiscalYear = this.dispatchPeriodPerFiscalYear();
-        this.valueList.sourceOfFundsCoefficient = this.getSourceOfFundsCofficient;
-        this.valueList.trialTypeCoefficient = this.getTrialTypeCofficient;
-        this.valueList.numberOfCrfItems = this.getNumberOfCrfItemsValue;
-        this.valueList.numberOfCases = this.getNumberOfCaseItemsValue;
-        this.valueList.facilities = this.getNumberOfFacilitiesItemValue;
         this.replaceItemNameAndDaysByTrialType();
         const recalculationItemList = this.itemsList.map(x => {
           let res = x;
@@ -177,9 +155,6 @@ return;
           ['trial', trialYears]
         ]);
       },
-      getTextBoxValue(id, targetItem) {
-        return this.textBoxCommon.filter(x => x.id === id)[0][targetItem];
-      },
       getRadioValue(radio, checkValue, targetItem) {
         return radio.filter(x => x.value === checkValue)[0][targetItem];
       },
@@ -230,32 +205,32 @@ return;
         // Calculate the base unit price.
         const res = /=round\(S[0-9]*\*T[0-9]*\*U[0-9]*,/i.test(x.baseUnitPrice) ? roundLower3Digits(x.unitPrice * x.days * x.numberOfPeople) :
                     x.baseUnitPrice === '=100000+IF(Trial!$B$30<100,4500*Trial!$B$30,IF(Trial!$B$30<1000,4500*100+2250*(Trial!$B$30-100),4500*100+2250*900+1100*(Trial!$B$30-1000)))' ? this.calculateBaseUnitPriceCreateDb(): 
-                    x.baseUnitPrice === '=Trial!$B$30*250' ? this.valueList.numberOfCrfItems * 250: 
+                    x.baseUnitPrice === '=Trial!$B$30*250' ? cst.get('mapTextBoxCommon').get('number_of_crf_items').value * 250: 
                     x.baseUnitPrice === '=round(log(Trial!$B$28,10+log(Trial!$B$28,2))*log(Trial!$B$30,10)*Trial!$C$27*25000,-3)' ?this.calculateBaseUnitPriceCentralMonitoring() :
                     '=round(log(Trial!$B$28,10)*log(Trial!$B$30,10)*Trial!$C$27*75000,-3)' ? this.calculateBaseUnitPriceDataCleaning() : null;
         return res;
       },
       calculateUnitPrice(x) {
         // Calculate the unit price.
-        const coefficient = this.valueList.sourceOfFundsCoefficient;
+        const coefficient = cst.get('mapRadioSourceOfFunds').get('checkSourceOfFunds').value;
         return /^=Round\(/i.test(x.price) ? x.baseUnitPriceValue * coefficient :
                /^=[A-Z][0-9]*$/i.test(x.price) ? x.baseUnitPriceValue: null;
       },
       calculateBaseUnitPriceDataCleaning() {
-        const coefficient = this.valueList.trialTypeCoefficient;
-        const caseItems = this.valueList.numberOfCases;
-        const crfItems = this.valueList.numberOfCrfItems;
+        const coefficient = cst.get('mapRadioTrialType').get('checkTrialType').value;
+        const caseItems = cst.get('mapTextBoxCommon').get('number_of_cases').value;
+        const crfItems = cst.get('mapTextBoxCommon').get('number_of_crf_items').value;
         return roundLower3Digits(Math.log10(caseItems) * Math.log10(crfItems) * coefficient * 75000);
       },
       calculateBaseUnitPriceCreateDb() {
-        const crfItems = this.valueList.numberOfCrfItems;
+        const crfItems = cst.get('mapTextBoxCommon').get('number_of_crf_items').value;
         return crfItems < 100 ? 4500 * crfItems :
                crfItems < 1000 ? 4500 * 100 + 2250 * (crfItems - 100) : 4500 * 100 + 2250 * 900 + 1100 * (crfItems - 1000);
       },
       calculateBaseUnitPriceCentralMonitoring() {
-        const coefficient = this.valueList.trialTypeCoefficient;
-        const caseItems = this.valueList.numberOfCases;
-        const crfItems = this.valueList.numberOfCrfItems;
+        const coefficient = cst.get('mapRadioTrialType').get('checkTrialType').value;
+        const caseItems = cst.get('mapTextBoxCommon').get('number_of_cases').value;
+        const crfItems = cst.get('mapTextBoxCommon').get('number_of_crf_items').value;
         return roundLower3Digits(this.getBaseLog(10 + Math.log2(caseItems), caseItems) * Math.log10(crfItems) * coefficient * 25000);
       },
       getBaseLog(x, y) {
@@ -271,16 +246,16 @@ return;
             ['業務分析・DM計画書の作成・CTR登録案の作成', 1],
             ['DB作成・eCRF作成・バリデーション', 1],
             ['バリデーション報告書', 1],
-            [this.variableItemNameList.get('accountSettings'), this.valueList.numberOfCases],
+            [this.variableItemNameList.get('accountSettings'), cst.get('mapTextBoxCommon').get('number_of_cases').value],
             ['入力の手引作成', 1]
           ]
         );
         if (this.checkTrialType === cst.get('investigatorInitiatedTrialValue')){
-          setItemsList.set(cst.get('investigatorInitiatedTrialItemNames').get('irb'), this.valueList.facilities);
+          setItemsList.set(cst.get('investigatorInitiatedTrialItemNames').get('irb'), cst.get('mapTextBoxCommon').get('facilities').value);
           setItemsList.set('SOP一式、CTR登録案、TMF雛形', 1);
         }
         if (this.checkTrialType === cst.get('specifiedClinicalTrialValue')) {
-          setItemsList.set('特定臨床研究法申請資料作成支援', this.valueList.facilities);
+          setItemsList.set('特定臨床研究法申請資料作成支援', cst.get('mapTextBoxCommon').get('facilities').value);
         }
         return setItemsList;
       },

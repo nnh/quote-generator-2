@@ -5,12 +5,8 @@
     mapConst.set('defaultFinalAnalysisTables', 50); 
     mapConst.set('defaultCrfItems', 1000);
     mapConst.set('defaultTitle', '概算見積算定フォーム');
-    mapConst.set('defaultSourceOfFunds', {value: 'publicFund', label:'公的資金（税金由来）', coefficient: 1});
-    mapConst.set('defaultTrialType', {value: 'observationalTrial', label: '観察研究・レジストリ', coefficient: 1});
     mapConst.set('investigatorInitiatedTrialValue', 'investigatorInitiatedTrial');
     mapConst.set('specifiedClinicalTrialValue', 'specifiedClinicalTrial');
-    mapConst.set('TrialTypeInvestigatorInitiatedTrial', {value: mapConst.get('investigatorInitiatedTrialValue'), label:'医師主導治験', coefficient: 5});
-    mapConst.set('TrialTypeSpecifiedClinicalTrial', {value: mapConst.get('specifiedClinicalTrialValue'), label:'特定臨床研究', coefficient: 3});
     mapConst.set('investigatorInitiatedTrialItemNames', 
       new Map([
         ['irb', 'IRB承認確認、施設管理'],
@@ -31,6 +27,29 @@
         ['csr', '研究結果報告書の作成']
       ])
     );
+    mapConst.set('mapTextBoxCommon',
+      new Map([
+        ['number_of_cases', {label: '目標症例数', unit: '症例', value: 1, type: 'number'}],
+        ['facilities', {label:'実施施設数', unit:'施設', value: 1, type:'number'}],
+        ['number_of_crf_items', {label:'CRF項目数', unit:'項目', value: mapConst.get('defaultCrfItems'), type:'number'}],
+        ['final_analysis_tables', {label:'統計解析に必要な図表数', unit:'項目', value: mapConst.get('defaultFinalAnalysisTables'), type:'number'}],
+      ])
+    );
+    mapConst.set('mapRadioSourceOfFunds',
+      new Map([
+        ['publicFund', {label:'公的資金（税金由来）', coefficient: 1}],
+        ['commercialCompanyCoefficient', {label:'営利企業原資（製薬企業等）', coefficient: 1.5}]
+      ])
+    );
+    mapConst.set('mapRadioTrialType',
+      new Map([
+        ['observationalTrial', {label: '観察研究・レジストリ', coefficient: 1}],
+        ['interventionTrial', {label:'介入研究（特定臨床研究以外）', coefficient: 2}], 
+        ['investigatorInitiatedTrialValue', {label:'医師主導治験', coefficient: 5}],
+        ['specifiedClinicalTrialValue', {label:'特定臨床研究', coefficient: 3}]
+      ])
+    );
+    
     return mapConst;
   }
   function roundLower3Digits(target) {
@@ -58,4 +77,14 @@
   function getPreviousMonthLastDate(year, month) {
     return new Date(year, month - 1, 0);
   }
+  function mapToArray(mapObj, keyName) {
+    const temp = [];
+    mapObj.forEach((value, key) => {
+      const res = value;
+      res[keyName] = key;
+      temp.push(res);
+    });
+    return temp;
+  }
+
 </script>
