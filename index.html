@@ -89,49 +89,8 @@
         <div class='d-grid gap-2'>
           <button class='btn btn-secondary' type='button' v-on:click='onSubmitApproximateQuote("total1")'>Total出力</button>
         </div>
-<!--
-        <div class='d-grid gap-2'>
-          <button class='btn btn-secondary' type='button' v-on:click='test20221118buttonclick'>test</button>
-        </div>
--->
-<!--
-        <table class="table table-dark table-striped">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">【見積明細：総期間】</th>
-              <th scope="col"></th>
-              <th scope="col">摘要</th>
-              <th scope="col"></th>
-              <th scope="col"></th>
-              <th scope="col"></th>
-              <th scope="col">金額</th>
-              <th scope="col">合計</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for='(item, idx) in itemsList'>
-              <tr v-show='showTable'>
-                <th scope="row">{{ idx + 1 }}</th>
-                <td v-if='item.item === ""'>{{ item.heading }}</td>
-                <td v-else=>  </td>
-                <td>{{ item.item }}</td>
-                <td>{{ formatPrice(item.unitPriceValue) }}</td>
-                <td v-if='item.item !== ""'> x </td>
-                <td v-else=>  </td>
-                <td>{{ item.count }}</td> 
-                <td>{{ item.unit }}</td>
-                <td v-if='item.item !== "" || item.heading === "合計（税抜）"'>{{ formatPrice(item.totalPrice) }}</td>
-                <td v-else=>  </td>
-                <td v-if='item.item === ""'>{{ formatPrice(item.totalSumPrice) }}</td>
-                <td v-else=>  </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
--->
       </div>
     </div>
-    <?!= HtmlService.createHtmlOutputFromFile('mainJs').getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile('indexJs').getContent(); ?>
   </body>
 </html>

@@ -1,0 +1,137 @@
+<script type="importmap">
+  {
+    "imports": {
+      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+    }
+  }
+</script>
+<script type="module">
+  import { createApp } from 'vue'
+  const cst = setConstIndex();
+  const appIndex = createApp({
+    data(){
+      return {
+        title: cst.get('defaultTitle'),
+        radioSourceOfFunds: mapToArray(cst.get('mapRadioSourceOfFunds'), 'value'),
+        checkSourceOfFunds: cst.get('mapRadioSourceOfFunds').get('publicFund').value,
+        radioTrialType: mapToArray(cst.get('mapRadioTrialType'), 'value'),
+        checkTrialType: cst.get('mapRadioTrialType').get('observationalTrial').value,
+        textBoxCommon: mapToArray(cst.get('mapTextBoxCommon'), 'id'),
+        dateYmList: [
+          {id: 'start', label: '症例登録開始年月', year: '', month: '', labelMonth: [4, 10]},
+          {id: 'end', label: '試験終了年月', year: '', month: '', labelMonth: [3, 9]}
+        ],
+        setupDate: [
+          {start: ''}
+        ],
+        closingDate: [
+          {start: ''}, {end: ''}
+        ]
+      }
+    },
+    methods: {
+      onSubmitApproximateQuote(pageName) {
+        // 入力チェックから出力回数とかとるあたりまではTotal, Total2で共通になるはず
+        if (!this.checkInputValue()){
+          return;
+        }
+        // 開始年月の設定
+        this.setupDate.start = this.getSetupDateStart;
+        this.setupYearKey = this.setupDate.start.getFullYear();
+        this.setClosingDate();
+        this.closingYearKey = this.closingDate.end.getFullYear();
+        const monthsEachFiscalYear = this.dispatchPeriodPerFiscalYear();
+        // パラメータセット
+        const param = new Map([
+          ['page', pageName],
+          ['sourceOfFunds', this.checkSourceOfFunds],
+          ['trialType', this.checkTrialType],
+          ['monthsEachFiscalYear', monthsEachFiscalYear],
+          ['setupYearKey', this.setupYearKey],
+          ['closingYearKey', this.closingYearKey],
+          ['numberOfCases', cst.get('mapTextBoxCommon').get('number_of_cases').value],
+          ['facilities', cst.get('mapTextBoxCommon').get('facilities').value],
+          ['numberOfCrfItems', cst.get('mapTextBoxCommon').get('number_of_crf_items').value],
+          ['finalAnalysisTables', cst.get('mapTextBoxCommon').get('final_analysis_tables').value]
+        ]);
+        doGetHtml(param);
+      },
+      // 入力チェック
+      checkInputValue() {
+        const checkTextBoxCommon = this.textBoxCommon.filter(x => x.type === 'number').map(x => this.checkNumber(x.value) && x.value !== '');
+        if (!checkTextBoxCommon.every(x => x)){
+          alert('必須入力チェックNG');
+          return false;
+        }
+        if (!this.checkConsistencyYm(this.dateYmList)){
+          alert('年月チェックNG');
+          return false;
+        }
+        return true;
+      },
+      checkNumber(target) {
+        if (Number.isInteger(Number(target))){
+          return target > 0;
+        }
+        return false;
+      },
+      checkConsistencyYm(dateList) {
+        const startDate = dateList.filter(x => x.id === 'start')[0];
+        const endDate = dateList.filter(x => x.id === 'end')[0];
+        return ((startDate.year !== '' && startDate.month !== '' && endDate.year !== '' && endDate.month !== '') &&
+                ((startDate.year < endDate.year) || 
+                (startDate.year === endDate.year && startDate.month <= endDate.month)));
+      },
+      setClosingDate() {
+        const endYm = getTargetYear(this.dateYmList, 'end');
+        const closingEndMonth = endYm.month === 3 ? 9 : 3;
+        this.closingDate.start = getMonthFirstDay(endYm.year, endYm.month);
+        this.closingDate.end = getPreviousMonthLastDate(endYm.year, closingEndMonth + 1);
+      },
+      dispatchPeriodPerFiscalYear() {
+        const startYear = this.setupYearKey;
+        const endYear = this.closingYearKey;
+        const yearsCount = endYear - startYear + 1;
+        const yearsList = [...Array(yearsCount)].map((_, idx) => startYear + idx);
+        // Setup
+        const setupYear = new Map([
+          [startYear, 6]
+        ]);
+        // Closing
+        const closingYear = new Map([
+          [endYear, 6]
+        ]);
+        const firstYearTrialMonth = this.setupDate.start.getMonth() + 1 === 4 ? 6 : 0;
+        const lastYearTrialMonth = this.closingDate.start.getMonth() + 1 === 10 ? 6 : 0;
+        const trialYm = yearsList.map(year => {
+          const month = startYear === endYear ? 6 :
+                        year === startYear ? firstYearTrialMonth :
+                        year === endYear ? lastYearTrialMonth :
+                        12;
+          return [year, month];
+        });
+        const trialYears = new Map(trialYm);
+        return new Map([
+          ['setup', setupYear],
+          ['closing', closingYear],
+          ['trial', trialYears]
+        ]);
+      }
+    },
+    computed: {
+      getYearList: function() {
+        const thisYear = new Date().getFullYear();
+        const pastYears = [...Array(2).keys()].map(x => thisYear - x - 1).reverse();
+        const nextYears = [...Array(10).keys()].map(x => thisYear + x);
+        return pastYears.concat(nextYears);
+      },
+      getSetupDateStart: function() {
+        const startYm = getTargetYear(this.dateYmList, 'start');
+        const setupYear = startYm.month === 4 ? startYm.year - 1 : startYm.year;
+        const setupStartMonth = startYm.month === 4 ? 9 : 4;
+        return getMonthFirstDay(setupYear, setupStartMonth - 1);
+      }
+    }
+  });
+  appIndex.mount('#appIndex');
+</script>

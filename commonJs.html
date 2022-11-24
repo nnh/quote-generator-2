@@ -1,32 +1,9 @@
 <script type="text/javascript">
-  function setConst(){
+  function setConstIndex() {
     const mapConst = new Map();
-    mapConst.set('taxRate', 0.1);
+    mapConst.set('defaultTitle', '概算見積算定フォーム');
     mapConst.set('defaultFinalAnalysisTables', 50); 
     mapConst.set('defaultCrfItems', 1000);
-    mapConst.set('defaultTitle', '概算見積算定フォーム');
-    mapConst.set('investigatorInitiatedTrialValue', 'investigatorInitiatedTrial');
-    mapConst.set('specifiedClinicalTrialValue', 'specifiedClinicalTrial');
-    mapConst.set('investigatorInitiatedTrialItemNames', 
-      new Map([
-        ['irb', 'IRB承認確認、施設管理'],
-        ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
-        ['centralMonitoring', '中央モニタリング'],
-        ['interimAnalysis', '中間解析プログラム作成、解析実施（ダブル）'],
-        ['finalAnalysis', '最終解析プログラム作成、解析実施（ダブル）'],
-        ['csr', 'CSRの作成支援']
-      ])
-    );
-    mapConst.set('othersItemNames',
-      new Map([
-        ['irb', 'IRB準備・承認確認'],
-        ['accountSettings', '初期アカウント設定（施設・ユーザー）、IRB承認確認'],
-        ['centralMonitoring', '中央モニタリング、定期モニタリングレポート作成'],
-        ['interimAnalysis', '中間解析プログラム作成、解析実施（シングル）'],
-        ['finalAnalysis', '最終解析プログラム作成、解析実施（シングル）'],
-        ['csr', '研究結果報告書の作成']
-      ])
-    );
     mapConst.set('mapTextBoxCommon',
       new Map([
         ['number_of_cases', {label: '目標症例数', unit: '症例', value: 1, type: 'number'}],
@@ -47,6 +24,33 @@
         ['interventionTrial', {label:'介入研究（特定臨床研究以外）', coefficient: 2}], 
         ['investigatorInitiatedTrialValue', {label:'医師主導治験', coefficient: 5}],
         ['specifiedClinicalTrialValue', {label:'特定臨床研究', coefficient: 3}]
+      ])
+    );
+    return mapConst;
+  }
+  function setConst(){
+    const mapConst = new Map();
+    mapConst.set('taxRate', 0.1);
+    mapConst.set('investigatorInitiatedTrialValue', 'investigatorInitiatedTrial');
+    mapConst.set('specifiedClinicalTrialValue', 'specifiedClinicalTrial');
+    mapConst.set('investigatorInitiatedTrialItemNames', 
+      new Map([
+        ['irb', 'IRB承認確認、施設管理'],
+        ['accountSettings', '初期アカウント設定（施設・ユーザー）'],
+        ['centralMonitoring', '中央モニタリング'],
+        ['interimAnalysis', '中間解析プログラム作成、解析実施（ダブル）'],
+        ['finalAnalysis', '最終解析プログラム作成、解析実施（ダブル）'],
+        ['csr', 'CSRの作成支援']
+      ])
+    );
+    mapConst.set('othersItemNames',
+      new Map([
+        ['irb', 'IRB準備・承認確認'],
+        ['accountSettings', '初期アカウント設定（施設・ユーザー）、IRB承認確認'],
+        ['centralMonitoring', '中央モニタリング、定期モニタリングレポート作成'],
+        ['interimAnalysis', '中間解析プログラム作成、解析実施（シングル）'],
+        ['finalAnalysis', '最終解析プログラム作成、解析実施（シングル）'],
+        ['csr', '研究結果報告書の作成']
       ])
     );
     return mapConst;

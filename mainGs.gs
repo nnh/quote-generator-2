@@ -5,20 +5,22 @@
 function doGet(e) {
   const param = e.parameter;
   const page = param.page ? param.page : 'index';
-  let htmlOutput = HtmlService.createTemplateFromFile(page).evaluate();
+  let html = HtmlService.createTemplateFromFile(page);
   let commonJs = HtmlService.createTemplateFromFile('commonJs').evaluate().getContent();
   if (page === 'index'){
-    htmlOutput
-      .setTitle('title_index')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-      .append(commonJs)
+    let htmlOutput = html.evaluate();
+    htmlOutput.setTitle('title_index');
+    htmlOutput.addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    htmlOutput.append(commonJs);
     return htmlOutput;
   } 
   if (page === 'total1'){
-    htmlOutput
-      .setTitle('title_quote')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1')     
-      .append(commonJs)
+    html.sourceOfFunds = param.sourceOfFunds;
+    html.param = param;
+    let htmlOutput = html.evaluate();
+    htmlOutput.setTitle('quote');
+    htmlOutput.addMetaTag('viewport', 'width=device-width, initial-scale=1');
+    htmlOutput.append(commonJs);
     return htmlOutput;
   }
 }

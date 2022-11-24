@@ -8,9 +8,9 @@
     <div id='appTotal'>
       <div class='container bg-dark text-white p-4'>
         <h1 class='text-center border-bottom pb-3 mb-4'>
-          {{ test }}
+          {{ title }}
         </h1>
-        <table class="table table-dark table-striped">
+<!--        <table class="table table-dark table-striped">
           <thead>
             <tr>
               <th scope="col">#</th>
@@ -44,8 +44,19 @@
             </template>
           </tbody>
         </table>
+-->
       </div>
     </div>
-    <?!= HtmlService.createHtmlOutputFromFile('mainJs').getContent(); ?>
+    <?!= HtmlService.createHtmlOutputFromFile('quoteJs').getContent(); ?>
+    <h1>
+      <?!= sourceOfFunds ?>
+      <?!= param ?>
+    </h1>
   </body>
 </html>
+<script>
+google.script.url.getLocation(function(location) {
+  const sourceOfFunds = location.parameter.sourceOfFunds;
+  const param = location.parameter;
+});
+</script>
