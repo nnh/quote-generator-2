@@ -1,3 +1,4 @@
+const colNamesConstant = [null, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ'];
 /**
  * 共通情報
  */
@@ -89,23 +90,6 @@ function getTemplateInfo_(){
   info.set('colWidths', colWidths);
   info.set('colItemNameAndIdx', colItemNameAndIdx);
   return info;
-}
-/**
-* 列番号から列名を返す
-* @param {Number} column_name 列番号
-* @return 1ならA、のような列名
-*/
-function getColumnString_(columnNumber){
-  const colNames = [null, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ'];
-  return colNames[columnNumber];
-}
-/**
-* 列名から列番号を返す
-* @param {string} columnName 列名（'A'など）
-* @return Aなら1、のような列番号
-*/
-function getColumnNumber_(columnName, sheet){ 
-  return sheet.getRange(`${columnName}1`).getColumn();
 }
 function getRowAndColLength_(array){
   return [array.length, array[0].length];

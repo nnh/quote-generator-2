@@ -22,8 +22,8 @@ function createTemplate_(ss, template, items){
   const editTemplateFormulas = new EditTemplateFormulas();
   const itemsTemplateRowDiff = getNumber_(templateInfo.get('bodyStartRowIdx') - itemsInfo.get('bodyStartRowIdx'));
   const itemsRangesValues = editItemValues_(itemsSheetValues);
-  const amountCol = getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('amount')));
-  const countCol = getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('count')));
+  const amountCol = commonGas.getColumnStringByIndex(templateInfo.get('colItemNameAndIdx').get('amount'));
+  const countCol = commonGas.getColumnStringByIndex(templateInfo.get('colItemNameAndIdx').get('count'));
   const formulas = itemsRangesValues.map((rows, rowIdx, itemsValues) => {
     const itemsRowNumber = rowIdx + itemsTemplateRowDiff;
     const rowNumber = rowIdx + outputBodyStartRowNumber;
@@ -47,10 +47,10 @@ function createTemplate_(ss, template, items){
       const sumFormula = rows[primaryItemExcludedIdx] && rows[itemsInfo.get('colItemNameAndIdx').get('primaryItem')] !== '' 
                          ? `=sum(${amountCol}${getNumber_(sumStartIdx) + outputBodyStartRowNumber}:${amountCol}${getNumber_(sumEndIdx) + outputBodyStartRowNumber})`
                          : "";
-      const sumExcludedFilter = rows[primaryItemExcludedIdx] ? `=if(sum(${getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('sum')))}${getNumber_(rowNumber)}) > 0, 1, 0)` : `=if(sum(${countCol}${getNumber_(sumStartIdx) + outputBodyStartRowNumber}:${countCol}${getNumber_(sumExcludedEndIdx) + outputBodyStartRowNumber})>0, 1, 0)`;
-      return editTemplateFormulas.editPrimaryItem(itemsRowNumber, sumFormula, sumExcludedFilter, ss);
+      const sumExcludedFilter = rows[primaryItemExcludedIdx] ? `=if(sum(${commonGas.getColumnStringByIndex(templateInfo.get('colItemNameAndIdx').get('sum'))}${getNumber_(rowNumber)}) > 0, 1, 0)` : `=if(sum(${countCol}${getNumber_(sumStartIdx) + outputBodyStartRowNumber}:${countCol}${getNumber_(sumExcludedEndIdx) + outputBodyStartRowNumber})>0, 1, 0)`;
+      return editTemplateFormulas.editPrimaryItem(itemsRowNumber, sumFormula, sumExcludedFilter);
     } else {
-      return editTemplateFormulas.editSecondaryItem(getNumber_(rowNumber), itemsRowNumber, ss);
+      return editTemplateFormulas.editSecondaryItem(getNumber_(rowNumber), itemsRowNumber);
     }
   });
   const itemsLastRowNumber = formulas.length - 1 + outputBodyStartRowNumber;
@@ -70,8 +70,36 @@ function createTemplate_(ss, template, items){
 
 //  setTemplateFilter_(template);
 //  const setBorders = setTemplateFormat_(template, outputBodyStartRowNumber - 1, totalRowNumber + 1);
-  const requests = [setHeadRequest, setBodyRequest];
+  const setColWidthRequest = [21, 50, 453, 76, 13, 35, 46, 81, 75, 22, 18, 35].map((width, idx) => spreadSheetBatchUpdate.getSetColWidthRequest(template.properties.sheetId, width, idx, idx + 1));
+  const autoResizeColRequest = ['C', 'D', 'H', 'I'].map(colName => {
+    const idx = commonGas.getColumnIndex(colName);
+    return spreadSheetBatchUpdate.getAutoResizeRowRequest(template.properties.id, idx, idx)
+  });
+  const bordersRequest = setTemplateBorders_(template);
+
+
+
+  
+  const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest];
   return requests;
+}
+function setTemplateBorders_(template){
+  let request = [];
+  const borderStyle = spreadSheetBatchUpdate.createBorderStyle();
+  const rowCol = {
+    'startRowIndex': 1,
+    'endRowIndex' : 98,
+    'startColumnIndex' : 1,
+    'endColumnIndex': 10,
+  }
+  const borders = {
+    'top': borderStyle.setBorderSolid(),
+    'bottom' : borderStyle.setBorderSolid(),
+    'left': borderStyle.setBorderSolid(),
+    'right': borderStyle.setBorderSolid(),
+  }
+  request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
+  return request;
 }
 /**
  * Set the format of the template sheet.
@@ -187,11 +215,11 @@ class EditTemplateFormulas{
   constructor(){
     this.items = itemsInfo.get('sheet');
     this.itemsSheetName = this.items.title.replace(' のコピー', '');
-    this.countCol = getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))); 
+    this.countCol = commonGas.getColumnStringByIndex(templateInfo.get('colItemNameAndIdx').get('count')); 
   }
-  editPrimaryItem(itemsRowNumber, sumFormula, sumExcludedFilter, ss){
+  editPrimaryItem(itemsRowNumber, sumFormula, sumExcludedFilter){
       return [
-        `=${this.itemsSheetName}!$${getColumnString_(1, ss)}$${itemsRowNumber}`,
+        `=${this.itemsSheetName}!$${commonGas.getColumnStringByNumber(1)}$${itemsRowNumber}`,
         '',
         '',
         '',
@@ -204,15 +232,15 @@ class EditTemplateFormulas{
         sumExcludedFilter,
       ]
   }
-  editSecondaryItem(rowNumber, itemsRowNumber, ss){
+  editSecondaryItem(rowNumber, itemsRowNumber){
     return [
       '',
-      `=${this.itemsSheetName}!$${getColumnString_(2, ss)}$${itemsRowNumber}`,
-      `=${this.itemsSheetName}!$${getColumnString_(3, ss)}$${itemsRowNumber}`,
-      '"x"',
+      `=${this.itemsSheetName}!$${commonGas.getColumnStringByNumber(2)}$${itemsRowNumber}`,
+      `=${this.itemsSheetName}!$${commonGas.getColumnStringByNumber(3)}$${itemsRowNumber}`,
+      'x',
       '',
-      `=${this.itemsSheetName}!$${getColumnString_(4, ss)}$${itemsRowNumber}`,
-      `=if(${this.countCol}${rowNumber}="", "", ${getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('price')))}${rowNumber} * ${this.countCol}${rowNumber})`,
+      `=${this.itemsSheetName}!$${commonGas.getColumnStringByNumber(4)}$${itemsRowNumber}`,
+      `=if(${this.countCol}${rowNumber}="", "", ${commonGas.getColumnStringByIndex(templateInfo.get('colItemNameAndIdx').get('price'))}${rowNumber} * ${this.countCol}${rowNumber})`,
       '',
       '',
       '',

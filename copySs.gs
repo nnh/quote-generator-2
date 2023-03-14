@@ -184,7 +184,7 @@ function setItemsSheet_(ss, items){
     itemsColIdxList.get('baseUnitPrice'),
   ];
   const requests = formulaColsIdx.map(formulaColIdx => {
-    const colString = getColumnString_(getNumber_(formulaColIdx), ss);
+    const colString = commonGas.getColumnStringByIndex(formulaColIdx);
     const setItems = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${sheetName}!${colString}:${colString}`, 'FORMULA')[0].values.map(x => x.length === 1 ? x : ['']);
     return spreadSheetBatchUpdate.getRangeSetValueRequest(sheetId, 
                                                           0, 
