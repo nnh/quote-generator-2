@@ -69,88 +69,122 @@ function createTemplate_(ss, template, items){
 //  new ProjectManagement().setTemplate_(template);
 
 //  setTemplateFilter_(template);
-//  const setBorders = setTemplateFormat_(template, outputBodyStartRowNumber - 1, totalRowNumber + 1);
   const setColWidthRequest = [21, 50, 453, 76, 13, 35, 46, 81, 75, 22, 18, 35].map((width, idx) => spreadSheetBatchUpdate.getSetColWidthRequest(template.properties.sheetId, width, idx, idx + 1));
   const autoResizeColRequest = ['C', 'D', 'H', 'I'].map(colName => {
     const idx = commonGas.getColumnIndex(colName);
     return spreadSheetBatchUpdate.getAutoResizeRowRequest(template.properties.id, idx, idx)
   });
-  const bordersRequest = setTemplateBorders_(template);
-
-
-
+  const bordersRequest = setTemplateBorders_(template, totalRowNumber);
+  const boldRequest = setTemplateBold_(template, totalRowNumber);
+  const horizontalAlignmentRequest = setTemplateHorizontalAlignment_(template);
+  const numberFormatRequest = setTemplateNumberFormat_(template, totalRowNumber);
   
-  const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest];
+  const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest];
   return requests;
 }
-function setTemplateBorders_(template){
+function setTemplateNumberFormat_(template, totalRowNumber){
+  const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
+                                                                   0, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('amount'),
+                                                                   totalRowNumber, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('sum'), 
+                                                                   spreadSheetBatchUpdate.editNumberFormat('NUMBER', '#,###'), 
+                                                                   'userEnteredFormat.numberFormat'),
+                  ];
+  return request;
+}
+function setTemplateHorizontalAlignment_(template){
+  const itemNameRowIdx = templateInfo.get('bodyStartRowIdx') - 1; 
+  const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
+                                                                   itemNameRowIdx, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('amount'),
+                                                                   itemNameRowIdx, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('sum'), 
+                                                                   spreadSheetBatchUpdate.getHorizontalAlignmentRequest('CENTER'), 
+                                                                   'userEnteredFormat.horizontalAlignment'),
+                  spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
+                                                                   itemNameRowIdx, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('secondaryItem'),
+                                                                   itemNameRowIdx, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('secondaryItem'), 
+                                                                   spreadSheetBatchUpdate.getHorizontalAlignmentRequest('CENTER'), 
+                                                                   'userEnteredFormat.horizontalAlignment'),
+                  spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
+                                                                   itemNameRowIdx, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('price'),
+                                                                   itemNameRowIdx, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('price'), 
+                                                                   spreadSheetBatchUpdate.getHorizontalAlignmentRequest('RIGHT'), 
+                                                                   'userEnteredFormat.horizontalAlignment'),
+                  ];
+  return request;
+}
+function setTemplateBold_(template, totalRowNumber){
+  const lastRow = totalRowNumber + 2;
+  const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
+                                                                   templateInfo.get('headStartRowIdx'), 
+                                                                   templateInfo.get('colItemNameAndIdx').get('primaryItem'),
+                                                                   lastRow, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('primaryItem'), 
+                                                                   spreadSheetBatchUpdate.getFontBoldRequest(), 
+                                                                   'userEnteredFormat.textFormat.bold'),
+                   spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
+                                                                   templateInfo.get('bodyStartRowIdx'), 
+                                                                   templateInfo.get('colItemNameAndIdx').get('sum'),
+                                                                   lastRow, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('sum'), 
+                                                                   spreadSheetBatchUpdate.getFontBoldRequest(), 
+                                                                   'userEnteredFormat.textFormat.bold'),
+                   spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
+                                                                   totalRowNumber, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('amount'),
+                                                                   lastRow, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('amount'), 
+                                                                   spreadSheetBatchUpdate.getFontBoldRequest(), 
+                                                                   'userEnteredFormat.textFormat.bold'),
+                  ];
+  return request;
+}
+function setTemplateBorders_(template, totalRowNumber){
+  const lastRow = totalRowNumber + 2;
+  const itemNameRowIdx = templateInfo.get('bodyStartRowIdx') - 1; 
   let request = [];
   const borderStyle = spreadSheetBatchUpdate.createBorderStyle();
-  const rowCol = {
-    'startRowIndex': 1,
-    'endRowIndex' : 98,
-    'startColumnIndex' : 1,
-    'endColumnIndex': 10,
+  let rowCol = {
+    'startRowIndex': null,
+    'endRowIndex' : null,
+    'startColumnIndex' : null,
+    'endColumnIndex': null,
   }
-  const borders = {
+  let borders = {
     'top': borderStyle.setBorderSolid(),
     'bottom' : borderStyle.setBorderSolid(),
     'left': borderStyle.setBorderSolid(),
     'right': borderStyle.setBorderSolid(),
   }
+  rowCol = {
+    'startRowIndex': templateInfo.get('headStartRowIdx'),
+    'endRowIndex' : lastRow,
+    'startColumnIndex' : templateInfo.get('startColIdx'),
+    'endColumnIndex': templateInfo.get('startColIdx') + templateInfo.get('colItemNameAndIdx').size,
+  }
+  request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders)); 
+  rowCol.startRowIndex = itemNameRowIdx;
+  rowCol.endRowIndex = templateInfo.get('bodyStartRowIdx'); 
+  request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
+  rowCol.startRowIndex = totalRowNumber;
+  rowCol.endRowIndex = lastRow;
+  borders.innerHorizontal = borderStyle.setBorderSolid();
+  request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
+  delete borders.innerHorizontal;
+  rowCol.startRowIndex = itemNameRowIdx;
+  rowCol.endRowIndex = totalRowNumber;
+  rowCol.startColumnIndex = templateInfo.get('colItemNameAndIdx').get('price');
+  request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
+  rowCol.startColumnIndex = templateInfo.get('colItemNameAndIdx').get('amount');
+  rowCol.endColumnIndex = templateInfo.get('colItemNameAndIdx').get('sum');
   request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
   return request;
-}
-/**
- * Set the format of the template sheet.
- * @param {Object} template Sheet object.
- * @return none.
- */
-function setTemplateFormat_(template, outputHeaderBodyRow, lastRow){
-  //templateInfo.get('colWidths').forEach((value, key) => template.setColumnWidth(key, value));
-//  const outputHeaderBodyRow = templateInfo.get('outputBodyStartRowNumber') - 1;
-//  const lastRow = templateInfo.get('totalRowNumber') + 1;
-  const bSolid = spreadSheetBatchUpdate.setBorderInfo();
-  const bNone = spreadSheetBatchUpdate.delBorderInfo();
-  const test = spreadSheetBatchUpdate.setBorders(template.id, {startRow: 1, startCol:1, endRow:1, endCol: 1}, {top: bSolid, bottom: bSolid, left: bSolid, right: bSolid, innerHorizontal: bNone, innerVertical: bNone});
-  return;
-  template.getRangeList([
-    `${templateInfo.get('colNames').get('primaryItem')}${templateInfo.get('outputStartRowNumber')}:${templateInfo.get('colNames').get('rightBorderEnd')}${templateInfo.get('outputStartRowNumber') + 1}`,
-    `${templateInfo.get('colNames').get('primaryItem')}${outputHeaderBodyRow}:${templateInfo.get('colNames').get('rightBorderEnd')}${outputHeaderBodyRow}`,
-    `${templateInfo.get('colNames').get('primaryItem')}${templateInfo.get('outputBodyStartRowNumber')}:${templateInfo.get('colNames').get('rightBorderEnd')}${templateInfo.get('totalRowNumber') - 1}`,
-    `${templateInfo.get('colNames').get('primaryItem')}${templateInfo.get('totalRowNumber')}:${templateInfo.get('colNames').get('rightBorderEnd')}${templateInfo.get('totalRowNumber')}`,
-    `${templateInfo.get('colNames').get('primaryItem')}${lastRow}:${templateInfo.get('colNames').get('rightBorderEnd')}${lastRow}`,
-  ]).setBorder(true, true, true, true, null, null);
-  template.getRangeList([
-    `${templateInfo.get('colNames').get('primaryItem')}${outputHeaderBodyRow}:${templateInfo.get('colNames').get('secondaryItem')}${lastRow}`,
-    `${templateInfo.get('colNames').get('amount')}${outputHeaderBodyRow}:${templateInfo.get('colNames').get('amount')}${templateInfo.get('totalRowNumber') - 1}`,
-  ]).setBorder(null, true, null, true, null, null);
-  template.getRangeList([
-    `${templateInfo.get('colNames').get('primaryItem')}:${templateInfo.get('colNames').get('primaryItem')}`, 
-    `${templateInfo.get('colNames').get('sum')}${templateInfo.get('outputBodyStartRowNumber')}:${templateInfo.get('colNames').get('sum')}`, 
-    `${templateInfo.get('colNames').get('amount')}${templateInfo.get('totalRowNumber')}:${templateInfo.get('colNames').get('amount')}${lastRow}`,
-  ]).setFontWeight('bold');
-  template.getRangeList([
-    `${templateInfo.get('colNames').get('x')}:${templateInfo.get('colNames').get('x')}`, 
-    `${templateInfo.get('colNames').get('count')}:${templateInfo.get('colNames').get('count')}`, 
-    `${templateInfo.get('colNames').get('amount')}:${templateInfo.get('colNames').get('sum')}`, 
-    `${templateInfo.get('colNames').get('price')}${outputHeaderBodyRow}`,
-  ]).setHorizontalAlignment('right');
-  template.getRangeList([
-    `${templateInfo.get('colNames').get('secondaryItem')}${outputHeaderBodyRow}`, 
-    `${templateInfo.get('colNames').get('filter')}:${templateInfo.get('colNames').get('filter')}`, 
-    `${templateInfo.get('colNames').get('amount')}${outputHeaderBodyRow}:${templateInfo.get('colNames').get('sum')}${outputHeaderBodyRow}`,
-  ]).setHorizontalAlignment('center');
-  template.getRangeList([
-    `${templateInfo.get('colNames').get('price')}${outputHeaderBodyRow}:${templateInfo.get('colNames').get('price')}`,
-    `${templateInfo.get('colNames').get('amount')}${outputHeaderBodyRow}:${templateInfo.get('colNames').get('sum')}`,
-  ]).setNumberFormat('#,##0');
-  // Sets the row height of the primary item.
-  for (let i = templateInfo.get('outputBodyStartRowNumber'); i < templateInfo.get('totalRowNumber'); i++){
-    if (template.getRange(i, templateInfo.get('colItemNameAndIdx').get('amount')).getValue() === ''){
-      template.setRowHeight(i, 36);
-    }
-  }
 }
 /**
  * Set filter.
@@ -162,26 +196,6 @@ function setTemplateFilter_(template){
   const targetRange = template.getRange(`${filterColName}${templateInfo.get('outputBodyStartRowNumber') -1}:${filterColName}`);
   setFilter_(template, targetRange);
 }
-/**
- * Set the heading information for the template sheet.
- * @param {Object} ss Spreadsheet object.
- * @param {Object} template Sheet object.
- * @return none.
- */
-/*
-function setTemplateHeader_(ss, template){
-  const itemsHead = [
-    ['【見積明細：1年毎(xxxx年度)】', '', '', '', '', '', '', ''],
-    ['', '', '単価', '', '', '', '', ''],
-    ['', '項目', '摘要', '', '', '', '金額', '合計金額'],
-  ];
-  const batchUpdate = new SpreadSheetBatchUpdate();
-  batchUpdate.rangeSetValue(ss.spreadsheetId, template.properties.sheetId,
-                            batchUpdate.getRangeSetValueRequest(template.properties.sheetId,
-                                                                templateInfo.get('headStartRowIdx'),
-                                                                templateInfo.get('startColIdx'),
-                                                                itemsHead));
-}*/
 /**
  * Set the heading information for the template sheet.
  * @param {Array.<string, string>} Value of the items sheet.
