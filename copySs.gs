@@ -14,7 +14,7 @@ function testCreateSs(inputData){
   ss.newSs = Sheets.Spreadsheets.get(ss.newSs.spreadsheetId);
   [ss.items, ss.trial, ss.quotationRequest] = copySheetNames.map(x => ss.newSs.sheets.filter(sheet => sheet.properties.title === x)[0]);
   editTrialTerm_(inputData);
-  const setTrialRequest = setTrialSheet_(inputData, ss.trial.sheetId);
+  const setTrialRequest = setTrialSheet_(inputData, ss.trial.properties.sheetId);
   const quotationRequestRequests = [
     spreadSheetBatchUpdate.getRangeSetValueRequest(ss.quotationRequest.properties.sheetId, 
                                                    1, 
@@ -24,10 +24,10 @@ function testCreateSs(inputData){
   const setItemsRequest = setItemsSheet_(ss.newSs, ss.items);
   const createTemplateRequest = createTemplate_(ss.newSs, ss.template, ss.items);
   const requestsArray = [
-                         ...setTrialRequest,
-                         ...quotationRequestRequests,
-                         ...setItemsRequest,
-                         ...createTemplateRequest,
+                         setTrialRequest,
+                         quotationRequestRequests,
+                         setItemsRequest,
+                         createTemplateRequest,
                         ];
   const requests = spreadSheetBatchUpdate.editBatchUpdateRequest(requestsArray);
   spreadSheetBatchUpdate.execBatchUpdate(requests, ss.newSs.spreadsheetId);
