@@ -1,62 +1,36 @@
-/**
- * @param {string} title Spreadsheet name.
- * @return {Object} Spreadsheet object.
- */
-function createNewSpreadSheet_(title){
-  const newSheet = Sheets.newSpreadsheet();
-  newSheet.properties = Sheets.newSpreadsheetProperties();
-  newSheet.properties.title = title;
-  const ss = Sheets.Spreadsheets.create(newSheet);
-  return ss;
-}
-/**
- * @param {Object} ss Spreadsheet object.
- * @param {number} sheetId
- * @return {Object} Sheet object.
- */
-function copySheet_(ss, sheetId){
-  const sheet = Sheets.Spreadsheets.Sheets.copyTo(
-    {
-      destinationSpreadsheetId: ss.spreadsheetId
-    },
-    PropertiesService.getScriptProperties().getProperty('templateFileId'),
-    sheetId    
-  );
-  return sheet;
-}
 function testCreateSs(inputData){
   const ss = {};
-  ss.ss = createNewSpreadSheet_('test20230215');
-  ss.template = ss.ss.sheets[0];
-  const copyFromSs = Sheets.Spreadsheets.get(PropertiesService.getScriptProperties().getProperty('templateFileId'));
-  const sheetIdMap = new Map(copyFromSs.sheets.map(x => [x.properties.title, x.properties.sheetId]));
+  ss.newSs = spreadSheetCommon.createNewSpreadSheet('test20230215');
+  ss.template = ss.newSs.sheets[0];
+  const sheetIdMap = spreadSheetCommon.getSheetIdMap(Sheets.Spreadsheets.get(PropertiesService.getScriptProperties().getProperty('templateFileId')));
   const copySheetNames = ['Items', 'Trial', 'Quotation Request'];
-  const copySheets = copySheetNames.map(x => copySheet_(ss.ss, sheetIdMap.get(x)));
-  [ss.items, ss.trial, ss.quotationRequest] = copySheets;
-  ss.ss = Sheets.Spreadsheets.get(ss.ss.spreadsheetId);
+  const copySheets = copySheetNames.map(x => spreadSheetCommon.copySheet(PropertiesService.getScriptProperties().getProperty('templateFileId'), ss.newSs, sheetIdMap.get(x)));
   const renameRequests = [
                           [0, templateInfo.get('sheetName')],
                           ...copySheetNames.map((sheetName, idx) => [copySheets[idx].sheetId, sheetName]),
                          ].map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));  
+  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest([renameRequests]), ss.newSs.spreadsheetId);
+  // Get the spreadsheet object again because the added sheet is not reflected.
+  ss.newSs = Sheets.Spreadsheets.get(ss.newSs.spreadsheetId);
+  [ss.items, ss.trial, ss.quotationRequest] = copySheetNames.map(x => ss.newSs.sheets.filter(sheet => sheet.properties.title === x)[0]);
   editTrialTerm_(inputData);
   const setTrialRequest = setTrialSheet_(inputData, ss.trial.sheetId);
   const quotationRequestRequests = [
-    spreadSheetBatchUpdate.getRangeSetValueRequest(ss.quotationRequest.sheetId, 
+    spreadSheetBatchUpdate.getRangeSetValueRequest(ss.quotationRequest.properties.sheetId, 
                                                    1, 
                                                    0, 
                                                    [[Utilities.formatDate(new Date(), 'JST', 'yyyy/MM/dd')]]),
   ];
-  const setItemsRequest = setItemsSheet_(ss.ss, ss.items);
-  const createTemplateRequest = createTemplate_(ss.ss, ss.template, ss.items);
+  const setItemsRequest = setItemsSheet_(ss.newSs, ss.items);
+  const createTemplateRequest = createTemplate_(ss.newSs, ss.template, ss.items);
   const requestsArray = [
-                         ...renameRequests,
                          ...setTrialRequest,
                          ...quotationRequestRequests,
                          ...setItemsRequest,
                          ...createTemplateRequest,
                         ];
   const requests = spreadSheetBatchUpdate.editBatchUpdateRequest(requestsArray);
-  spreadSheetBatchUpdate.execBatchUpdate(requests, ss.ss.spreadsheetId);
+  spreadSheetBatchUpdate.execBatchUpdate(requests, ss.newSs.spreadsheetId);
   return;
 
   return;
@@ -175,8 +149,8 @@ function setTrialSheet_(inputData, sheetId){
  */
 function setItemsSheet_(ss, items){
   itemsInfo.set('sheet', items);
-  const sheetId = items.sheetId;
-  const sheetName = items.title;
+  const sheetId = items.properties.sheetId;
+  const sheetName = items.properties.title;
   const itemsColIdxList = itemsInfo.get('colItemNameAndIdx');
   const formulaColsIdx = [
     itemsColIdxList.get('secondaryItem'),

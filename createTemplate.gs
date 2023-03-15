@@ -4,7 +4,7 @@
  * @param {Object} items Sheet object.
  */
 function createTemplate_(ss, template, items){
-  const itemsSheetRawValues = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, [`${items.title}!R${getNumber_(itemsInfo.get('bodyStartRowIdx'))}C${getNumber_(itemsInfo.get('colItemNameAndIdx').get('primaryItem'))}:R${items.gridProperties.rowCount}C${getNumber_(itemsInfo.get('colItemNameAndIdx').get('unit'))}`])[0].values;
+  const itemsSheetRawValues = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, [`${items.properties.title}!R${getNumber_(itemsInfo.get('bodyStartRowIdx'))}C${getNumber_(itemsInfo.get('colItemNameAndIdx').get('primaryItem'))}:R${items.properties.gridProperties.rowCount}C${getNumber_(itemsInfo.get('colItemNameAndIdx').get('unit'))}`])[0].values;
   const maxLength = Math.max(...itemsSheetRawValues.map(x => x.length));
   const itemsSheetValues = itemsSheetRawValues.map(x => x.length < maxLength ? [...x, ...new Array(maxLength - x.length).fill('')] : x);
   const primaryItemFlagIdx = maxLength;
@@ -214,7 +214,7 @@ function setColNamesInfo_(ss, targetMap){
 class EditTemplateFormulas{
   constructor(){
     this.items = itemsInfo.get('sheet');
-    this.itemsSheetName = this.items.title.replace(' のコピー', '');
+    this.itemsSheetName = this.items.properties.title;
     this.countCol = commonGas.getColumnStringByIndex(templateInfo.get('colItemNameAndIdx').get('count')); 
   }
   editPrimaryItem(itemsRowNumber, sumFormula, sumExcludedFilter){
