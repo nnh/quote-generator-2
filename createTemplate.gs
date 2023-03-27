@@ -74,19 +74,20 @@ function createTemplate_(ss, template, items){
     const idx = commonGas.getColumnIndex(colName);
     return spreadSheetBatchUpdate.getAutoResizeRowRequest(template.properties.id, idx, idx)
   });
-  const bordersRequest = setTemplateBorders_(template, totalRowNumber);
-  const boldRequest = setTemplateBold_(template, totalRowNumber);
+  const lastRow = totalRowNumber + 2;
+  const bordersRequest = setTemplateBorders_(template, totalRowNumber, lastRow);
+  const boldRequest = setTemplateBold_(template, totalRowNumber, lastRow);
   const horizontalAlignmentRequest = setTemplateHorizontalAlignment_(template);
-  const numberFormatRequest = setTemplateNumberFormat_(template, totalRowNumber);
-  
+  const numberFormatRequest = setTemplateNumberFormat_(template, lastRow);
+//  const filterRequest = [spreadSheetBatchUpdate.getBasicFilterRequest(['0'], 11, spreadSheetBatchUpdate.getRangeGridByIdx(template.properties.sheetId, 3, 11, null, 11))];
   const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest];
   return requests;
 }
-function setTemplateNumberFormat_(template, totalRowNumber){
+function setTemplateNumberFormat_(template, lastRow){
   const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
                                                                    0, 
                                                                    templateInfo.get('colItemNameAndIdx').get('amount'),
-                                                                   totalRowNumber, 
+                                                                   lastRow, 
                                                                    templateInfo.get('colItemNameAndIdx').get('sum'), 
                                                                    spreadSheetBatchUpdate.editNumberFormat('NUMBER', '#,###'), 
                                                                    'userEnteredFormat.numberFormat'),
@@ -119,8 +120,7 @@ function setTemplateHorizontalAlignment_(template){
                   ];
   return request;
 }
-function setTemplateBold_(template, totalRowNumber){
-  const lastRow = totalRowNumber + 2;
+function setTemplateBold_(template, totalRowNumber, lastRow){
   const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
                                                                    templateInfo.get('headStartRowIdx'), 
                                                                    templateInfo.get('colItemNameAndIdx').get('primaryItem'),
@@ -145,8 +145,7 @@ function setTemplateBold_(template, totalRowNumber){
                   ];
   return request;
 }
-function setTemplateBorders_(template, totalRowNumber){
-  const lastRow = totalRowNumber + 2;
+function setTemplateBorders_(template, totalRowNumber, lastRow){
   const itemNameRowIdx = templateInfo.get('bodyStartRowIdx') - 1; 
   let request = [];
   const borderStyle = spreadSheetBatchUpdate.createBorderStyle();
@@ -191,11 +190,11 @@ function setTemplateBorders_(template, totalRowNumber){
  * @param {Object} Sheet object.
  * @return none.
  */
-function setTemplateFilter_(template){
+/*function setTemplateFilter_(template){
   const filterColName = getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('filter')), template);
   const targetRange = template.getRange(`${filterColName}${templateInfo.get('outputBodyStartRowNumber') -1}:${filterColName}`);
   setFilter_(template, targetRange);
-}
+}*/
 /**
  * Set the heading information for the template sheet.
  * @param {Array.<string, string>} Value of the items sheet.
