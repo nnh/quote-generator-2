@@ -1,22 +1,24 @@
 class SetValuesSheetByYear{
-  constructor(inputData){
+  constructor(inputData, ss){
     this.formulas = new Map([
       ['cases', '=Trial!$B$28'],
       ['facilities', '=Trial!$B$29'],
       ['crfItems', '=Trial!$B$30'],
     ]);
     this.inputData = inputData;
+    this.ss = ss;
   }
-  exec_(sheet){
-    const outputData = this.getRowNumberAndCount_(sheet);
-    this.setSheetValues_(sheet, outputData);
+  exec_(year, sheet){
+    this.appSheet = SpreadsheetApp.openById(this.ss.spreadsheetId).getSheetByName(year);
+    const outputData = this.getRowNumberAndCount_(year, sheet);
+    this.setSheetValues_(outputData);
   }
-  getRowNumberAndCount_(sheet){
-    this.itemNameAndCount = this.editValues(sheet);
+  getRowNumberAndCount_(year, sheet){
+    this.itemNameAndCount = this.editValues(year);
     const [itemNameIdx, countIdx] = [0, 1];
     const itemColIdx = templateInfo.get('colItemNameAndIdx').get('secondaryItem');
-    const sheetValues = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn()).getValues();
-    let outputValues = [...Array(sheet.getLastRow())].map(_ => [null]);
+    const sheetValues = this.appSheet.getRange(1, 1, this.appSheet.getLastRow(), this.appSheet.getLastColumn()).getValues();
+    let outputValues = [...Array(this.appSheet.getLastRow())].map(_ => [null]);
     sheetValues.forEach((rows, idx) => {
       this.itemNameAndCount.forEach(item =>{
         if (item[itemNameIdx] === rows[itemColIdx]){
@@ -26,10 +28,10 @@ class SetValuesSheetByYear{
     });
     return outputValues;
   }
-  setSheetValues_(sheet, values){
+  setSheetValues_(values){
     values.forEach((value, idx) => {
       if (value[0]){
-        sheet.getRange(getNumber_(idx), getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))).setValue(value[0]);
+        this.appSheet.getRange(getNumber_(idx), getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))).setValue(value[0]);
       }
     });
   }
@@ -46,7 +48,7 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     const monthUnit = 1000 * 60 * 60 * 24 * 30;
     return Math.trunc(Math.abs(endDate - startDate) / monthUnit);
   }
-  editValues(sheet){
+  editValues(year){
     const [interimAnalysis, centralMonitoring] = this.getItemNameByTrialType_(commonInfo.get('investigatorInitiatedTrialFlag'), 
       [
         ['中間解析プログラム作成、解析実施（ダブル）', '中間解析プログラム作成、解析実施（シングル）'],
@@ -54,7 +56,6 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
       ]
     );
     // Obtain the number of months of registration for the relevant year.
-    const year = sheet.getName();
     const targetSheetStartDay = new Date(year, 3, 1);
     const targetSheetEndDay = new Date(parseInt(year) + 1, 2, 31);
     const thisYearStart = trialInfo.get('trialEnd') < targetSheetStartDay 
@@ -91,8 +92,8 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     ];
     return itemNameAndCount;
   }
-  setSheetValues_(sheet, values){
-    const targetRange = sheet.getRange(1, getNumber_(templateInfo.get('colItemNameAndIdx').get('count')), values.length, 1);
+  setSheetValues_(values){
+    const targetRange = this.appSheet.getRange(1, getNumber_(templateInfo.get('colItemNameAndIdx').get('count')), values.length, 1);
     const targetValue = targetRange.getValues().map((_, idx) => values[idx]);
     targetRange.setValues(targetValue);
   }

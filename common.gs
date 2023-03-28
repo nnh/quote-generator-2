@@ -13,6 +13,7 @@ function getCommonInfo_(){
   ]);
   info.set('trialType', trialType);
   info.set('totalSheetName', 'total');
+  info.set('total2SheetName', 'total2');
   return info;
 }
 /**

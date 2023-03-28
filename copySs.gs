@@ -36,8 +36,6 @@ function testCreateSs(inputData){
   const targetYearsRename = Array.from(targetYearsSheet.keys()).map(key => [targetYearsSheet.get(key).sheetId, String(key)]);
   const targetYearsRenameRequests = targetYearsRename.map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(targetYearsRenameRequests), ss.newSs.spreadsheetId);
-  // ↓どこかで`【見積明細：1年毎(${year}年度)】`の変更のバッチリクエスト入れないとだめ
-  //  return targetYears.map(year => copyFromTemplate_(ss, template, year, `【見積明細：1年毎(${year}年度)】`));
   const totalSheetRequest = new CreateTotalSheet(ss.newSs, targetYearsSheet).exec();
   const totalRequestsArray = [
                                [totalSheetRequest],
@@ -45,22 +43,24 @@ function testCreateSs(inputData){
   const totalRequests = spreadSheetBatchUpdate.editBatchUpdateRequest(totalRequestsArray);
   spreadSheetBatchUpdate.execBatchUpdate(totalRequests, ss.newSs.spreadsheetId);
   
-  return;
-//  const targetYears = targetYearsSheet.map(x => x.getName());
-  new CreateTotalSheet(newSs, targetYears, templateSheet).exec('Total');
-  new CreateTotal2Sheet(newSs, targetYears, templateSheet).exec();
-  templateSheet.hideSheet();
+  // ↓どこかで`【見積明細：1年毎(${year}年度)】`の変更のバッチリクエスト入れないとだめ
+  //  return targetYears.map(year => copyFromTemplate_(ss, template, year, `【見積明細：1年毎(${year}年度)】`));
+//  templateSheet.hideSheet();
   setPropertiesByTrialType_(inputData);
-  const setValuesRegistration = new SetValuesRegistrationSheet(inputData);
-  targetYears.forEach((year, idx, arr) => {
-    const targetSheet = newSs.getSheetByName(year);
-    setValuesRegistration.exec_(targetSheet);
-    if (idx === 0){
-      new SetValuesSetupSheet(inputData).exec_(targetSheet);
+  const setValuesRegistration = new SetValuesRegistrationSheet(inputData, ss.newSs);
+  let idx = 0;
+  targetYearsSheet.forEach((sheet, year, arr) => {
+    const targetSheetCheck = /^\d{4}$/.test(String(year));
+    if (targetSheetCheck){
+      setValuesRegistration.exec_(year, sheet);
+      if (idx === 0){
+        new SetValuesSetupSheet(inputData, ss.newSs).exec_(year, sheet);
+      }
+      if (idx === arr.length - 1){
+        new SetValuesClosingSheet(inputData, ss.newSs).exec_(year, sheet);
+      }
     }
-    if (idx === arr.length - 1){
-      new SetValuesClosingSheet(inputData).exec_(targetSheet);
-    }
+    idx++;
   });
 }
 /**
@@ -86,6 +86,7 @@ function copyTemplate_(ss, template){
   const endYear = trialInfo.get('trialEnd').getMonth() === 2 ? trialInfo.get('closingEnd').getFullYear() : trialInfo.get('trialEnd').getFullYear();
   let targetYears = [...Array(endYear - startYear + 1)].map((_, idx) => startYear + idx);
   targetYears.push(commonInfo.get('totalSheetName'));
+  targetYears.push(commonInfo.get('total2SheetName'));
   const targets = new Map();
   targetYears.forEach(year => targets.set(year, spreadSheetCommon.copySheet(ss.spreadsheetId, ss, template.properties.sheetId)));
   return targets;

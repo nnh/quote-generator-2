@@ -14,25 +14,26 @@ class CreateTotalSheet{
         this.targetSheetList.push(value);
       } else if (key === commonInfo.get('totalSheetName')){
         this.totalSheet = value;
+      } else if (key === commonInfo.get('total2SheetName')){
+        this.total2Sheet = value;
       }
     });
     this.template = ss.sheets.filter(x => x.properties.title === templateInfo.get('sheetName'))[0];    
-    this.headText = '【見積明細：総期間】';
+    this.totalHeadText = '【見積明細：総期間】';
     this.countColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))];
   }
   exec(){
-    return this.editSheet_();
+    let res = [];
+    res.push(this.editTotalSheet_());
+    return res;
   }
   /**
    * Edit total sheet.
-   * @param {Object} sheet Sheet object.
-   * @return none.
+   * @param none.
+   * @return {Object}
    */
-  editSheet_(){
-    // F8:F96まで各シート足しこみの関数を入れる、=シート名!F8+シート名!F8+シート名!F8
-    // ここまでにシート名変えとかないとだめだ
+  editTotalSheet_(){
     const formulas = [];
-    const test = this.totalSheet;
     for (let i = templateInfo.get('bodyStartRowIdx'); i < this.totalSheet.gridProperties.rowCount - templateInfo.get('bodyStartRowIdx'); i++){
       const formula = this.yearList.map(sheetName => `'${sheetName}'!${this.countColName}${i + 1}`).join(' + ');
       formulas.push([`=if(${formula} > 0, ${formula}, "")`]);
@@ -41,18 +42,13 @@ class CreateTotalSheet{
                                                                               templateInfo.get('bodyStartRowIdx'),
                                                                               templateInfo.get('colItemNameAndIdx').get('count'),
                                                                               formulas);
-    return setFormulasRequest;
+    const setHeadTextRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(this.totalSheet.sheetId,
+                                                                        templateInfo.get('headStartRowIdx'),
+                                                                        templateInfo.get('startColIdx'),
+                                                                        [[this.totalHeadText]]);
+    return [setFormulasRequest, setHeadTextRequest];
     // Project management is calculated only once during the entire period.
     //new ProjectManagement().setTotal_(sheet, this.yearList);
-  }
-  /**
-   * @param {number} index to output formulas.
-   * @return {string[]} Reshaped formulas.
-   */
-  setTargetFormula_(idx){
-    const rowNumber = getNumber_(idx);
-    const target = this.yearList.map(year => `${year}!$${this.targetColName}$${rowNumber + templateInfo.get('bodyStartRowIdx')}`).join('+');
-    return [`=${target}`];
   }
 }
 /**
