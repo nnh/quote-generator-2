@@ -31,11 +31,22 @@ function testCreateSs(inputData){
                         ];
   const requests = spreadSheetBatchUpdate.editBatchUpdateRequest(requestsArray);
   spreadSheetBatchUpdate.execBatchUpdate(requests, ss.newSs.spreadsheetId);
+  // Fix the template and then copy the sheets for each year, total, total2.
+  const targetYearsSheet = copyTemplate_(ss.newSs, ss.template);
+  const targetYearsRename = Array.from(targetYearsSheet.keys()).map(key => [targetYearsSheet.get(key).sheetId, String(key)]);
+  const targetYearsRenameRequests = targetYearsRename.map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));
+  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(targetYearsRenameRequests), ss.newSs.spreadsheetId);
+  // ↓どこかで`【見積明細：1年毎(${year}年度)】`の変更のバッチリクエスト入れないとだめ
+  //  return targetYears.map(year => copyFromTemplate_(ss, template, year, `【見積明細：1年毎(${year}年度)】`));
+  const totalSheetRequest = new CreateTotalSheet(ss.newSs, targetYearsSheet).exec();
+  const totalRequestsArray = [
+                               [totalSheetRequest],
+                             ];
+  const totalRequests = spreadSheetBatchUpdate.editBatchUpdateRequest(totalRequestsArray);
+  spreadSheetBatchUpdate.execBatchUpdate(totalRequests, ss.newSs.spreadsheetId);
+  
   return;
-
-  return;
-  const targetYearsSheet = copyTemplate_(newSs, templateSheet);
-  const targetYears = targetYearsSheet.map(x => x.getName());
+//  const targetYears = targetYearsSheet.map(x => x.getName());
   new CreateTotalSheet(newSs, targetYears, templateSheet).exec('Total');
   new CreateTotal2Sheet(newSs, targetYears, templateSheet).exec();
   templateSheet.hideSheet();
@@ -65,7 +76,7 @@ function setPropertiesByTrialType_(inputData){
   commonInfo.set('clinicalTrialsOfficeFlag', clinicalTrialsOfficeFlag);
 }
 /**
- * Copy the template sheet by the number of contract years.
+ * Copy the template sheet by the number of contract years, total, total2.
  * @param {Object} Spreadsheet object.
  * @param {Object} Sheet object.
  * @return Sheet object.
@@ -73,14 +84,11 @@ function setPropertiesByTrialType_(inputData){
 function copyTemplate_(ss, template){
   const startYear = trialInfo.get('setupStart').getFullYear();
   const endYear = trialInfo.get('trialEnd').getMonth() === 2 ? trialInfo.get('closingEnd').getFullYear() : trialInfo.get('trialEnd').getFullYear();
-  const targetYears = [...Array(endYear - startYear + 1)].map((_, idx) => startYear + idx);
-  return targetYears.map(year => copyFromTemplate_(ss, template, year, `【見積明細：1年毎(${year}年度)】`));
-}
-function copyFromTemplate_(ss, template, sheetName, headValue, headAddress='B2'){
-  const sheet = template.copyTo(ss);
-  sheet.setName(sheetName);
-  sheet.getRange(headAddress).setValue(headValue);
-  return sheet;
+  let targetYears = [...Array(endYear - startYear + 1)].map((_, idx) => startYear + idx);
+  targetYears.push(commonInfo.get('totalSheetName'));
+  const targets = new Map();
+  targetYears.forEach(year => targets.set(year, spreadSheetCommon.copySheet(ss.spreadsheetId, ss, template.properties.sheetId)));
+  return targets;
 }
 /**
  * Calculate the contract start end date.

@@ -64,6 +64,11 @@ function createTemplate_(ss, template, items){
                                                                         outputBodyStartRowNumber,
                                                                         templateInfo.get('startColIdx'),
                                                                         itemsBody);
+  const delRowIndex = totalRowNumber + 2;
+  // 不要な行を削除
+  const delRowsRequest = [
+    spreadSheetBatchUpdate.getdelRowColRequest(template.properties.sheetId, 'ROWS', delRowIndex, template.properties.gridProperties.rowCount),
+  ]
   // Set up formulas individually only for project management.
   // 後にしよ
 //  new ProjectManagement().setTemplate_(template);
@@ -80,8 +85,29 @@ function createTemplate_(ss, template, items){
   const horizontalAlignmentRequest = setTemplateHorizontalAlignment_(template);
   const numberFormatRequest = setTemplateNumberFormat_(template, lastRow);
 //  const filterRequest = [spreadSheetBatchUpdate.getBasicFilterRequest(['0'], 11, spreadSheetBatchUpdate.getRangeGridByIdx(template.properties.sheetId, 3, 11, null, 11))];
-  const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest];
+  const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest, horizontalAlignmentRequest, ...delRowsRequest];
   return requests;
+}
+function setTemplateColorFormat_(template, lastRow){
+  const arg = {};
+  const backgroundColorStyle = {
+    'rgbColor': {
+      'red': 0,
+      'green': 0,
+      'blue' : 1,
+      'alpha' : 0,
+    },
+  }
+  arg.backgroundColorStyle = backgroundColorStyle;
+  const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
+                                                                   0, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('amount'),
+                                                                   lastRow, 
+                                                                   templateInfo.get('colItemNameAndIdx').get('sum'), 
+                                                                   spreadSheetBatchUpdate.editCellFormatBackgroundColorStyle(arg), 
+                                                                   'userEnteredFormat.backgroundColorStyle'),
+                  ];
+  return request;
 }
 function setTemplateNumberFormat_(template, lastRow){
   const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
@@ -185,16 +211,6 @@ function setTemplateBorders_(template, totalRowNumber, lastRow){
   request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
   return request;
 }
-/**
- * Set filter.
- * @param {Object} Sheet object.
- * @return none.
- */
-/*function setTemplateFilter_(template){
-  const filterColName = getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('filter')), template);
-  const targetRange = template.getRange(`${filterColName}${templateInfo.get('outputBodyStartRowNumber') -1}:${filterColName}`);
-  setFilter_(template, targetRange);
-}*/
 /**
  * Set the heading information for the template sheet.
  * @param {Array.<string, string>} Value of the items sheet.

@@ -12,6 +12,7 @@ function getCommonInfo_(){
     ['specifiedClinicalTrial', '特定臨床研究'],
   ]);
   info.set('trialType', trialType);
+  info.set('totalSheetName', 'total');
   return info;
 }
 /**

@@ -4,45 +4,46 @@ class CreateTotalSheet{
    * @param {string[]} yearList Array of sheet names.
    * @param {Object} template Sheet object.
    */
-  constructor(ss, yearList, template){
+  constructor(ss, targets){
     this.ss = ss;
-    this.yearList = yearList;
-    this.template = template;
-    this.targetColName = getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('count')), ss.getSheets()[0]);
+    this.yearList = [];
+    this.targetSheetList = [];
+    targets.forEach((value, key) => {
+      if (/\d{4}/.test(key)){
+        this.yearList.push(key);
+        this.targetSheetList.push(value);
+      } else if (key === commonInfo.get('totalSheetName')){
+        this.totalSheet = value;
+      }
+    });
+    this.template = ss.sheets.filter(x => x.properties.title === templateInfo.get('sheetName'))[0];    
     this.headText = '【見積明細：総期間】';
-    this.sheetName = 'Total';
+    this.countColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))];
   }
   exec(){
-    const targetSheet = this.copySheet_();
-    this.editSheet_(targetSheet);
-  }
-  /**
-   * Copy the template and add sheets.
-   * @param {string} sheetName Name of the sheet to be added.
-   * @param {string} headText String to be output to cell B2.
-   * @return {Object} Sheet object.
-   * @see copyFromTemplate_
-   */
-  copySheet_(){
-    const checkSheet = this.ss.getSheets().filter(x => x.getName() === this.sheetName);
-    if (checkSheet.length > 0){
-      return checkSheet[0];
-    }
-    return copyFromTemplate_(this.ss, this.template, this.sheetName, this.headText); 
+    return this.editSheet_();
   }
   /**
    * Edit total sheet.
    * @param {Object} sheet Sheet object.
    * @return none.
    */
-  editSheet_(sheet){
-    const totalRange = sheet.getRange(getNumber_(templateInfo.get('bodyStartRowIdx')), 1, sheet.getLastRow(), sheet.getLastColumn());
-    const totalValues = totalRange.getValues();
-    const targetRange = totalRange.offset(0, templateInfo.get('colItemNameAndIdx').get('count'), totalValues.length, 1);
-    const formulas = totalValues.map((rows, idx) => rows[templateInfo.get('colItemNameAndIdx').get('price')] !== '' ? this.setTargetFormula_(idx) : [null]);
-    targetRange.setFormulas(formulas);
+  editSheet_(){
+    // F8:F96まで各シート足しこみの関数を入れる、=シート名!F8+シート名!F8+シート名!F8
+    // ここまでにシート名変えとかないとだめだ
+    const formulas = [];
+    const test = this.totalSheet;
+    for (let i = templateInfo.get('bodyStartRowIdx'); i < this.totalSheet.gridProperties.rowCount - templateInfo.get('bodyStartRowIdx'); i++){
+      const formula = this.yearList.map(sheetName => `'${sheetName}'!${this.countColName}${i + 1}`).join(' + ');
+      formulas.push([`=if(${formula} > 0, ${formula}, "")`]);
+    }
+    const setFormulasRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(this.totalSheet.sheetId,
+                                                                              templateInfo.get('bodyStartRowIdx'),
+                                                                              templateInfo.get('colItemNameAndIdx').get('count'),
+                                                                              formulas);
+    return setFormulasRequest;
     // Project management is calculated only once during the entire period.
-    new ProjectManagement().setTotal_(sheet, this.yearList);
+    //new ProjectManagement().setTotal_(sheet, this.yearList);
   }
   /**
    * @param {number} index to output formulas.
