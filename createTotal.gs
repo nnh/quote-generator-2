@@ -34,25 +34,69 @@ class CreateTotalSheet{
   editTotal2Sheet_(){
     const test = this.total2Sheet;
     // 1行目を削除する
-    // 4行目を削除する
   const delRowsRequest = [
     spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 0, 1),
-    spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 3, 4),
   ];
+    // D列以降を一旦削除し、年数分+3列追加する
+  const outputStartIdx = templateInfo.get('colItemNameAndIdx').get('price');
+  const delColRequest = spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', outputStartIdx, this.total2Sheet.gridProperties.columnCount - outputStartIdx);
+  const insertColRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', outputStartIdx, this.yearList.length + 3);
+  const insertRowRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'ROWS', 3, 4);
   // B1セルに「期間別見積」
   // B3セルに'【見積明細：総期間】'
-  const setBodyRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(this.total2Sheet.sheetId,
-                                                                        0,
-                                                                        templateInfo.get('startColIdx'),
-                                                                        [['【期間別見積】', ''],['', ''],[this.totalHeadText, '']]);
-    // D列以降を削除する
-  const delColRequest = spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', 3, 10);
-  return [...delRowsRequest, setBodyRequest, delColRequest];
-    // D列の後ろに年数＋３列を追加
-    // ４行目に年数を出力
-    // 5行目以降年数分、該当シートの該当セルを出す
-    // 合計列に合計を出す
-    // 一列開けてフィルタ0/1
+  // ４行目に年数を出力
+  const primaryItemColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('primaryItem'))];
+  const secondaryItemColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('secondaryItem'))];
+  const primaryItemRange = `${commonInfo.get('total2SheetName')}!${primaryItemColName}1:${secondaryItemColName}${this.total2Sheet.gridProperties.rowCount}`;
+  const itemsValues = spreadSheetBatchUpdate.rangeGetValue(this.ss.spreadsheetId, primaryItemRange)[0].values;
+  let primaryRowIndex = [];
+  let secondaryRowIndex =[];
+  itemsValues.forEach((value, idx) => {
+    if (value.length === 0){
+      return null;
+    }
+    if (value.length === 2){
+      secondaryRowIndex.push(idx);
+    }
+    if (value[0] !== ''){
+      primaryRowIndex.push(idx);
+    }
+  });
+  //const primaryRowIndex = primaryItemValues.map((value, idx) => value.length > 0 ? idx : null).filter(x => x);
+  // 5行目以降年数分、該当シートの該当セルを出す
+  const sumRowIdx = itemsValues.map((value, idx) => value.length > 0 ? value[0] === '合計' ? idx : null : null).filter(x => x)[0];  
+  let bodyRowsArray = [];
+  for (let i = 5; i < sumRowIdx; i++){
+    bodyRowsArray.push(i);
+  }
+  const outputStartColName = colNamesConstant[getNumber_(outputStartIdx)];
+  const outputEndColName = colNamesConstant[getNumber_(outputStartIdx + this.yearList.length - 1)];
+  const sumColName = colNamesConstant[getNumber_(outputStartIdx + this.yearList.length)];
+  const setBodyFormulas = bodyRowsArray.map(row => {
+    const yearsFormula = this.yearList.map(year => `=${String(year)}!$H$${row}`);
+    const sumFormula = `=if(sum(${outputStartColName}${row}:${outputEndColName}${row})=0, "", sum(${outputStartColName}${row}:${outputEndColName}${row}))`;
+    const filterFormula = `="dummy"`;
+    return [...yearsFormula, sumFormula, '', filterFormula];
+  });
+  const headerValuesArray = new Array(this.yearList.length + outputStartIdx + 1).fill('');
+  const headerValues = [
+    ['', '【期間別見積】', ...headerValuesArray.slice(2)],
+    headerValuesArray,
+    ['', this.totalHeadText, ...headerValuesArray.slice(2)],
+    ['', '', '',　...this.yearList.map(x => String(x)), '合計'],
+  ];
+  const setBodyRequest = [
+    spreadSheetBatchUpdate.getRangeSetValueRequest(this.total2Sheet.sheetId,
+                                                   4,
+                                                   3,
+                                                   setBodyFormulas), 
+    spreadSheetBatchUpdate.getRangeSetValueRequest(this.total2Sheet.sheetId,
+                                                   0,
+                                                   0,
+                                                   headerValues),
+  ];
+  return [...delRowsRequest, delColRequest, insertColRequest, insertRowRequest, ...setBodyRequest];
+    // フィルタはTotalから値をとってくる
 
   }
   /**

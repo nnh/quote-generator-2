@@ -65,6 +65,7 @@ function createTemplate_(ss, template, items){
                                                                         templateInfo.get('startColIdx'),
                                                                         itemsBody);
   const delRowsRequest = [
+    spreadSheetBatchUpdate.getdelRowColRequest(template.properties.sheetId, 'ROWS', 4, 6),
     spreadSheetBatchUpdate.getdelRowColRequest(template.properties.sheetId, 'ROWS', totalRowNumber + 2, template.properties.gridProperties.rowCount),
   ];
   // Set up formulas individually only for project management.
