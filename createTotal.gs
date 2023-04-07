@@ -37,7 +37,7 @@ class CreateTotalSheet{
     // 4行目を削除する
   const delRowsRequest = [
     spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 0, 1),
-    spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 3, this.total2Sheet),
+    spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 3, 4),
   ];
   // B1セルに「期間別見積」
   // B3セルに'【見積明細：総期間】'
