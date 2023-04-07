@@ -37,6 +37,8 @@ function getTrialsInfo_(){
   info.set('closingEnd', null);
   info.set('setupTerm', null);
   info.set('closingTerm', null);
+  info.set('discountRateAddress', 'B47');
+  info.set('sheetName', 'Trial');
   return info;
 }
 /**
@@ -53,6 +55,7 @@ function getItemsInfo_(){
   ]);
   info.set('colItemNameAndIdx', colItemNameAndIdx);
   info.set('bodyStartRowIdx', 2);
+  info.set('sheetName', 'Items');
   return info;
 }
 /**

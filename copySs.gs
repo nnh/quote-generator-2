@@ -1,9 +1,11 @@
 function testCreateSs(inputData){
   const ss = {};
-  ss.newSs = spreadSheetCommon.createNewSpreadSheet('test20230215');
+  const now = driveCommon.todayYyyymmdd();
+  ss.newSs = spreadSheetCommon.createNewSpreadSheet(`test${now}`);
   ss.template = ss.newSs.sheets[0];
   const sheetIdMap = spreadSheetCommon.getSheetIdMap(Sheets.Spreadsheets.get(PropertiesService.getScriptProperties().getProperty('templateFileId')));
-  const copySheetNames = ['Items', 'Trial', 'Quotation Request'];
+  // Copy the 'Items', 'Trial', and 'Quotation Request' sheets from the source file.
+  const copySheetNames = [itemsInfo.get('sheetName'), trialInfo.get('sheetName'), 'Quotation Request'];
   const copySheets = copySheetNames.map(x => spreadSheetCommon.copySheet(PropertiesService.getScriptProperties().getProperty('templateFileId'), ss.newSs, sheetIdMap.get(x)));
   const renameRequests = [
                           [0, templateInfo.get('sheetName')],
@@ -19,7 +21,7 @@ function testCreateSs(inputData){
     spreadSheetBatchUpdate.getRangeSetValueRequest(ss.quotationRequest.properties.sheetId, 
                                                    1, 
                                                    0, 
-                                                   [[Utilities.formatDate(new Date(), 'JST', 'yyyy/MM/dd')]]),
+                                                   [[now]]),
   ];
   const setItemsRequest = setItemsSheet_(ss.newSs, ss.items);
   const createTemplateRequest = createTemplate_(ss.newSs, ss.template, ss.items);
@@ -38,7 +40,7 @@ function testCreateSs(inputData){
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(targetYearsRenameRequests), ss.newSs.spreadsheetId);
   const totalSheetRequest = new CreateTotalSheet(ss.newSs, targetYearsSheet).exec();
   const totalRequestsArray = [
-                               [totalSheetRequest],
+                               totalSheetRequest,
                              ];
   const totalRequests = spreadSheetBatchUpdate.editBatchUpdateRequest(totalRequestsArray);
   spreadSheetBatchUpdate.execBatchUpdate(totalRequests, ss.newSs.spreadsheetId);
@@ -49,27 +51,29 @@ function testCreateSs(inputData){
   setPropertiesByTrialType_(inputData);
   const setValuesRegistration = new SetValuesRegistrationSheet(inputData, ss.newSs);
   let idx = 0;
-  targetYearsSheet.forEach((sheet, year, arr) => {
+  targetYearsSheet.forEach((_, year, arr) => {
     const targetSheetCheck = /^\d{4}$/.test(String(year));
     if (targetSheetCheck){
-      setValuesRegistration.exec_(year, sheet);
+      setValuesRegistration.exec_(year);
       if (idx === 0){
-        new SetValuesSetupSheet(inputData, ss.newSs).exec_(year, sheet);
+        new SetValuesSetupSheet(inputData, ss.newSs).exec_(year);
       }
       if (idx === arr.length - 1){
-        new SetValuesClosingSheet(inputData, ss.newSs).exec_(year, sheet);
+        new SetValuesClosingSheet(inputData, ss.newSs).exec_(year);
       }
     }
     idx++;
   });
 }
 /**
- * 
+ * Configure settings for each TrialType.
+ * @param {Object} inputData The map object of the information entered from the form.
+ * @return none.
  */
 function setPropertiesByTrialType_(inputData){
   commonInfo.set('investigatorInitiatedTrialFlag', inputData.get(commonInfo.get('trialTypeItemName')) === commonInfo.get('trialType').get('investigatorInitiatedTrial'));
   commonInfo.set('specifiedClinicalTrialFlag', inputData.get(commonInfo.get('trialTypeItemName')) === commonInfo.get('trialType').get('specifiedClinicalTrial'));
-  // 事務局運営の設定：企業原資または調整事務局の有無が「あり」または医師主導治験の場合に積む
+  // Establishment of secretariat operation: Add if the presence of company source or coordinating secretariat is "Yes" or if it is an investigator-initiated clinical trial.
   const clinicalTrialsOfficeFlag = inputData.get(commonInfo.get('sourceOfFundsTextItemName')) === commonInfo.get('commercialCompany') ||
                                    inputData.get('調整事務局の有無') === 'あり' ||
                                    commonInfo.get('investigatorInitiatedTrialFlag');
@@ -77,8 +81,8 @@ function setPropertiesByTrialType_(inputData){
 }
 /**
  * Copy the template sheet by the number of contract years, total, total2.
- * @param {Object} Spreadsheet object.
- * @param {Object} Sheet object.
+ * @param {Object} ss Spreadsheet object.
+ * @param {Object} template Sheet object.
  * @return Sheet object.
  */
 function copyTemplate_(ss, template){
@@ -101,9 +105,9 @@ function editTrialTerm_(inputData){
   const trialStartMonth = inputData.get(`${trialInfo.get('trialStartText')}${trialInfo.get('monthText')}`).replace(trialInfo.get('monthText'), '') - 1;
   const trialEndYear = inputData.get(`${trialInfo.get('trialEndText')}${trialInfo.get('yearText')}`).replace(trialInfo.get('yearText'), '');
   const trialEndMonth = inputData.get(`${trialInfo.get('trialEndText')}${trialInfo.get('monthText')}`).replace(trialInfo.get('monthText'), '');
-  const target = ['医師主導治験', '特定臨床研究'];
-  const setupTerm = target.some(x => inputData.get('試験種別') === x) ? 6 : 3; 
-  const closingTerm = target.some(x => inputData.get('試験種別') === x) ? 6 : 3; 
+  const target = [commonInfo.get('trialType').get('investigatorInitiatedTrial'), commonInfo.get('trialType').get('specifiedClinicalTrial')];
+  const setupTerm = target.some(x => inputData.get(commonInfo.get('trialTypeItemName')) === x) ? 6 : 3; 
+  const closingTerm = target.some(x => inputData.get(commonInfo.get('trialTypeItemName')) === x) ? 6 : 3; 
   const trialStart = new Date(trialStartYear, trialStartMonth, 1);
   const trialEnd = new Date(trialEndYear, trialEndMonth, 0);
   const setupStart = new Date(trialStart.getFullYear(), trialStart.getMonth() - setupTerm, trialStart.getDate());

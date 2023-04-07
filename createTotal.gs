@@ -1,3 +1,6 @@
+/**
+ * Create a Total, Total2 sheet.
+ */
 class CreateTotalSheet{
   /**
    * @param {Object} ss Spreadsheet object.
@@ -24,8 +27,33 @@ class CreateTotalSheet{
   }
   exec(){
     let res = [];
+    res.push(this.editTotal2Sheet_());
     res.push(this.editTotalSheet_());
-    return res;
+    return [res];
+  }
+  editTotal2Sheet_(){
+    const test = this.total2Sheet;
+    // 1行目を削除する
+    // 4行目を削除する
+  const delRowsRequest = [
+    spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 0, 1),
+    spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 3, this.total2Sheet),
+  ];
+  // B1セルに「期間別見積」
+  // B3セルに'【見積明細：総期間】'
+  const setBodyRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(this.total2Sheet.sheetId,
+                                                                        0,
+                                                                        templateInfo.get('startColIdx'),
+                                                                        [['【期間別見積】', ''],['', ''],[this.totalHeadText, '']]);
+    // D列以降を削除する
+  const delColRequest = spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', 3, 10);
+  return [...delRowsRequest, setBodyRequest, delColRequest];
+    // D列の後ろに年数＋３列を追加
+    // ４行目に年数を出力
+    // 5行目以降年数分、該当シートの該当セルを出す
+    // 合計列に合計を出す
+    // 一列開けてフィルタ0/1
+
   }
   /**
    * Edit total sheet.

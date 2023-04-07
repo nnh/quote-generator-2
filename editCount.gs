@@ -8,12 +8,12 @@ class SetValuesSheetByYear{
     this.inputData = inputData;
     this.ss = ss;
   }
-  exec_(year, sheet){
+  exec_(year){
     this.appSheet = SpreadsheetApp.openById(this.ss.spreadsheetId).getSheetByName(year);
-    const outputData = this.getRowNumberAndCount_(year, sheet);
+    const outputData = this.getRowNumberAndCount_(year);
     this.setSheetValues_(outputData);
   }
-  getRowNumberAndCount_(year, sheet){
+  getRowNumberAndCount_(year){
     this.itemNameAndCount = this.editValues(year);
     const [itemNameIdx, countIdx] = [0, 1];
     const itemColIdx = templateInfo.get('colItemNameAndIdx').get('secondaryItem');

@@ -57,18 +57,16 @@ function createTemplate_(ss, template, items){
   const totalRowNumber = itemsLastRowNumber + 1;
   const itemsTotal = [
     ['合計', '（税抜）', '', '', '', '', `=sum(${amountCol}${outputBodyStartRowNumber + 1}:${amountCol}${totalRowNumber})`, '', '', '', 1],
-    ['割引後合計','', '', '', '', '', `=${amountCol}${totalRowNumber + 1}*(1-Trial!$B$47)`, '', '', '', '=if(Trial!$B$47=0, 0, 1)'],
+    ['割引後合計','', '', '', '', '', `=${amountCol}${totalRowNumber + 1}*(1-Trial!${trialInfo.get('discountRateAddress')})`, '', '', '', `=if(Trial!${trialInfo.get('discountRateAddress')}=0, 0, 1)`],
   ];
   const itemsBody = [...formulas, ...itemsTotal];
   const setBodyRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(template.properties.sheetId,
                                                                         outputBodyStartRowNumber,
                                                                         templateInfo.get('startColIdx'),
                                                                         itemsBody);
-  const delRowIndex = totalRowNumber + 2;
-  // 不要な行を削除
   const delRowsRequest = [
-    spreadSheetBatchUpdate.getdelRowColRequest(template.properties.sheetId, 'ROWS', delRowIndex, template.properties.gridProperties.rowCount),
-  ]
+    spreadSheetBatchUpdate.getdelRowColRequest(template.properties.sheetId, 'ROWS', totalRowNumber + 2, template.properties.gridProperties.rowCount),
+  ];
   // Set up formulas individually only for project management.
   // 後にしよ
 //  new ProjectManagement().setTemplate_(template);
@@ -213,8 +211,8 @@ function setTemplateBorders_(template, totalRowNumber, lastRow){
 }
 /**
  * Set the heading information for the template sheet.
- * @param {Array.<string, string>} Value of the items sheet.
- * @return {Array.<string, string>}
+ * @param {string[][]} Value of the items sheet.
+ * @return {string[][]}
  */
 function editItemValues_(itemsSheetValues){
   const primaryItemExcludedList = ['準備作業', 'EDC構築', '中央モニタリング', 'データセット作成'];
@@ -240,26 +238,36 @@ function setColNamesInfo_(ss, targetMap){
   targetMap.get('colItemNameAndIdx').forEach((idx, itemName) => colNames.set(itemName, getColumnString_(getNumber_(idx), ss)));
   targetMap.set('colNames', colNames);
 }
+/**
+ * Create a list of functions to be set up on the template sheet.
+ */
 class EditTemplateFormulas{
   constructor(){
     this.items = itemsInfo.get('sheet');
     this.itemsSheetName = this.items.properties.title;
     this.countCol = commonGas.getColumnStringByIndex(templateInfo.get('colItemNameAndIdx').get('count')); 
   }
+  /**
+   * Create a function list of major items.
+   * @param {number} itemsRowNumber Row number of the items sheet.
+   * @param {string} sumFormula Total column function.
+   * @param {string} sumExcludedFilter Function of the filter column.
+   * @return {string[]} a function list of major items.
+   */
   editPrimaryItem(itemsRowNumber, sumFormula, sumExcludedFilter){
-      return [
-        `=${this.itemsSheetName}!$${commonGas.getColumnStringByNumber(1)}$${itemsRowNumber}`,
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        sumFormula,
-        '',
-        '',
-        sumExcludedFilter,
-      ]
+    return [
+      `=${this.itemsSheetName}!$${commonGas.getColumnStringByNumber(1)}$${itemsRowNumber}`,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      sumFormula,
+      '',
+      '',
+      sumExcludedFilter,
+    ];
   }
   editSecondaryItem(rowNumber, itemsRowNumber){
     return [
