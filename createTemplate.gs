@@ -57,7 +57,7 @@ function createTemplate_(ss, template, items){
   const totalRowNumber = itemsLastRowNumber + 1;
   const itemsTotal = [
     ['合計', '（税抜）', '', '', '', '', `=sum(${amountCol}${outputBodyStartRowNumber + 1}:${amountCol}${totalRowNumber})`, '', '', '', 1],
-    ['割引後合計','', '', '', '', '', `=${amountCol}${totalRowNumber + 1}*(1-Trial!${trialInfo.get('discountRateAddress')})`, '', '', '', `=if(Trial!${trialInfo.get('discountRateAddress')}=0, 0, 1)`],
+    ['割引後合計','', '', '', '', '', `=${amountCol}${totalRowNumber + 1}*(1-${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')})`, '', '', '', `=if(${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')}=0, 0, 1)`],
   ];
   const itemsBody = [...formulas, ...itemsTotal];
   const setBodyRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(template.properties.sheetId,
