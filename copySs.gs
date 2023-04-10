@@ -1,3 +1,28 @@
+/**
+ * Create and return a request body.
+ * @param {string}[][] hiddenValues ex.['0', '1', '2'], If not filtering [].
+ * @param {number} columnIndex target column index.
+ * @param {Object} range
+ * @return {Object} Request body.
+ */
+function getBasicFilterRequest(hiddenValues=[], columnIndex, range){
+  return { 
+    'setBasicFilter': {
+      'filter': {
+        'range': range,
+        'filterSpecs': [
+          {
+            'filterCriteria': {
+              'hiddenValues': hiddenValues,
+            },
+            'columnIndex' : columnIndex,
+          },
+        ],
+      }
+    }
+  };
+}
+
 function testCreateSs(inputData){
   const ss = {};
   const now = driveCommon.todayYyyymmdd();
@@ -44,26 +69,28 @@ function testCreateSs(inputData){
                              ];
   const totalRequests = spreadSheetBatchUpdate.editBatchUpdateRequest(totalRequestsArray);
   spreadSheetBatchUpdate.execBatchUpdate(totalRequests, ss.newSs.spreadsheetId);
-  
-  // ↓どこかで`【見積明細：1年毎(${year}年度)】`の変更のバッチリクエスト入れないとだめ
-  //  return targetYears.map(year => copyFromTemplate_(ss, template, year, `【見積明細：1年毎(${year}年度)】`));
-//  templateSheet.hideSheet();
   setPropertiesByTrialType_(inputData);
   const setValuesRegistration = new SetValuesRegistrationSheet(inputData, ss.newSs);
   let idx = 0;
+  let filterRequests = [];
   targetYearsSheet.forEach((_, year, arr) => {
     const targetSheetCheck = /^\d{4}$/.test(String(year));
+    let res;
     if (targetSheetCheck){
-      setValuesRegistration.exec_(year);
+      res = setValuesRegistration.exec_(year);
       if (idx === 0){
-        new SetValuesSetupSheet(inputData, ss.newSs).exec_(year);
+        res = new SetValuesSetupSheet(inputData, ss.newSs).exec_(year);
       }
       if (idx === arr.length - 1){
-        new SetValuesClosingSheet(inputData, ss.newSs).exec_(year);
+        res = new SetValuesClosingSheet(inputData, ss.newSs).exec_(year);
       }
     }
     idx++;
+    if (res){
+      filterRequests.push(res);
+    }
   });
+  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), ss.newSs.spreadsheetId);
 }
 /**
  * Configure settings for each TrialType.

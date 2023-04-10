@@ -74,25 +74,10 @@ function getTemplateInfo_(){
     ['rightBorderEnd', 9],
     ['filter', 11],
   ]);
-/*  const colWidths = new Map([
-    [1, 21],
-    [getNumber_(colItemNameAndIdx.get('primaryItem')), 50],
-    [getNumber_(colItemNameAndIdx.get('secondaryItem')), 453],
-    [getNumber_(colItemNameAndIdx.get('price')), 76],
-    [getNumber_(colItemNameAndIdx.get('x')), 13],
-    [getNumber_(colItemNameAndIdx.get('count')), 35],
-    [7, 46],
-    [getNumber_(colItemNameAndIdx.get('amount')), 81],
-    [getNumber_(colItemNameAndIdx.get('sum')), 105],
-    [getNumber_(colItemNameAndIdx.get('rightBorderEnd')), 22],
-    [11, 18],
-    [getNumber_(colItemNameAndIdx.get('filter')), 35],
-  ]);*/
   info.set('sheetName', 'templateByYear');
   info.set('headStartRowIdx', 1);
   info.set('bodyStartRowIdx', 4);
   info.set('startColIdx', 1);
-//  info.set('colWidths', colWidths);
   info.set('colItemNameAndIdx', colItemNameAndIdx);
   return info;
 }

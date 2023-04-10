@@ -32,12 +32,10 @@ class CreateTotalSheet{
     return [res];
   }
   editTotal2Sheet_(){
-    const test = this.total2Sheet;
-    // 1行目を削除する
     const delRowsRequest = [
       spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 0, 1),
     ];
-    // D列以降を一旦削除し、年数分+3列追加する
+    // Delete columns D and after and add years + 3 columns.
     this.outputStartIdx = templateInfo.get('colItemNameAndIdx').get('price');
     const delColRequest = spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', this.outputStartIdx, this.total2Sheet.gridProperties.columnCount - this.outputStartIdx);
     const insertColRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', this.outputStartIdx, this.yearList.length + 3);
@@ -81,7 +79,6 @@ class CreateTotalSheet{
       const filterFormula = `=${commonInfo.get('totalSheetName')}!${colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('filter'))]}${row - 1}`;
       return [...yearsFormula, sumFormula, '', filterFormula];
     });
-
     const headerValuesArray = new Array(this.yearList.length + this.outputStartIdx + 1).fill('');
     const headerValues = [
       ['', '【期間別見積】', ...headerValuesArray.slice(2)],
@@ -179,22 +176,6 @@ class CreateTotalSheet{
     }
     borders.innerHorizontal = borderStyle.setBorderSolid();
     request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
-/*    rowCol.startRowIndex = 1;
-    rowCol.endRowIndex = 96; 
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders));  
-    rowCol.startRowIndex = totalRowNumber;
-    rowCol.endRowIndex = lastRow;
-    borders.innerHorizontal = borderStyle.setBorderSolid();
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
-    delete borders.innerHorizontal;
-    rowCol.startRowIndex = itemNameRowIdx;
-    rowCol.endRowIndex = totalRowNumber;
-    rowCol.startColumnIndex = templateInfo.get('colItemNameAndIdx').get('price');
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
-    rowCol.startColumnIndex = templateInfo.get('colItemNameAndIdx').get('amount');
-    rowCol.endColumnIndex = templateInfo.get('colItemNameAndIdx').get('sum');
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
-*/
     return request;
   }
   /**

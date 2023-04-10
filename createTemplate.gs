@@ -83,7 +83,6 @@ function createTemplate_(ss, template, items){
   const boldRequest = setTemplateBold_(template, totalRowNumber, lastRow);
   const horizontalAlignmentRequest = setTemplateHorizontalAlignment_(template);
   const numberFormatRequest = setTemplateNumberFormat_(template, lastRow);
-//  const filterRequest = [spreadSheetBatchUpdate.getBasicFilterRequest(['0'], 11, spreadSheetBatchUpdate.getRangeGridByIdx(template.properties.sheetId, 3, 11, null, 11))];
   const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest, horizontalAlignmentRequest, ...delRowsRequest];
   return requests;
 }

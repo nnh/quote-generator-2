@@ -12,6 +12,11 @@ class SetValuesSheetByYear{
     this.appSheet = SpreadsheetApp.openById(this.ss.spreadsheetId).getSheetByName(year);
     const outputData = this.getRowNumberAndCount_(year);
     this.setSheetValues_(outputData);
+    this.appSheet.getRange('B2').setValue(`【見積明細：1年毎(${year}年度)】`);
+    SpreadsheetApp.flush();
+    const filterRange = spreadSheetBatchUpdate.getRangeGridByIdx(this.appSheet.getSheetId(), templateInfo.get('bodyStartRowIdx') - 1, templateInfo.get('colItemNameAndIdx').get('filter'), null, templateInfo.get('colItemNameAndIdx').get('filter'));
+    const filterRequest = getBasicFilterRequest(['0'], templateInfo.get('colItemNameAndIdx').get('filter'), filterRange);
+    return filterRequest;
   }
   getRowNumberAndCount_(year){
     this.itemNameAndCount = this.editValues(year);
