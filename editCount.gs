@@ -167,3 +167,12 @@ class SetValuesClosingSheet extends SetValuesSheetByYear{
     return itemNameAndCount;
   }
 }
+class SetFilterTotalSheet extends SetValuesSheetByYear{
+  exec_(year){
+    this.appSheet = SpreadsheetApp.openById(this.ss.spreadsheetId).getSheetByName(year);
+    const filterCol = year === commonInfo.get('total2SheetName') ? this.appSheet.getLastColumn() - 1 : templateInfo.get('colItemNameAndIdx').get('filter');
+    const filterRange = spreadSheetBatchUpdate.getRangeGridByIdx(this.appSheet.getSheetId(), templateInfo.get('bodyStartRowIdx') - 1, filterCol, null, filterCol);
+    const filterRequest = getBasicFilterRequest(['0'], filterCol, filterRange);
+    return filterRequest;
+  }
+}

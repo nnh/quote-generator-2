@@ -32,11 +32,9 @@ class CreateTotalSheet{
     return [res];
   }
   editTotal2Sheet_(){
-    const delRowsRequest = [
-      spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 0, 1),
-    ];
     // Delete columns D and after and add years + 3 columns.
     this.outputStartIdx = templateInfo.get('colItemNameAndIdx').get('price');
+    this.sumColIdx = this.yearList.length + this.outputStartIdx + 1;
     const delColRequest = spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', this.outputStartIdx, this.total2Sheet.gridProperties.columnCount - this.outputStartIdx);
     const insertColRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', this.outputStartIdx, this.yearList.length + 3);
     const insertRowRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'ROWS', 3, 4);
@@ -67,7 +65,7 @@ class CreateTotalSheet{
       }
     });
     let bodyRowsArray = [];
-    for (let i = 5; i < this.total2Sheet.gridProperties.rowCount; i++){
+    for (let i = 6; i < this.total2Sheet.gridProperties.rowCount; i++){
       bodyRowsArray.push(i);
     }
     const outputStartColName = colNamesConstant[getNumber_(this.outputStartIdx)];
@@ -88,11 +86,11 @@ class CreateTotalSheet{
     ];
     const setBodyRequest = [
       spreadSheetBatchUpdate.getRangeSetValueRequest(this.total2Sheet.sheetId,
-                                                     4,
-                                                     3,
+                                                     5,
+                                                     this.outputStartIdx,
                                                      setBodyFormulas), 
       spreadSheetBatchUpdate.getRangeSetValueRequest(this.total2Sheet.sheetId,
-                                                     1,
+                                                     0,
                                                      0,
                                                      headerValues),
     ];
@@ -102,7 +100,28 @@ class CreateTotalSheet{
     const setColWidthRequest = colWidths.map((width, idx) => spreadSheetBatchUpdate.getSetColWidthRequest(this.total2Sheet.sheetId, width, idx, idx + 1));
     // Border setting
     const bordersRequest = this.setBorders_();
-    return [delColRequest, insertColRequest, insertRowRequest, ...setBodyRequest, ...delRowsRequest, ...setColWidthRequest, bordersRequest];
+    const delRowsRequest = [
+      spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 4, 5),
+    ];
+    const formatRequest = [
+      spreadSheetBatchUpdate.getRangeSetFormatRequest(this.total2Sheet.sheetId, 
+                                                      0, 
+                                                      templateInfo.get('colItemNameAndIdx').get('primaryItem'),
+                                                      1, 
+                                                      templateInfo.get('colItemNameAndIdx').get('primaryItem'), 
+                                                      spreadSheetBatchUpdate.getFontBoldRequest(), 
+                                                      'userEnteredFormat.textFormat.bold'),
+      spreadSheetBatchUpdate.getRangeSetFormatRequest(this.total2Sheet.sheetId, 
+                                                      3,
+                                                      this.outputStartIdx,
+                                                      3, 
+                                                      this.sumColIdx, 
+                                                      spreadSheetBatchUpdate.getHorizontalAlignmentRequest('CENTER'), 
+                                                      'userEnteredFormat.horizontalAlignment'),
+
+    ];
+
+    return [delColRequest, insertColRequest, insertRowRequest, ...setBodyRequest, ...delRowsRequest, ...setColWidthRequest, bordersRequest, formatRequest];
   }
   setBorders_(){
     let request = [];
@@ -136,26 +155,25 @@ class CreateTotalSheet{
     }
     delete borders.innerHorizontal;
     delete borders.innerVertical;
-    const sumColIdx = this.yearList.length + this.outputStartIdx + 1;
     rowCol = {
       'startRowIndex': 2,
       'endRowIndex' : this.sumRowIdx,
       'startColumnIndex' : 1,
-      'endColumnIndex': sumColIdx,
+      'endColumnIndex': this.sumColIdx,
     }
     request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
     rowCol = {
       'startRowIndex': 2,
       'endRowIndex' : 3,
       'startColumnIndex' : 1,
-      'endColumnIndex': sumColIdx,
+      'endColumnIndex': this.sumColIdx,
     }
     request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
     rowCol = {
       'startRowIndex': 3,
       'endRowIndex' : 4,
       'startColumnIndex' : this.outputStartIdx,
-      'endColumnIndex': sumColIdx,
+      'endColumnIndex': this.sumColIdx,
     }
     borders.innerHorizontal = borderStyle.setBorderSolid();
     borders.innerVertical = borderStyle.setBorderSolid();
@@ -164,17 +182,25 @@ class CreateTotalSheet{
       'startRowIndex': 4,
       'endRowIndex' : this.lastRowIdx,
       'startColumnIndex' : this.outputStartIdx,
-      'endColumnIndex': sumColIdx,
+      'endColumnIndex': this.sumColIdx,
     }
     delete borders.innerHorizontal;
     request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
     rowCol = {
       'startRowIndex': this.sumRowIdx,
       'endRowIndex' : this.lastRowIdx,
-      'startColumnIndex' : 1,
-      'endColumnIndex': sumColIdx,
+      'startColumnIndex' : this.outputStartIdx,
+      'endColumnIndex': this.sumColIdx,
     }
     borders.innerHorizontal = borderStyle.setBorderSolid();
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    rowCol = {
+      'startRowIndex': this.sumRowIdx,
+      'endRowIndex' : this.lastRowIdx,
+      'startColumnIndex' : 1,
+      'endColumnIndex': this.outputStartIdx,
+    }
+    delete borders.innerVertical;
     request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
     return request;
   }

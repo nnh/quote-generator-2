@@ -84,6 +84,8 @@ function testCreateSs(inputData){
       if (idx === arr.length - 1){
         res = new SetValuesClosingSheet(inputData, ss.newSs).exec_(year);
       }
+    } else {
+      res = new SetFilterTotalSheet(inputData, ss.newSs).exec_(year);
     }
     idx++;
     if (res){
