@@ -1,28 +1,3 @@
-/**
- * Create and return a request body.
- * @param {string}[][] hiddenValues ex.['0', '1', '2'], If not filtering [].
- * @param {number} columnIndex target column index.
- * @param {Object} range
- * @return {Object} Request body.
- */
-function getBasicFilterRequest(hiddenValues=[], columnIndex, range){
-  return { 
-    'setBasicFilter': {
-      'filter': {
-        'range': range,
-        'filterSpecs': [
-          {
-            'filterCriteria': {
-              'hiddenValues': hiddenValues,
-            },
-            'columnIndex' : columnIndex,
-          },
-        ],
-      }
-    }
-  };
-}
-
 function testCreateSs(inputData){
   const ss = {};
   const now = driveCommon.todayYyyymmdd();
