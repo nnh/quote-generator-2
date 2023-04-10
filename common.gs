@@ -74,7 +74,7 @@ function getTemplateInfo_(){
     ['rightBorderEnd', 9],
     ['filter', 11],
   ]);
-  const colWidths = new Map([
+/*  const colWidths = new Map([
     [1, 21],
     [getNumber_(colItemNameAndIdx.get('primaryItem')), 50],
     [getNumber_(colItemNameAndIdx.get('secondaryItem')), 453],
@@ -87,12 +87,12 @@ function getTemplateInfo_(){
     [getNumber_(colItemNameAndIdx.get('rightBorderEnd')), 22],
     [11, 18],
     [getNumber_(colItemNameAndIdx.get('filter')), 35],
-  ]);
+  ]);*/
   info.set('sheetName', 'templateByYear');
   info.set('headStartRowIdx', 1);
   info.set('bodyStartRowIdx', 4);
   info.set('startColIdx', 1);
-  info.set('colWidths', colWidths);
+//  info.set('colWidths', colWidths);
   info.set('colItemNameAndIdx', colItemNameAndIdx);
   return info;
 }

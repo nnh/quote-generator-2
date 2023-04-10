@@ -38,17 +38,19 @@ class CreateTotalSheet{
       spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 0, 1),
     ];
     // D列以降を一旦削除し、年数分+3列追加する
-    const outputStartIdx = templateInfo.get('colItemNameAndIdx').get('price');
-    const delColRequest = spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', outputStartIdx, this.total2Sheet.gridProperties.columnCount - outputStartIdx);
-    const insertColRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', outputStartIdx, this.yearList.length + 3);
+    this.outputStartIdx = templateInfo.get('colItemNameAndIdx').get('price');
+    const delColRequest = spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', this.outputStartIdx, this.total2Sheet.gridProperties.columnCount - this.outputStartIdx);
+    const insertColRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', this.outputStartIdx, this.yearList.length + 3);
     const insertRowRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'ROWS', 3, 4);
     const primaryItemColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('primaryItem'))];
     const secondaryItemColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('secondaryItem'))];
     const primaryItemRange = `${commonInfo.get('total2SheetName')}!${primaryItemColName}1:${secondaryItemColName}${this.total2Sheet.gridProperties.rowCount}`;
     const itemsValues = spreadSheetBatchUpdate.rangeGetValue(this.ss.spreadsheetId, primaryItemRange)[0].values;
+    this.lastRowIdx = itemsValues.length;
     let primaryRowIndex = [];
     let secondaryRowIndex =[];
     let discountedSumRowIdx;
+    this.sumRowIdx = null;
     itemsValues.forEach((value, idx) => {
       if (value.length === 0){
         return null;
@@ -62,22 +64,25 @@ class CreateTotalSheet{
       if (value[0] === '割引後合計'){
         discountedSumRowIdx = idx;
       }
+      if (value[0] === '合計' && !this.sumRowIdx){
+        this.sumRowIdx = idx;
+      }
     });
     let bodyRowsArray = [];
     for (let i = 5; i < this.total2Sheet.gridProperties.rowCount; i++){
       bodyRowsArray.push(i);
     }
-    const outputStartColName = colNamesConstant[getNumber_(outputStartIdx)];
-    const outputEndColName = colNamesConstant[getNumber_(outputStartIdx + this.yearList.length - 1)];
+    const outputStartColName = colNamesConstant[getNumber_(this.outputStartIdx)];
+    const outputEndColName = colNamesConstant[getNumber_(this.outputStartIdx + this.yearList.length - 1)];
     const setBodyFormulas = bodyRowsArray.map(row => {
     // The rows after the discounted total fills in another formula.
-      const yearsFormula = this.yearList.map((year, idx) => row <= getNumber_(discountedSumRowIdx) ? `=${String(year)}!$H${row - 1}` : `=if(and(${colNamesConstant[getNumber_(idx + outputStartIdx)]}${row - 1} <> "", ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')} <> 0), (${colNamesConstant[getNumber_(idx + outputStartIdx)]}${row - 1} * (1 - ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')})), ${colNamesConstant[getNumber_(idx + outputStartIdx)]}${row - 1})`);
+      const yearsFormula = this.yearList.map((year, idx) => row <= getNumber_(discountedSumRowIdx) ? `=${String(year)}!$H${row - 1}` : `=if(and(${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1} <> "", ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')} <> 0), (${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1} * (1 - ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')})), ${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1})`);
       const sumFormula = `=if(sum(${outputStartColName}${row}:${outputEndColName}${row})=0, "", sum(${outputStartColName}${row}:${outputEndColName}${row}))`;
       const filterFormula = `=${commonInfo.get('totalSheetName')}!${colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('filter'))]}${row - 1}`;
       return [...yearsFormula, sumFormula, '', filterFormula];
     });
 
-    const headerValuesArray = new Array(this.yearList.length + outputStartIdx + 1).fill('');
+    const headerValuesArray = new Array(this.yearList.length + this.outputStartIdx + 1).fill('');
     const headerValues = [
       ['', '【期間別見積】', ...headerValuesArray.slice(2)],
       headerValuesArray,
@@ -94,7 +99,103 @@ class CreateTotalSheet{
                                                      0,
                                                      headerValues),
     ];
-    return [delColRequest, insertColRequest, insertRowRequest, ...setBodyRequest, ...delRowsRequest];
+    // Column width setting
+    const yearsColWidths = 81;
+    const colWidths = [25, 38, 447, ...this.yearList.map(_ => yearsColWidths), yearsColWidths, 18, 35];
+    const setColWidthRequest = colWidths.map((width, idx) => spreadSheetBatchUpdate.getSetColWidthRequest(this.total2Sheet.sheetId, width, idx, idx + 1));
+    // Border setting
+    const bordersRequest = this.setBorders_();
+    return [delColRequest, insertColRequest, insertRowRequest, ...setBodyRequest, ...delRowsRequest, ...setColWidthRequest, bordersRequest];
+  }
+  setBorders_(){
+    let request = [];
+    const borderStyle = spreadSheetBatchUpdate.createBorderStyle();
+    let borders = {
+      'top': borderStyle.setBorderNone(),
+      'bottom' : borderStyle.setBorderNone(),
+      'left': borderStyle.setBorderNone(),
+      'right': borderStyle.setBorderNone(),
+      'innerHorizontal': borderStyle.setBorderNone(),
+      'innerVertical': borderStyle.setBorderNone(),
+    }
+    let rowCol = {
+      'startRowIndex': null,
+      'endRowIndex' : null,
+      'startColumnIndex' : null,
+      'endColumnIndex': null,
+    }
+    rowCol = {
+      'startRowIndex': 0,
+      'endRowIndex' : this.total2Sheet.gridProperties.rowCount,
+      'startColumnIndex' : 0,
+      'endColumnIndex': this.total2Sheet.gridProperties.columnCount,
+    }
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    borders = {
+      'top': borderStyle.setBorderSolid(),
+      'bottom' : borderStyle.setBorderSolid(),
+      'left': borderStyle.setBorderSolid(),
+      'right': borderStyle.setBorderSolid(),
+    }
+    delete borders.innerHorizontal;
+    delete borders.innerVertical;
+    const sumColIdx = this.yearList.length + this.outputStartIdx + 1;
+    rowCol = {
+      'startRowIndex': 2,
+      'endRowIndex' : this.sumRowIdx,
+      'startColumnIndex' : 1,
+      'endColumnIndex': sumColIdx,
+    }
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    rowCol = {
+      'startRowIndex': 2,
+      'endRowIndex' : 3,
+      'startColumnIndex' : 1,
+      'endColumnIndex': sumColIdx,
+    }
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    rowCol = {
+      'startRowIndex': 3,
+      'endRowIndex' : 4,
+      'startColumnIndex' : this.outputStartIdx,
+      'endColumnIndex': sumColIdx,
+    }
+    borders.innerHorizontal = borderStyle.setBorderSolid();
+    borders.innerVertical = borderStyle.setBorderSolid();
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    rowCol = {
+      'startRowIndex': 4,
+      'endRowIndex' : this.lastRowIdx,
+      'startColumnIndex' : this.outputStartIdx,
+      'endColumnIndex': sumColIdx,
+    }
+    delete borders.innerHorizontal;
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    rowCol = {
+      'startRowIndex': this.sumRowIdx,
+      'endRowIndex' : this.lastRowIdx,
+      'startColumnIndex' : 1,
+      'endColumnIndex': sumColIdx,
+    }
+    borders.innerHorizontal = borderStyle.setBorderSolid();
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+/*    rowCol.startRowIndex = 1;
+    rowCol.endRowIndex = 96; 
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders));  
+    rowCol.startRowIndex = totalRowNumber;
+    rowCol.endRowIndex = lastRow;
+    borders.innerHorizontal = borderStyle.setBorderSolid();
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
+    delete borders.innerHorizontal;
+    rowCol.startRowIndex = itemNameRowIdx;
+    rowCol.endRowIndex = totalRowNumber;
+    rowCol.startColumnIndex = templateInfo.get('colItemNameAndIdx').get('price');
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
+    rowCol.startColumnIndex = templateInfo.get('colItemNameAndIdx').get('amount');
+    rowCol.endColumnIndex = templateInfo.get('colItemNameAndIdx').get('sum');
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(template.properties.id, rowCol, borders));  
+*/
+    return request;
   }
   /**
    * Edit total sheet.
