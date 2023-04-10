@@ -1,3 +1,34 @@
+function setAddConditionalFormatRuleNumberEq(range, 
+                                             condition='=0', 
+                                             foregroundColorStyle={'rgbColor': {'red': 0.5, 'green': 0.5,'blue': 0.5,'alpha': 0.5}}, 
+                                             backgroundColorStyle){
+  return [
+    {
+      'addConditionalFormatRule': {
+        'rule': {
+          'ranges': range,
+          'booleanRule': {
+            'condition': {
+              'type': 'NUMBER_EQ',
+              'values': [
+                {
+                  'userEnteredValue': condition
+                },
+              ],
+            },
+            'format': {
+              'textFormat': {
+                'foregroundColorStyle': foregroundColorStyle,
+              },
+              'backgroundColorStyle': backgroundColorStyle,
+            }, 
+          },
+        },
+        'index': 0,
+      },
+    },
+  ];
+}
 /**
  * Build a template sheet.
  * @param {Object} template Sheet object.
@@ -72,7 +103,6 @@ function createTemplate_(ss, template, items){
   // 後にしよ
 //  new ProjectManagement().setTemplate_(template);
 
-//  setTemplateFilter_(template);
   const setColWidthRequest = [21, 50, 453, 76, 13, 35, 46, 81, 75, 22, 18, 35].map((width, idx) => spreadSheetBatchUpdate.getSetColWidthRequest(template.properties.sheetId, width, idx, idx + 1));
   const autoResizeColRequest = ['C', 'D', 'H', 'I'].map(colName => {
     const idx = commonGas.getColumnIndex(colName);
@@ -83,9 +113,16 @@ function createTemplate_(ss, template, items){
   const boldRequest = setTemplateBold_(template, totalRowNumber, lastRow);
   const horizontalAlignmentRequest = setTemplateHorizontalAlignment_(template);
   const numberFormatRequest = setTemplateNumberFormat_(template, lastRow);
-  const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest, horizontalAlignmentRequest, ...delRowsRequest];
+  const rgbColor = new SetRgbColor();
+  const addConditionalFormatRuleRequest = setAddConditionalFormatRuleNumberEq([spreadSheetBatchUpdate.getRangeGridByIdx(0, 0, 11, 20, 11),],
+                                                                              '=0',
+                                                                              rgbColor.white(),
+                                                                              rgbColor.gray()
+                                                                             );
+  const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest, horizontalAlignmentRequest, ...delRowsRequest, ...addConditionalFormatRuleRequest];
   return requests;
 }
+/*
 function setTemplateColorFormat_(template, lastRow){
   const arg = {};
   const backgroundColorStyle = {
@@ -107,6 +144,7 @@ function setTemplateColorFormat_(template, lastRow){
                   ];
   return request;
 }
+*/
 function setTemplateNumberFormat_(template, lastRow){
   const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
                                                                    0, 

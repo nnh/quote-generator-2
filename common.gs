@@ -162,3 +162,29 @@ class ProjectManagement{
     sheet.getRange(`${countColName}${rowNumber}`).setValue(1);
   }
 }
+class SetRgbColor{
+  constructor(){
+  }
+  gray(){
+    const rgbColor = {
+      'rgbColor': {
+        'red': 0.5,
+        'green': 0.5,
+        'blue' : 0.5,
+        'alpha' : 0.5,
+      },
+    }
+    return rgbColor;
+  }
+  white(){
+    const rgbColor = {
+      'rgbColor': {
+        'red': 1,
+        'green': 1,
+        'blue' : 1,
+        'alpha' : 1,
+      },
+    }
+    return rgbColor;
+  }
+}
