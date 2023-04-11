@@ -1,36 +1,3 @@
-function setAddConditionalFormatRuleNumberEq(range, 
-                                             condition= '=0' , 
-                                             foregroundColorStyle = {'rgbColor': {'red':0, 'green':0 ,'blue':0 ,'alpha':0}}, 
-                                             backgroundColorStyle = {'rgbColor': {'red':1, 'green':1 ,'blue':1 ,'alpha':0}},
-                                             type = 'NUMBER_EQ',
-                                             index = 0){
-  return [
-    {
-      'addConditionalFormatRule': {
-        'rule': {
-          'ranges': range,
-          'booleanRule': {
-            'condition': {
-              'type': type,
-              'values': [
-                {
-                  'userEnteredValue': condition
-                },
-              ],
-            },
-            'format': {
-              'textFormat': {
-                'foregroundColorStyle': foregroundColorStyle,
-              },
-              'backgroundColorStyle': backgroundColorStyle,
-            }, 
-          },
-        },
-        'index': index,
-      },
-    },
-  ];
-}
 /**
  * Build a template sheet.
  * @param {Object} template Sheet object.

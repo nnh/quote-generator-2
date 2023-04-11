@@ -165,20 +165,12 @@ class ProjectManagement{
 /**
  * @param {Object} targetRange Range object to set the filter. 
  * @return {Object} Request body.
+ * @see library spreadSheetBatchUpdate
  */
 function editConditionalFormatRuleRequest(targetRange){
   const rgbColor = new spreadSheetBatchUpdate.createRgbColor();
   return [
-    setAddConditionalFormatRuleNumberEq(targetRange,
-                                        '0',
-                                        rgbColor.white(),
-                                        rgbColor.gray(),
-                                       ),
-    setAddConditionalFormatRuleNumberEq(targetRange,
-                                        '0',
-                                        rgbColor.white(),
-                                        rgbColor.white(),
-                                        'NUMBER_NOT_EQ'
-                                       ),
+    spreadSheetBatchUpdate.setAddConditionalFormatRuleNumberEq(targetRange, '0', rgbColor.white(), rgbColor.gray()),
+    spreadSheetBatchUpdate.setAddConditionalFormatRuleNumberEq(targetRange, '0', rgbColor.white(), rgbColor.white(), 'NUMBER_NOT_EQ'),
   ];
 }
