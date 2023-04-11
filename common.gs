@@ -161,3 +161,23 @@ function editConditionalFormatRuleRequest(targetRange){
     spreadSheetBatchUpdate.setAddConditionalFormatRuleNumberEq(targetRange, '0', rgbColor.white(), rgbColor.white(), 'NUMBER_NOT_EQ'),
   ];
 }
+/**
+ * Set number formatting.
+ * @param {Object} sheet The sheet object.
+ * @param {number} startRow
+ * @param {number} startCol
+ * @param {number} lastRow
+ * @param {number} lastCol
+ * @return {Object} Request body.
+ */
+function setNumberFormat_(sheet, startRow=0, startCol=templateInfo.get('colItemNameAndIdx').get('amount'), lastRow, lastCol=templateInfo.get('colItemNameAndIdx').get('sum')){
+  const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(sheet.properties.sheetId, 
+                                                                   startRow, 
+                                                                   startCol,
+                                                                   lastRow, 
+                                                                   lastCol, 
+                                                                   spreadSheetBatchUpdate.editNumberFormat('NUMBER', '#,###'), 
+                                                                   'userEnteredFormat.numberFormat'),
+                  ];
+  return request;
+}

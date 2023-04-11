@@ -56,7 +56,8 @@ class CreateTotalSheet{
     let primaryRowIndex = [];
     let secondaryRowIndex =[];
     let discountedSumRowIdx;
-    this.sumRowIdx = null;
+    this.sumRowIdx;
+    let taxIncludedSumRowIdx;
     itemsValues.forEach((value, idx) => {
       if (value.length === 0){
         return null;
@@ -70,19 +71,26 @@ class CreateTotalSheet{
       if (value[0] === '割引後合計'){
         discountedSumRowIdx = idx;
       }
-      if (value[0] === '合計' && !this.sumRowIdx){
+      if (value[0] === '合計' && value[1] === '（税抜）'){
         this.sumRowIdx = idx;
+      }
+      if (value[0] === '合計' && value[1] === '（税込）'){
+        taxIncludedSumRowIdx = idx;
       }
     });
     let bodyRowsArray = [];
-    for (let i = 6; i < this.total2Sheet.gridProperties.rowCount; i++){
+    for (let i = 6; i <= this.total2Sheet.gridProperties.rowCount; i++){
       bodyRowsArray.push(i);
     }
     const outputStartColName = colNamesConstant[getNumber_(this.outputStartIdx)];
     const outputEndColName = colNamesConstant[getNumber_(this.outputStartIdx + this.yearList.length - 1)];
     const setBodyFormulas = bodyRowsArray.map(row => {
     // The rows after the discounted total fills in another formula.
-      const yearsFormula = this.yearList.map((year, idx) => row <= getNumber_(discountedSumRowIdx) ? `=${String(year)}!$H${row - 1}` : `=if(and(${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1} <> "", ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')} <> 0), (${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1} * (1 - ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')})), ${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1})`);
+      const yearsFormula = this.yearList.map((year, idx) => row <= getNumber_(discountedSumRowIdx) 
+        ? `=${String(year)}!$H${row - 1}` 
+        : row === getNumber_(discountedSumRowIdx) + 1
+          ? `=if(and(${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1} <> "", ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')} <> 0), (${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1} * (1 - ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')})), ${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1})`
+          : `=if(${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 2} <> "", (${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 2} * (1 + ${trialInfo.get('sheetName')}!${trialInfo.get('taxAddress')})), "")`);
       const sumFormula = `=if(sum(${outputStartColName}${row}:${outputEndColName}${row})=0, "", sum(${outputStartColName}${row}:${outputEndColName}${row}))`;
       const filterFormula = `=${commonInfo.get('totalSheetName')}!${colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('filter'))]}${row - 1}`;
       return [...yearsFormula, sumFormula, '', filterFormula];

@@ -86,17 +86,6 @@ function createTemplate_(ss, template, items){
   const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest, horizontalAlignmentRequest, ...delRowsRequest, ...addConditionalFormatRuleRequest, ...setRowHeightRequest];
   return requests;
 }
-function setNumberFormat_(sheet, startRow=0, startCol=templateInfo.get('colItemNameAndIdx').get('amount'), lastRow, lastCol=templateInfo.get('colItemNameAndIdx').get('sum')){
-  const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(sheet.properties.sheetId, 
-                                                                   startRow, 
-                                                                   startCol,
-                                                                   lastRow, 
-                                                                   lastCol, 
-                                                                   spreadSheetBatchUpdate.editNumberFormat('NUMBER', '#,###'), 
-                                                                   'userEnteredFormat.numberFormat'),
-                  ];
-  return request;
-}
 function setTemplateHorizontalAlignment_(template){
   const itemNameRowIdx = templateInfo.get('bodyStartRowIdx') - 1; 
   const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
