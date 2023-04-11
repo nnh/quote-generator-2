@@ -1,7 +1,7 @@
 function testCreateSs(inputData){
   const ss = {};
   const now = driveCommon.todayYyyymmdd();
-  ss.newSs = spreadSheetCommon.createNewSpreadSheet(`test${now}`);
+  ss.newSs = spreadSheetCommon.createNewSpreadSheet(`Quote ${inputData.get('試験実施番号')} ${now}`);
   ss.template = ss.newSs.sheets[0];
   const sheetIdMap = spreadSheetCommon.getSheetIdMap(Sheets.Spreadsheets.get(PropertiesService.getScriptProperties().getProperty('templateFileId')));
   // Copy the 'Items', 'Trial', and 'Quotation Request' sheets from the source file.
@@ -39,6 +39,7 @@ function testCreateSs(inputData){
   const projectManagementPriceRequest = projectManagement.setTemplate_(ss.template.properties.sheetId);
   const numberFormatRequest = setNumberFormat_(ss.template, projectManagement.getRowIdx(), templateInfo.get('colItemNameAndIdx').get('price'), projectManagement.getRowIdx(), templateInfo.get('colItemNameAndIdx').get('price'));
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest([projectManagementPriceRequest, numberFormatRequest]), ss.newSs.spreadsheetId);
+  // Create years, total, total2 sheet.
   const targetYearsSheet = copyTemplate_(ss.newSs, ss.template);
   const targetYearsRename = Array.from(targetYearsSheet.keys()).map(key => [targetYearsSheet.get(key).sheetId, String(key)]);
   const targetYearsRenameRequests = targetYearsRename.map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));
@@ -49,6 +50,7 @@ function testCreateSs(inputData){
                              ];
   const totalRequests = spreadSheetBatchUpdate.editBatchUpdateRequest(totalRequestsArray);
   spreadSheetBatchUpdate.execBatchUpdate(totalRequests, ss.newSs.spreadsheetId);
+  // Edit the sheet for each fiscal year.
   setPropertiesByTrialType_(inputData);
   const setValuesRegistration = new SetValuesRegistrationSheet(inputData, ss.newSs);
   let idx = 0;

@@ -89,31 +89,6 @@ function getNumber_(idx){
 
 }
 /**
- * Set the filter.
- * @param {Object} sheet Sheet object.
- * @param {Object} targetRange Range object.
- * @return none.
- */
-/*
-function setFilter_(sheet, targetRange){
-  const newRule1 = SpreadsheetApp.newConditionalFormatRule()
-    .setRanges([targetRange])
-    .whenNumberGreaterThanOrEqualTo(1)
-    .setBackground('#FFFFFF')
-    .setFontColor('#FFFFFF')
-    .build();
-  const newRule2 = SpreadsheetApp.newConditionalFormatRule()
-    .setRanges([targetRange])
-    .whenNumberEqualTo(0)
-    .setBackground('#CCCCCC')
-    .setFontColor('#FFFFFF')
-    .build();
-  const newRules = [newRule1, newRule2];
-  sheet.setConditionalFormatRules(newRules);
-  targetRange.createFilter();
-}
-*/
-/**
  * Project management is handled separately since the formula is different from other items.
  */
 class ProjectManagement{
@@ -151,21 +126,6 @@ class ProjectManagement{
       spreadSheetBatchUpdate.getRangeSetValueRequest(sheetId, this.getRowIdx(), templateInfo.get('colItemNameAndIdx').get('price'), [[formulaText]]),
     ];
     return requests;
-  }
-  /**
-   * Edit the Total sheet.
-   * @param {Object} sheet Sheet object.
-   * @param <Array>{string} yearList Array of sheet names.
-   * @return none.
-   */
-  setTotal_(sheet, yearList){
-    this.sheet = sheet;
-    const rowNumber = this.getRowNumber();
-    const priceItemColName = getColumnString_(this.priceItemColNumber, sheet);
-    const formulaText = yearList.map(year => `${year}!$${priceItemColName}$${rowNumber}`).join('+');
-    sheet.getRange(`${priceItemColName}${rowNumber}`).setFormula(formulaText);
-    const countColName = this.getCountColName();
-    sheet.getRange(`${countColName}${rowNumber}`).setValue(1);
   }
 }
 /**

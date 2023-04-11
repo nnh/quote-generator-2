@@ -14,6 +14,7 @@ function myFunction(){
                    ['試験終了月', '9月'],
                    [commonInfo.get('sourceOfFundsTextItemName'), '公的資金（税金由来）'],
                    ['調整事務局の有無', 'なし'],
+                   ['試験実施番号', 'test-shiken'],
                  ]);
   testCreateSs(test);
 }

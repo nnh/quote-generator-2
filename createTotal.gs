@@ -25,12 +25,22 @@ class CreateTotalSheet{
     this.totalHeadText = '【見積明細：総期間】';
     this.countColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))];
   }
+  /**
+   * Edit total, total2 sheet.
+   * @param none.
+   * @return {Object} Request body.
+   */
   exec(){
     let res = [];
     res.push(this.editTotal2Sheet_());
     res.push(this.editTotalSheet_());
     return [res];
   }
+  /**
+   * Edit total2 sheet.
+   * @param none.
+   * @return {Object} Request body.
+   */
   editTotal2Sheet_(){
     // Delete columns D and after and add years + 3 columns.
     this.outputStartIdx = templateInfo.get('colItemNameAndIdx').get('price');
@@ -209,7 +219,7 @@ class CreateTotalSheet{
   /**
    * Edit total sheet.
    * @param none.
-   * @return {Object}
+   * @return {Object} Request body.
    */
   editTotalSheet_(){
     const formulas = [];
@@ -226,7 +236,5 @@ class CreateTotalSheet{
                                                                         templateInfo.get('startColIdx'),
                                                                         [[this.totalHeadText]]);
     return [setFormulasRequest, setHeadTextRequest];
-    // Project management is calculated only once during the entire period.
-    //new ProjectManagement().setTotal_(sheet, this.yearList);
   }
 }
