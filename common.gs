@@ -188,3 +188,23 @@ class SetRgbColor{
     return rgbColor;
   }
 }
+/**
+ * @param {Object} targetRange Range object to set the filter. 
+ * @return {Object} Request body.
+ */
+function editConditionalFormatRuleRequest(targetRange){
+  const rgbColor = new SetRgbColor();
+  return [
+    setAddConditionalFormatRuleNumberEq(targetRange,
+                                        '0',
+                                        rgbColor.white(),
+                                        rgbColor.gray(),
+                                       ),
+    setAddConditionalFormatRuleNumberEq(targetRange,
+                                        '0',
+                                        rgbColor.white(),
+                                        rgbColor.white(),
+                                        'NUMBER_NOT_EQ'
+                                       ),
+  ];
+}

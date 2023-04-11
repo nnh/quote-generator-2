@@ -1,7 +1,9 @@
 function setAddConditionalFormatRuleNumberEq(range, 
-                                             condition='=0', 
-                                             foregroundColorStyle={'rgbColor': {'red': 0.5, 'green': 0.5,'blue': 0.5,'alpha': 0.5}}, 
-                                             backgroundColorStyle){
+                                             condition= '=0' , 
+                                             foregroundColorStyle = {'rgbColor': {'red':0, 'green':0 ,'blue':0 ,'alpha':0}}, 
+                                             backgroundColorStyle = {'rgbColor': {'red':1, 'green':1 ,'blue':1 ,'alpha':0}},
+                                             type = 'NUMBER_EQ',
+                                             index = 0){
   return [
     {
       'addConditionalFormatRule': {
@@ -9,7 +11,7 @@ function setAddConditionalFormatRuleNumberEq(range,
           'ranges': range,
           'booleanRule': {
             'condition': {
-              'type': 'NUMBER_EQ',
+              'type': type,
               'values': [
                 {
                   'userEnteredValue': condition
@@ -24,7 +26,7 @@ function setAddConditionalFormatRuleNumberEq(range,
             }, 
           },
         },
-        'index': 0,
+        'index': index,
       },
     },
   ];
@@ -113,38 +115,11 @@ function createTemplate_(ss, template, items){
   const boldRequest = setTemplateBold_(template, totalRowNumber, lastRow);
   const horizontalAlignmentRequest = setTemplateHorizontalAlignment_(template);
   const numberFormatRequest = setTemplateNumberFormat_(template, lastRow);
-  const rgbColor = new SetRgbColor();
-  const addConditionalFormatRuleRequest = setAddConditionalFormatRuleNumberEq([spreadSheetBatchUpdate.getRangeGridByIdx(0, 0, 11, 20, 11),],
-                                                                              '=0',
-                                                                              rgbColor.white(),
-                                                                              rgbColor.gray()
-                                                                             );
+  const addConditionalFormatRuleTarget = spreadSheetBatchUpdate.getRangeGridByIdx(template.properties.sheetId, 0, templateInfo.get('colItemNameAndIdx').get('filter'), template.properties.gridProperties.rowCount, templateInfo.get('colItemNameAndIdx').get('filter'));
+  const addConditionalFormatRuleRequest = editConditionalFormatRuleRequest([addConditionalFormatRuleTarget,]);
   const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest, horizontalAlignmentRequest, ...delRowsRequest, ...addConditionalFormatRuleRequest];
   return requests;
 }
-/*
-function setTemplateColorFormat_(template, lastRow){
-  const arg = {};
-  const backgroundColorStyle = {
-    'rgbColor': {
-      'red': 0,
-      'green': 0,
-      'blue' : 1,
-      'alpha' : 0,
-    },
-  }
-  arg.backgroundColorStyle = backgroundColorStyle;
-  const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
-                                                                   0, 
-                                                                   templateInfo.get('colItemNameAndIdx').get('amount'),
-                                                                   lastRow, 
-                                                                   templateInfo.get('colItemNameAndIdx').get('sum'), 
-                                                                   spreadSheetBatchUpdate.editCellFormatBackgroundColorStyle(arg), 
-                                                                   'userEnteredFormat.backgroundColorStyle'),
-                  ];
-  return request;
-}
-*/
 function setTemplateNumberFormat_(template, lastRow){
   const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
                                                                    0, 
