@@ -94,6 +94,7 @@ function getNumber_(idx){
  * @param {Object} targetRange Range object.
  * @return none.
  */
+/*
 function setFilter_(sheet, targetRange){
   const newRule1 = SpreadsheetApp.newConditionalFormatRule()
     .setRanges([targetRange])
@@ -111,20 +112,22 @@ function setFilter_(sheet, targetRange){
   sheet.setConditionalFormatRules(newRules);
   targetRange.createFilter();
 }
+*/
 /**
  * Project management is handled separately since the formula is different from other items.
  */
 class ProjectManagement{
-  constructor(){
+  constructor(ss){
+    this.ss = ss;
     this.itemName = 'プロジェクト管理';
     this.secondaryItemColNumber = getNumber_(templateInfo.get('colItemNameAndIdx').get('secondaryItem'));
     this.priceItemColNumber = getNumber_(templateInfo.get('colItemNameAndIdx').get('price'));
   }
   getCountColName(){
-    return getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('count')));
+    return colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))];
   }
   getRowIdx(){
-    const secondaryItems = this.sheet.getRange(1, this.secondaryItemColNumber, this.sheet.getLastRow(), 1).getValues();
+    const secondaryItems = spreadSheetBatchUpdate.rangeGetValue(this.ss.spreadsheetId, `${this.sheet.properties.title}!${colNamesConstant[this.secondaryItemColNumber]}1:${colNamesConstant[this.secondaryItemColNumber]}${this.sheet.properties.gridProperties.rowCount}`)[0].values;
     const projectManagementIdx = secondaryItems.map((x, idx) => x[0] === this.itemName ? idx : null).filter(x => x)[0];
     return projectManagementIdx;
   }
@@ -133,18 +136,21 @@ class ProjectManagement{
   }
   /**
    * Edit the Template sheet.
-   * @param {Object} sheet Sheet object.
-   * @return none.
+   * @param {string} sheetId the sheet id.
+   * @return {Object} Request body.
    */
-  setTemplate_(sheet){
-    this.sheet = sheet;
+  setTemplate_(sheetId){
+    this.sheet = this.ss.sheets.filter(sheet => sheet.properties.sheetId === sheetId)[0];
     const rowNumber = this.getRowNumber();
     const targetStartRowNumber = getNumber_(templateInfo.get('bodyStartRowIdx'));
     const targetLastRowNumber = 63;
     const countColName = this.getCountColName();
-    const amountColName = getColumnString_(getNumber_(templateInfo.get('colItemNameAndIdx').get('amount')), sheet);
-    const formulaText = `(sumif($${countColName}$${targetStartRowNumber}:$${countColName}$${rowNumber - 1}, ">0", $${amountColName}$${targetStartRowNumber}:$${amountColName}$${rowNumber - 1}) + sumif($${countColName}$${rowNumber + 1}:$${countColName}$${targetLastRowNumber}, ">0", $${amountColName}$${rowNumber + 1}:$${amountColName}$${targetLastRowNumber})) * 0.1`; 
-    sheet.getRange(rowNumber, this.priceItemColNumber).setFormula(formulaText);
+    const amountColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('amount'))];
+    const formulaText = `=((sumif($${countColName}$${targetStartRowNumber}:$${countColName}$${rowNumber - 1}, ">0", $${amountColName}$${targetStartRowNumber}:$${amountColName}$${rowNumber - 1}) + sumif($${countColName}$${rowNumber + 1}:$${countColName}$${targetLastRowNumber}, ">0", $${amountColName}$${rowNumber + 1}:$${amountColName}$${targetLastRowNumber})) * 0.1) / ${countColName}${rowNumber}`; 
+    const requests = [
+      spreadSheetBatchUpdate.getRangeSetValueRequest(sheetId, this.getRowIdx(), templateInfo.get('colItemNameAndIdx').get('price'), [[formulaText]]),
+    ];
+    return requests;
   }
   /**
    * Edit the Total sheet.
@@ -163,7 +169,8 @@ class ProjectManagement{
   }
 }
 /**
- * @param {Object} targetRange Range object to set the filter. 
+ * Set conditional formatting.
+ * @param {Object} targetRange Range object to set the conditional formatting. 
  * @return {Object} Request body.
  * @see library spreadSheetBatchUpdate
  */

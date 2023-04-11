@@ -34,6 +34,13 @@ function testCreateSs(inputData){
   const requests = spreadSheetBatchUpdate.editBatchUpdateRequest(requestsArray);
   spreadSheetBatchUpdate.execBatchUpdate(requests, ss.newSs.spreadsheetId);
   // Fix the template and then copy the sheets for each year, total, total2.
+
+  // Set up formulas individually only for project management.
+  const projectManagement = new ProjectManagement(ss.newSs);
+  const projectManagementPriceRequest = projectManagement.setTemplate_(ss.template.properties.sheetId);
+  const numberFormatRequest = setNumberFormat_(ss.template, projectManagement.getRowIdx(), templateInfo.get('colItemNameAndIdx').get('price'), projectManagement.getRowIdx(), templateInfo.get('colItemNameAndIdx').get('price'));
+  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest([projectManagementPriceRequest, numberFormatRequest]), ss.newSs.spreadsheetId);
+//  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest([projectManagementPriceRequest]), ss.newSs.spreadsheetId);
   const targetYearsSheet = copyTemplate_(ss.newSs, ss.template);
   const targetYearsRename = Array.from(targetYearsSheet.keys()).map(key => [targetYearsSheet.get(key).sheetId, String(key)]);
   const targetYearsRenameRequests = targetYearsRename.map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));

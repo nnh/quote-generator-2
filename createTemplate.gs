@@ -68,10 +68,6 @@ function createTemplate_(ss, template, items){
     spreadSheetBatchUpdate.getdelRowColRequest(template.properties.sheetId, 'ROWS', 4, 6),
     spreadSheetBatchUpdate.getdelRowColRequest(template.properties.sheetId, 'ROWS', totalRowNumber + 2, template.properties.gridProperties.rowCount),
   ];
-  // Set up formulas individually only for project management.
-  // 後にしよ
-//  new ProjectManagement().setTemplate_(template);
-
   const setColWidthRequest = [21, 50, 453, 76, 13, 35, 46, 81, 75, 22, 18, 35].map((width, idx) => spreadSheetBatchUpdate.getSetColWidthRequest(template.properties.sheetId, width, idx, idx + 1));
   const autoResizeColRequest = ['C', 'D', 'H', 'I'].map(colName => {
     const idx = commonGas.getColumnIndex(colName);
@@ -81,18 +77,18 @@ function createTemplate_(ss, template, items){
   const bordersRequest = setTemplateBorders_(template, totalRowNumber, lastRow);
   const boldRequest = setTemplateBold_(template, totalRowNumber, lastRow);
   const horizontalAlignmentRequest = setTemplateHorizontalAlignment_(template);
-  const numberFormatRequest = setTemplateNumberFormat_(template, lastRow);
+  const numberFormatRequest = setNumberFormat_(template, 0, templateInfo.get('colItemNameAndIdx').get('amount'), lastRow, templateInfo.get('colItemNameAndIdx').get('sum'));
   const addConditionalFormatRuleTarget = spreadSheetBatchUpdate.getRangeGridByIdx(template.properties.sheetId, 0, templateInfo.get('colItemNameAndIdx').get('filter'), template.properties.gridProperties.rowCount, templateInfo.get('colItemNameAndIdx').get('filter'));
   const addConditionalFormatRuleRequest = editConditionalFormatRuleRequest([addConditionalFormatRuleTarget,]);
   const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest, horizontalAlignmentRequest, ...delRowsRequest, ...addConditionalFormatRuleRequest];
   return requests;
 }
-function setTemplateNumberFormat_(template, lastRow){
-  const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(template.properties.sheetId, 
-                                                                   0, 
-                                                                   templateInfo.get('colItemNameAndIdx').get('amount'),
+function setNumberFormat_(sheet, startRow=0, startCol=templateInfo.get('colItemNameAndIdx').get('amount'), lastRow, lastCol=templateInfo.get('colItemNameAndIdx').get('sum')){
+  const request = [spreadSheetBatchUpdate.getRangeSetFormatRequest(sheet.properties.sheetId, 
+                                                                   startRow, 
+                                                                   startCol,
                                                                    lastRow, 
-                                                                   templateInfo.get('colItemNameAndIdx').get('sum'), 
+                                                                   lastCol, 
                                                                    spreadSheetBatchUpdate.editNumberFormat('NUMBER', '#,###'), 
                                                                    'userEnteredFormat.numberFormat'),
                   ];
