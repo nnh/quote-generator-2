@@ -36,7 +36,9 @@ class SetValuesSheetByYear{
   setSheetValues_(values){
     values.forEach((value, idx) => {
       if (value[0]){
-        this.appSheet.getRange(getNumber_(idx), getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))).setValue(value[0]);
+        const targetRange = this.appSheet.getRange(getNumber_(idx), getNumber_(templateInfo.get('colItemNameAndIdx').get('count')));
+        const targetValue = targetRange.getValue() !== '' && value[0] !== '' ? targetRange.getValue() + value[0] : value[0];
+        targetRange.setValue(targetValue);
       }
     });
   }
@@ -57,7 +59,7 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     const [interimAnalysis, centralMonitoring] = this.getItemNameByTrialType_(commonInfo.get('investigatorInitiatedTrialFlag'), 
       [
         ['中間解析プログラム作成、解析実施（ダブル）', '中間解析プログラム作成、解析実施（シングル）'],
-        ['中央モニタリング', '中央モニタリング、定期モニタリングレポート作成'],
+        ['ロジカルチェック、マニュアルチェック、クエリ対応', 'ロジカルチェック、マニュアルチェック、クエリ対応'],
       ]
     );
     // Obtain the number of months of registration for the relevant year.
@@ -93,13 +95,13 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
       ['効果安全性評価委員会事務局業務', this.inputData.get('効安事務局設置') === 'あり' ? registrationMonth : null],
       ['事務局運営（試験開始後から試験終了まで）', commonInfo.get('clinicalTrialsOfficeFlag') ? registrationMonth : null],
       ['データベース管理料', registrationMonth],
-      ['プロジェクト管理', 1],
+      ['プロジェクト管理', registrationMonth],
     ];
     return itemNameAndCount;
   }
   setSheetValues_(values){
     const targetRange = this.appSheet.getRange(1, getNumber_(templateInfo.get('colItemNameAndIdx').get('count')), values.length, 1);
-    const targetValue = targetRange.getValues().map((_, idx) => values[idx]);
+    const targetValue = targetRange.getValues().map((x, idx) => x !== '' && values[idx] !== '' ? [x + values[idx]] : [values[idx]]); 
     targetRange.setValues(targetValue);
   }
 }
@@ -119,7 +121,7 @@ class SetValuesSetupSheet extends SetValuesSheetByYear{
       ['特定臨床研究法申請資料作成支援', commonInfo.get('specifiedClinicalTrialFlag') ? this.formulas.get('facilities') : null],
       ['ミーティング準備・実行', this.inputData.get('キックオフミーティング') === 'あり' ? 1 : null],
       ['SOP一式、CTR登録案、TMF雛形', commonInfo.get('investigatorInitiatedTrialFlag') ? 1 : null],
-      ['事務局運営（試験開始前）', commonInfo.get('clinicalTrialsOfficeFlag') ? 1 : null],
+      ['事務局運営（試験開始前）', commonInfo.get('clinicalTrialsOfficeFlag') ? trialInfo.get('setupTerm') : null],
       [officeIrbStr, commonInfo.get('investigatorInitiatedTrialFlag') ? this.formulas.get('facilities') : null],
       ['薬剤対応', commonInfo.get('investigatorInitiatedTrialFlag') ? this.formulas.get('facilities') : null],
       ['モニタリング準備業務（関連資料作成、キックオフ参加）', 0],
@@ -132,6 +134,7 @@ class SetValuesSetupSheet extends SetValuesSheetByYear{
       ['外部監査費用', 0],
       ['保険料', 0],
       ['治験薬管理（中央）', this.inputData.get('治験薬管理') === 'あり' ? 1 : null],
+      ['プロジェクト管理', trialInfo.get('setupTerm')],
     ];
     return itemNameAndCount;
   }
@@ -145,7 +148,7 @@ class SetValuesClosingSheet extends SetValuesSheetByYear{
       ]
     );
     const csrCount = commonInfo.get('investigatorInitiatedTrialFlag') || this.inputData.get('研究結果報告書作成支援') === 'あり' ? 1 : null;
-    const finalAnalysisTableCount = this.inputData.get('最終解析業務の依頼') === 'あり' 
+    const finalAnalysisTableCount = this.inputData.get('統計解析に必要な図表数') > 0 
                                     ? commonInfo.get('investigatorInitiatedTrialFlag') && this.inputData.get('統計解析に必要な図表数') < 50 ? 50 : this.inputData.get('統計解析に必要な図表数')
                                     : null;
     const itemNameAndCount = [
@@ -156,13 +159,13 @@ class SetValuesClosingSheet extends SetValuesSheetByYear{
       ['監査対応', commonInfo.get('clinicalTrialsOfficeFlag') ? 1 : null],
       ['データベース固定作業、クロージング', 1],
       ['症例検討会資料作成', this.inputData.get('症例検討会') === 'あり' ? 1 : null],
-      ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', this.inputData.get('最終解析業務の依頼') === 'あり' ? 1 :null],
+      ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', finalAnalysisTableCount ? 1 :null],
       [finalAnalysis, finalAnalysisTableCount],
-      ['最終解析報告書作成（出力結果＋表紙）', this.inputData.get('最終解析業務の依頼') === 'あり' ? 1 :null],
-      ['監査対応', 0],
+      ['最終解析報告書作成（出力結果＋表紙）', finalAnalysisTableCount ? 1 :null],
       [csr, csrCount],
       ['症例報告', this.inputData.get('症例最終報告書提出毎の支払') === 'あり' ? setValuesSheetByYear.formulas.get('cases') : null],
       ['外部監査費用', 0],
+      ['プロジェクト管理', trialInfo.get('closingTerm')],
     ];
     return itemNameAndCount;
   }

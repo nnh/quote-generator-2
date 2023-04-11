@@ -1,4 +1,4 @@
-function testCreateSs(inputData){
+function createSpreadsheet(inputData){
   const ss = {};
   const now = driveCommon.todayYyyymmdd();
   ss.newSs = spreadSheetCommon.createNewSpreadSheet(`Quote ${inputData.get('試験実施番号')} ${now}`);
@@ -54,26 +54,30 @@ function testCreateSs(inputData){
   setPropertiesByTrialType_(inputData);
   const setValuesRegistration = new SetValuesRegistrationSheet(inputData, ss.newSs);
   let idx = 0;
-  let filterRequests = [];
-  targetYearsSheet.forEach((_, year, arr) => {
+  //let filterRequests = [];
+  let targetYears = [];
+  let targetTotal = [];
+  targetYearsSheet.forEach((_, year) => {
     const targetSheetCheck = /^\d{4}$/.test(String(year));
-    let res;
     if (targetSheetCheck){
-      res = setValuesRegistration.exec_(year);
-      if (idx === 0){
-        res = new SetValuesSetupSheet(inputData, ss.newSs).exec_(year);
-      }
-      if (idx === arr.length - 1){
-        res = new SetValuesClosingSheet(inputData, ss.newSs).exec_(year);
-      }
+      targetYears.push(year);
     } else {
-      res = new SetFilterTotalSheet(inputData, ss.newSs).exec_(year);
-    }
-    idx++;
-    if (res){
-      filterRequests.push(res);
+      targetTotal.push(year);
     }
   });
+  const filterRequestsYears = targetYears.map((year, idx) => {
+    let res = setValuesRegistration.exec_(year);
+    if (idx === 0){
+      const _ = new SetValuesSetupSheet(inputData, ss.newSs).exec_(year);
+    }
+    if (idx === targetYears.length - 1){
+      const _ = new SetValuesClosingSheet(inputData, ss.newSs).exec_(year);
+    }
+    return res;
+  });
+  const setFilterTotal = new SetFilterTotalSheet(inputData, ss.newSs)
+  const filterRequestTotal = targetTotal.map(year => setFilterTotal.exec_(year));
+  const filterRequests = [...filterRequestsYears, ...filterRequestTotal];
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), ss.newSs.spreadsheetId);
 }
 /**

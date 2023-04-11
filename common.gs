@@ -90,22 +90,42 @@ function getNumber_(idx){
 }
 /**
  * Project management is handled separately since the formula is different from other items.
+ * @see library spreadSheetBatchUpdate
  */
 class ProjectManagement{
+  /**
+   * @param {Object} ss The spreadsheet object.
+   * @return none.
+   */
   constructor(ss){
     this.ss = ss;
     this.itemName = 'プロジェクト管理';
     this.secondaryItemColNumber = getNumber_(templateInfo.get('colItemNameAndIdx').get('secondaryItem'));
     this.priceItemColNumber = getNumber_(templateInfo.get('colItemNameAndIdx').get('price'));
   }
+  /**
+   * Returns the column name of the count column on the template sheet as a string, e.g. 'F'.
+   * @param none.
+   * @return {string} the column name.
+   */
   getCountColName(){
     return colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))];
   }
+  /**
+   * Looks for "project management" in the list of subitem names and returns its index.
+   * @param none.
+   * @return {number} The row index.
+   */
   getRowIdx(){
     const secondaryItems = spreadSheetBatchUpdate.rangeGetValue(this.ss.spreadsheetId, `${this.sheet.properties.title}!${colNamesConstant[this.secondaryItemColNumber]}1:${colNamesConstant[this.secondaryItemColNumber]}${this.sheet.properties.gridProperties.rowCount}`)[0].values;
     const projectManagementIdx = secondaryItems.map((x, idx) => x[0] === this.itemName ? idx : null).filter(x => x)[0];
     return projectManagementIdx;
   }
+  /**
+   * Looks for "project management" in the list of subitem names and returns its index.
+   * @param none.
+   * @return {number} The row number.
+   */
   getRowNumber(){
     return getNumber_(this.getRowIdx());
   }
@@ -132,7 +152,6 @@ class ProjectManagement{
  * Set conditional formatting.
  * @param {Object} targetRange Range object to set the conditional formatting. 
  * @return {Object} Request body.
- * @see library spreadSheetBatchUpdate
  */
 function editConditionalFormatRuleRequest(targetRange){
   const rgbColor = new spreadSheetBatchUpdate.createRgbColor();

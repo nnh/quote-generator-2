@@ -80,7 +80,9 @@ function createTemplate_(ss, template, items){
   const numberFormatRequest = setNumberFormat_(template, 0, templateInfo.get('colItemNameAndIdx').get('amount'), lastRow, templateInfo.get('colItemNameAndIdx').get('sum'));
   const addConditionalFormatRuleTarget = spreadSheetBatchUpdate.getRangeGridByIdx(template.properties.sheetId, 0, templateInfo.get('colItemNameAndIdx').get('filter'), template.properties.gridProperties.rowCount, templateInfo.get('colItemNameAndIdx').get('filter'));
   const addConditionalFormatRuleRequest = editConditionalFormatRuleRequest([addConditionalFormatRuleTarget,]);
-  const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest, horizontalAlignmentRequest, ...delRowsRequest, ...addConditionalFormatRuleRequest];
+  const rowHeightArray = [...[13, 21, 21, 21], ...formulas.map(x => x[0] !== '' ? 36 : 21)];
+  const setRowHeightRequest = rowHeightArray.map((height, idx) => spreadSheetBatchUpdate.getSetRowHeightRequest(template.properties.sheetId, height, idx, idx + 1));
+  const requests = [setHeadRequest, setBodyRequest, ...setColWidthRequest, autoResizeColRequest, bordersRequest, boldRequest, horizontalAlignmentRequest, numberFormatRequest, horizontalAlignmentRequest, ...delRowsRequest, ...addConditionalFormatRuleRequest, ...setRowHeightRequest];
   return requests;
 }
 function setNumberFormat_(sheet, startRow=0, startCol=templateInfo.get('colItemNameAndIdx').get('amount'), lastRow, lastCol=templateInfo.get('colItemNameAndIdx').get('sum')){
