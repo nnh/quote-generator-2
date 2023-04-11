@@ -58,6 +58,7 @@ function createTemplate_(ss, template, items){
   const itemsTotal = [
     ['合計', '（税抜）', '', '', '', '', `=sum(${amountCol}${outputBodyStartRowNumber + 1}:${amountCol}${totalRowNumber})`, '', '', '', 1],
     ['割引後合計','', '', '', '', '', `=${amountCol}${totalRowNumber + 1}*(1-${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')})`, '', '', '', `=if(${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')}=0, 0, 1)`],
+    ['合計', '（税込）', '', '', '', '', `=${amountCol}${totalRowNumber + 1}*(1+${trialInfo.get('sheetName')}!${trialInfo.get('taxAddress')})`, '', '', '', `=if(${amountCol}${totalRowNumber + 1}<>${amountCol}${totalRowNumber + 3}, 1, 0)`],
   ];
   const itemsBody = [...formulas, ...itemsTotal];
   const setBodyRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(template.properties.sheetId,
@@ -73,7 +74,7 @@ function createTemplate_(ss, template, items){
     const idx = commonGas.getColumnIndex(colName);
     return spreadSheetBatchUpdate.getAutoResizeRowRequest(template.properties.id, idx, idx)
   });
-  const lastRow = totalRowNumber + 2;
+  const lastRow = totalRowNumber + 3;
   const bordersRequest = setTemplateBorders_(template, totalRowNumber, lastRow);
   const boldRequest = setTemplateBold_(template, totalRowNumber, lastRow);
   const horizontalAlignmentRequest = setTemplateHorizontalAlignment_(template);

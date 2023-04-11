@@ -38,6 +38,7 @@ function getTrialsInfo_(){
   info.set('setupTerm', null);
   info.set('closingTerm', null);
   info.set('discountRateAddress', 'B47');
+  info.set('taxAddress', 'B45');
   info.set('sheetName', 'Trial');
   return info;
 }
