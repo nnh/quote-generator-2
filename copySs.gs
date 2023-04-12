@@ -44,6 +44,9 @@ function createSpreadsheet(inputData){
   const targetYearsRename = Array.from(targetYearsSheet.keys()).map(key => [targetYearsSheet.get(key).sheetId, String(key)]);
   const targetYearsRenameRequests = targetYearsRename.map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(targetYearsRenameRequests), ss.newSs.spreadsheetId);
+  // Get the spreadsheet object again because the added sheet is not reflected.
+  ss.newSs = Sheets.Spreadsheets.get(ss.newSs.spreadsheetId);
+  targetYearsSheet.forEach((_, sheetName) => targetYearsSheet.set(sheetName, ss.newSs.sheets.filter(sheet => sheet.properties.title === String(sheetName))[0]));
   const totalSheetRequest = new CreateTotalSheet(ss.newSs, targetYearsSheet).exec();
   const totalRequestsArray = [
                                totalSheetRequest,
@@ -53,8 +56,6 @@ function createSpreadsheet(inputData){
   // Edit the sheet for each fiscal year.
   setPropertiesByTrialType_(inputData);
   const setValuesRegistration = new SetValuesRegistrationSheet(inputData, ss.newSs);
-  let idx = 0;
-  //let filterRequests = [];
   let targetYears = [];
   let targetTotal = [];
   targetYearsSheet.forEach((_, year) => {

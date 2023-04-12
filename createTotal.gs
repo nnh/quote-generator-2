@@ -57,7 +57,6 @@ class CreateTotalSheet{
     let secondaryRowIndex =[];
     let discountedSumRowIdx;
     this.sumRowIdx;
-    let taxIncludedSumRowIdx;
     itemsValues.forEach((value, idx) => {
       if (value.length === 0){
         return null;
@@ -74,9 +73,6 @@ class CreateTotalSheet{
       if (value[0] === '合計' && value[1] === '（税抜）'){
         this.sumRowIdx = idx;
       }
-      if (value[0] === '合計' && value[1] === '（税込）'){
-        taxIncludedSumRowIdx = idx;
-      }
     });
     let bodyRowsArray = [];
     for (let i = 6; i <= this.total2Sheet.gridProperties.rowCount; i++){
@@ -90,7 +86,7 @@ class CreateTotalSheet{
         ? `=${String(year)}!$H${row - 1}` 
         : row === getNumber_(discountedSumRowIdx) + 1
           ? `=if(and(${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1} <> "", ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')} <> 0), (${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1} * (1 - ${trialInfo.get('sheetName')}!${trialInfo.get('discountRateAddress')})), ${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 1})`
-          : `=if(${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 2} <> "", (${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 2} * (1 + ${trialInfo.get('sheetName')}!${trialInfo.get('taxAddress')})), "")`);
+          : `=${colNamesConstant[getNumber_(idx + this.outputStartIdx)]}${row - 2} * (1 + ${trialInfo.get('sheetName')}!${trialInfo.get('taxAddress')})`);
       const sumFormula = `=if(sum(${outputStartColName}${row}:${outputEndColName}${row})=0, "", sum(${outputStartColName}${row}:${outputEndColName}${row}))`;
       const filterFormula = `=${commonInfo.get('totalSheetName')}!${colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('filter'))]}${row - 1}`;
       return [...yearsFormula, sumFormula, '', filterFormula];
@@ -122,6 +118,8 @@ class CreateTotalSheet{
     const delRowsRequest = [
       spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 4, 5),
     ];
+    const test = this.ss;
+    const test2 = this.total2Sheet;
     const formatRequest = [
       spreadSheetBatchUpdate.getRangeSetFormatRequest(this.total2Sheet.sheetId, 
                                                       0, 
@@ -137,7 +135,7 @@ class CreateTotalSheet{
                                                       this.sumColIdx, 
                                                       spreadSheetBatchUpdate.getHorizontalAlignmentRequest('CENTER'), 
                                                       'userEnteredFormat.horizontalAlignment'),
-
+      spreadSheetBatchUpdate.getSetRowHeightRequest(this.total2Sheet.sheetId, 21, 0, 1),
     ];
     const addConditionalFormatRuleTarget = spreadSheetBatchUpdate.getRangeGridByIdx(this.total2Sheet.sheetId, 0, filterColIdx, this.lastRowIdx, filterColIdx);
     const addConditionalFormatRuleRequest = editConditionalFormatRuleRequest([addConditionalFormatRuleTarget,]);
