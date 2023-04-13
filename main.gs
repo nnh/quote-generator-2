@@ -2,6 +2,7 @@ const commonInfo = getCommonInfo_();
 const trialInfo = getTrialsInfo_();
 const itemsInfo = getItemsInfo_();
 const templateInfo = getTemplateInfo_();
+const registrationDivisionInfo = getRegistrationDivisionInfo_();
 function myFunction(){
   const test = new Map([
                    [commonInfo.get('trialTypeItemName'), '医師主導治験'],
@@ -24,6 +25,8 @@ function myFunction(){
                    ['キックオフミーティング', 'あり'],
                    ['治験薬管理', 'あり'],
                    ['保険料', 1000000],
+                   ['試験開始準備費用', 5000],
+                   ['症例登録毎の支払', 10000],
                  ]);
   createSpreadsheet(test);
 }

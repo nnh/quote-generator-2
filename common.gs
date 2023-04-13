@@ -1,5 +1,14 @@
 const colNamesConstant = [null, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ'];
 /**
+ * registrationの年度で等分する必要のある項目リスト
+ * 
+ */
+function getRegistrationDivisionInfo_(){
+  const info = new Map();
+  info.set('症例登録毎の支払', null);
+  return info;
+}
+/**
  * 共通情報
  */
 function getCommonInfo_(){
@@ -38,6 +47,11 @@ function getTrialsInfo_(){
   info.set('closingEnd', null);
   info.set('setupTerm', null);
   info.set('closingTerm', null);
+  info.set('case', null);
+  info.set('facilities', null);
+  info.set('registrationStartYear', null);
+  info.set('registrationEndYear', null)
+  info.set('registrationYearsCount', null);
   info.set('discountRateAddress', 'B47');
   info.set('taxAddress', 'B45');
   info.set('sheetName', 'Trial');

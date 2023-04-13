@@ -62,6 +62,12 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
         ['ロジカルチェック、マニュアルチェック、クエリ対応', 'ロジカルチェック、マニュアルチェック、クエリ対応'],
       ]
     );
+    // 症例登録とかの対応
+    if (year === trialInfo.get('registrationStartYear')){
+      registrationDivisionInfo.forEach((_, itemName) => {
+
+      });
+    }
     // Obtain the number of months of registration for the relevant year.
     const targetSheetStartDay = new Date(year, 3, 1);
     const targetSheetEndDay = new Date(parseInt(year) + 1, 2, 31);
@@ -89,7 +95,7 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
       ['データクリーニング', interimAnalysisFlag ? 1 : null],
       ['症例モニタリング・SAE対応', 0],
       ['施設監査費用', 0],
-      ['症例登録', 0],
+      ['症例登録', Number.isSafeInteger(this.inputData.get('症例登録毎の支払')) ? this.getDivisionCount_(trialInfo.get('cases'), year) : null],
       [centralMonitoring, registrationMonth],
       ['安全性管理事務局業務', this.inputData.get('安全性管理事務局設置') === 'あり' ? registrationMonth : null],
       ['効果安全性評価委員会事務局業務', this.inputData.get('効安事務局設置') === 'あり' ? registrationMonth : null],
@@ -98,6 +104,16 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
       ['プロジェクト管理', registrationMonth],
     ];
     return itemNameAndCount;
+  }
+  getDivisionCount_(inputData, year){
+    if (!Number.isSafeInteger(inputData)){
+      return null;
+    }
+    if (year < trialInfo.get('registrationStartYear') || trialInfo.get('registrationEndYear') < year){
+      return null;
+    }
+    const count = Math.floor(inputData / trialInfo.get('registrationYearsCount'));
+    return year !== trialInfo.get('registrationEndYear') ? inputData - count * (trialInfo.get('registrationYearsCount') - 1) : count;
   }
   setSheetValues_(values){
     const targetRange = this.appSheet.getRange(1, getNumber_(templateInfo.get('colItemNameAndIdx').get('count')), values.length, 1);
@@ -135,6 +151,7 @@ class SetValuesSetupSheet extends SetValuesSheetByYear{
       ['保険料', Number.isSafeInteger(this.inputData.get('保険料')) ? 1 : null],
       ['治験薬管理（中央）', this.inputData.get('治験薬管理') === 'あり' ? 1 : null],
       ['プロジェクト管理', trialInfo.get('setupTerm')],
+      ['試験開始準備費用', Number.isSafeInteger(this.inputData.get('試験開始準備費用')) ? this.formulas.get('facilities') : null]
     ];
     return itemNameAndCount;
   }
@@ -163,7 +180,7 @@ class SetValuesClosingSheet extends SetValuesSheetByYear{
       [finalAnalysis, finalAnalysisTableCount],
       ['最終解析報告書作成（出力結果＋表紙）', finalAnalysisTableCount ? 1 :null],
       [csr, csrCount],
-      ['症例報告', this.inputData.get('症例最終報告書提出毎の支払') === 'あり' ? setValuesSheetByYear.formulas.get('cases') : null],
+      ['症例報告', Number.isSafeInteger(this.inputData.get('症例最終報告書提出毎の支払')) ? setValuesSheetByYear.formulas.get('cases') : null],
       ['外部監査費用', 0],
       ['プロジェクト管理', trialInfo.get('closingTerm')],
     ];

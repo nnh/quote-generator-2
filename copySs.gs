@@ -60,7 +60,6 @@ function createSpreadsheet(inputData){
   spreadSheetBatchUpdate.execBatchUpdate(totalRequests, ss.newSs.spreadsheetId);
   // Edit the sheet for each fiscal year.
   setPropertiesByTrialType_(inputData);
-  const setValuesRegistration = new SetValuesRegistrationSheet(inputData, ss.newSs);
   let targetYears = [];
   let targetTotal = [];
   targetYearsSheet.forEach((_, year) => {
@@ -71,6 +70,12 @@ function createSpreadsheet(inputData){
       targetTotal.push(year);
     }
   });
+  // Registrationの開始、終了年を取得する
+  const test = targetYears.length;
+  trialInfo.set('registrationStartYear', trialInfo.get('trialStart').getMonth() === 3 ? targetYears[1] : targetYears[0]);
+  trialInfo.set('registrationEndYear', trialInfo.get('trialEnd').getMonth() === 2 ? targetYears[targetYears.length - 2] : targetYears[targetYears.length - 1]);
+  trialInfo.set('registrationYearsCount', trialInfo.get('registrationEndYear') - trialInfo.get('registrationStartYear') + 1);  
+  const setValuesRegistration = new SetValuesRegistrationSheet(inputData, ss.newSs);
   const filterRequestsYears = targetYears.map((year, idx) => {
     let res = setValuesRegistration.exec_(year);
     if (idx === 0){
@@ -139,6 +144,8 @@ function editTrialTerm_(inputData){
   trialInfo.set('closingEnd', closingEnd);
   trialInfo.set('setupTerm', setupTerm);
   trialInfo.set('closingTerm', closingTerm);
+  trialInfo.set('cases', inputData.get('目標症例数'));
+  trialInfo.set('facilities', inputData.get(commonInfo.get('facilitiesItemName')));
 }
 
 /**
@@ -194,12 +201,29 @@ function setItemsSheet_(ss, inputData){
     return;
   }
   const secondaryItem = secondaryItemValue[0].values;
-  const setPriceTarget = ['保険料'];
+  const setPriceTarget = new Map(
+    [
+      ['保険料', '保険料'],
+      ['試験開始準備費用', '試験開始準備費用'],
+      ['症例最終報告書提出毎の支払', '症例報告'],
+      ['症例登録毎の支払', '症例登録'],
+    ]
+  );
+//  const setPriceTarget = ['保険料', '試験開始準備費用', '症例最終報告書提出毎の支払', '症例登録毎の支払'];
+/*
   const setPriceTargetNameAndIdx = setPriceTarget.map(itemText => {
     const idxArray = secondaryItem.map((x, idx) => x[0] === itemText ? idx: null).filter(x => x);
     return idxArray.length === 1 ? [itemText, idxArray[0]] : null; 
   }).filter(x => x);
   const setPriceTargetNameAndIdxMap = new Map(setPriceTargetNameAndIdx);
+*/
+  const setPriceTargetNameAndIdxMap = new Map();
+  setPriceTarget.forEach((itemName, inputTitleName) => {
+    const idxArray = secondaryItem.map((x, idx) => x[0] === itemName ? idx: null).filter(x => x);
+    if (idxArray.length === 1 && Number.isSafeInteger(inputData.get(inputTitleName))){
+      setPriceTargetNameAndIdxMap.set(inputTitleName, idxArray[0]);
+    } 
+  });
   itemsInfo.set('sheet', items);
   const itemsColIdxList = itemsInfo.get('colItemNameAndIdx');
   const formulaColsIdx = [
@@ -215,7 +239,7 @@ function setItemsSheet_(ss, inputData){
                                                           formulaColIdx, 
                                                           setItems);
   });
-  const setPriceRequest = setPriceTarget.map(itemText => {
+  /*const setPriceRequest = setPriceTarget.map(itemText => {
     if (Number.isSafeInteger(inputData.get(itemText))){
       const targetRowIdx = setPriceTargetNameAndIdxMap.get(itemText); 
       return spreadSheetBatchUpdate.getRangeSetValueRequest(items.properties.sheetId, 
@@ -225,7 +249,16 @@ function setItemsSheet_(ss, inputData){
     } else {
       return null;
     }
-  }).filter(x => x);
+  }).filter(x => x);*/
+  let setPriceRequest = [];
+  setPriceTargetNameAndIdxMap.forEach((targetRowIdx, itemName) => 
+    setPriceRequest.push(
+      spreadSheetBatchUpdate.getRangeSetValueRequest(items.properties.sheetId, 
+                                                     targetRowIdx, 
+                                                     itemsColIdxList.get('price'), 
+                                                     [[inputData.get(itemName)]])
+    )
+  );
   let requests = [...setFormulaRequest];
   if (setPriceRequest.length > 0){
     requests.push(...setPriceRequest);
