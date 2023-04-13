@@ -45,12 +45,13 @@ class CreateTotalSheet{
     // Delete columns D and after and add years + 3 columns.
     this.outputStartIdx = templateInfo.get('colItemNameAndIdx').get('price');
     this.sumColIdx = this.yearList.length + this.outputStartIdx + 1;
-    const delColRequest = spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', this.outputStartIdx, this.total2Sheet.gridProperties.columnCount - this.outputStartIdx);
-    const insertColRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'COLUMNS', this.outputStartIdx, this.yearList.length + 3);
-    const insertRowRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.total2Sheet.sheetId, 'ROWS', 3, 4);
+    this.sheetId = this.total2Sheet.properties.sheetId;
+    const delColRequest = spreadSheetBatchUpdate.getdelRowColRequest(this.sheetId, 'COLUMNS', this.outputStartIdx, this.total2Sheet.properties.gridProperties.columnCount - this.outputStartIdx);
+    const insertColRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.sheetId, 'COLUMNS', this.outputStartIdx, this.yearList.length + 3);
+    const insertRowRequest = spreadSheetBatchUpdate.getInsertRowColRequest(this.sheetId, 'ROWS', 3, 4);
     const primaryItemColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('primaryItem'))];
     const secondaryItemColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('secondaryItem'))];
-    const primaryItemRange = `${commonInfo.get('total2SheetName')}!${primaryItemColName}1:${secondaryItemColName}${this.total2Sheet.gridProperties.rowCount}`;
+    const primaryItemRange = `${commonInfo.get('total2SheetName')}!${primaryItemColName}1:${secondaryItemColName}${this.total2Sheet.properties.gridProperties.rowCount}`;
     const itemsValues = spreadSheetBatchUpdate.rangeGetValue(this.ss.spreadsheetId, primaryItemRange)[0].values;
     this.lastRowIdx = itemsValues.length;
     let primaryRowIndex = [];
@@ -75,7 +76,7 @@ class CreateTotalSheet{
       }
     });
     let bodyRowsArray = [];
-    for (let i = 6; i <= this.total2Sheet.gridProperties.rowCount; i++){
+    for (let i = 6; i <= this.total2Sheet.properties.gridProperties.rowCount; i++){
       bodyRowsArray.push(i);
     }
     const outputStartColName = colNamesConstant[getNumber_(this.outputStartIdx)];
@@ -99,11 +100,11 @@ class CreateTotalSheet{
       ['', '', '',　...this.yearList.map(x => String(x)), '合計'],
     ];
     const setBodyRequest = [
-      spreadSheetBatchUpdate.getRangeSetValueRequest(this.total2Sheet.sheetId,
+      spreadSheetBatchUpdate.getRangeSetValueRequest(this.sheetId,
                                                      5,
                                                      this.outputStartIdx,
                                                      setBodyFormulas), 
-      spreadSheetBatchUpdate.getRangeSetValueRequest(this.total2Sheet.sheetId,
+      spreadSheetBatchUpdate.getRangeSetValueRequest(this.sheetId,
                                                      0,
                                                      0,
                                                      headerValues),
@@ -112,32 +113,30 @@ class CreateTotalSheet{
     const yearsColWidths = 81;
     const colWidths = [25, 38, 447, ...this.yearList.map(_ => yearsColWidths), yearsColWidths, 18, 35];
     const filterColIdx = colWidths.length - 1;
-    const setColWidthRequest = colWidths.map((width, idx) => spreadSheetBatchUpdate.getSetColWidthRequest(this.total2Sheet.sheetId, width, idx, idx + 1));
+    const setColWidthRequest = colWidths.map((width, idx) => spreadSheetBatchUpdate.getSetColWidthRequest(this.sheetId, width, idx, idx + 1));
     // Border setting
     const bordersRequest = this.setBorders_();
     const delRowsRequest = [
-      spreadSheetBatchUpdate.getdelRowColRequest(this.total2Sheet.sheetId, 'ROWS', 4, 5),
+      spreadSheetBatchUpdate.getdelRowColRequest(this.sheetId, 'ROWS', 4, 5),
     ];
-    const test = this.ss;
-    const test2 = this.total2Sheet;
     const formatRequest = [
-      spreadSheetBatchUpdate.getRangeSetFormatRequest(this.total2Sheet.sheetId, 
+      spreadSheetBatchUpdate.getRangeSetFormatRequest(this.sheetId, 
                                                       0, 
                                                       templateInfo.get('colItemNameAndIdx').get('primaryItem'),
                                                       1, 
                                                       templateInfo.get('colItemNameAndIdx').get('primaryItem'), 
                                                       spreadSheetBatchUpdate.getFontBoldRequest(), 
                                                       'userEnteredFormat.textFormat.bold'),
-      spreadSheetBatchUpdate.getRangeSetFormatRequest(this.total2Sheet.sheetId, 
+      spreadSheetBatchUpdate.getRangeSetFormatRequest(this.sheetId, 
                                                       3,
                                                       this.outputStartIdx,
                                                       3, 
                                                       this.sumColIdx, 
                                                       spreadSheetBatchUpdate.getHorizontalAlignmentRequest('CENTER'), 
                                                       'userEnteredFormat.horizontalAlignment'),
-      spreadSheetBatchUpdate.getSetRowHeightRequest(this.total2Sheet.sheetId, 21, 0, 1),
+      spreadSheetBatchUpdate.getSetRowHeightRequest(this.sheetId, 21, 0, 1),
     ];
-    const addConditionalFormatRuleTarget = spreadSheetBatchUpdate.getRangeGridByIdx(this.total2Sheet.sheetId, 0, filterColIdx, this.lastRowIdx, filterColIdx);
+    const addConditionalFormatRuleTarget = spreadSheetBatchUpdate.getRangeGridByIdx(this.sheetId, 0, filterColIdx, this.lastRowIdx, filterColIdx);
     const addConditionalFormatRuleRequest = editConditionalFormatRuleRequest([addConditionalFormatRuleTarget,]);
     return [delColRequest, insertColRequest, insertRowRequest, ...setBodyRequest, ...delRowsRequest, ...setColWidthRequest, bordersRequest, formatRequest, ...addConditionalFormatRuleRequest];
   }
@@ -160,11 +159,11 @@ class CreateTotalSheet{
     }
     rowCol = {
       'startRowIndex': 0,
-      'endRowIndex' : this.total2Sheet.gridProperties.rowCount,
+      'endRowIndex' : this.total2Sheet.properties.gridProperties.rowCount,
       'startColumnIndex' : 0,
-      'endColumnIndex': this.total2Sheet.gridProperties.columnCount,
+      'endColumnIndex': this.total2Sheet.properties.gridProperties.columnCount,
     }
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.sheetId, rowCol, borders)); 
     borders = {
       'top': borderStyle.setBorderSolid(),
       'bottom' : borderStyle.setBorderSolid(),
@@ -179,14 +178,14 @@ class CreateTotalSheet{
       'startColumnIndex' : 1,
       'endColumnIndex': this.sumColIdx,
     }
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.sheetId, rowCol, borders)); 
     rowCol = {
       'startRowIndex': 2,
       'endRowIndex' : 3,
       'startColumnIndex' : 1,
       'endColumnIndex': this.sumColIdx,
     }
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.sheetId, rowCol, borders)); 
     rowCol = {
       'startRowIndex': 3,
       'endRowIndex' : 4,
@@ -195,7 +194,7 @@ class CreateTotalSheet{
     }
     borders.innerHorizontal = borderStyle.setBorderSolid();
     borders.innerVertical = borderStyle.setBorderSolid();
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.sheetId, rowCol, borders)); 
     rowCol = {
       'startRowIndex': 4,
       'endRowIndex' : this.lastRowIdx,
@@ -203,7 +202,7 @@ class CreateTotalSheet{
       'endColumnIndex': this.sumColIdx,
     }
     delete borders.innerHorizontal;
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.sheetId, rowCol, borders)); 
     rowCol = {
       'startRowIndex': this.sumRowIdx,
       'endRowIndex' : this.lastRowIdx,
@@ -211,7 +210,7 @@ class CreateTotalSheet{
       'endColumnIndex': this.sumColIdx,
     }
     borders.innerHorizontal = borderStyle.setBorderSolid();
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.sheetId, rowCol, borders)); 
     rowCol = {
       'startRowIndex': this.sumRowIdx,
       'endRowIndex' : this.lastRowIdx,
@@ -219,7 +218,7 @@ class CreateTotalSheet{
       'endColumnIndex': this.outputStartIdx,
     }
     delete borders.innerVertical;
-    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.total2Sheet.sheetId, rowCol, borders)); 
+    request.push(spreadSheetBatchUpdate.getUpdateBordersRequest(this.sheetId, rowCol, borders)); 
     return request;
   }
   /**
@@ -229,15 +228,16 @@ class CreateTotalSheet{
    */
   editTotalSheet_(){
     const formulas = [];
-    for (let i = templateInfo.get('bodyStartRowIdx'); i < this.totalSheet.gridProperties.rowCount - templateInfo.get('bodyStartRowIdx'); i++){
+    for (let i = templateInfo.get('bodyStartRowIdx'); i < this.totalSheet.properties.gridProperties.rowCount - templateInfo.get('bodyStartRowIdx'); i++){
       const formula = this.yearList.map(sheetName => `'${sheetName}'!${this.countColName}${i + 1}`).join(' + ');
       formulas.push([`=if(${formula} > 0, ${formula}, "")`]);
     }
-    const setFormulasRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(this.totalSheet.sheetId,
+    this.sheetId = this.totalSheet.properties.sheetId;
+    const setFormulasRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(this.sheetId,
                                                                               templateInfo.get('bodyStartRowIdx'),
                                                                               templateInfo.get('colItemNameAndIdx').get('count'),
                                                                               formulas);
-    const setHeadTextRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(this.totalSheet.sheetId,
+    const setHeadTextRequest = spreadSheetBatchUpdate.getRangeSetValueRequest(this.sheetId,
                                                                         templateInfo.get('headStartRowIdx'),
                                                                         templateInfo.get('startColIdx'),
                                                                         [[this.totalHeadText]]);
