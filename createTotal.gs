@@ -135,6 +135,7 @@ class CreateTotalSheet{
                                                       spreadSheetBatchUpdate.getHorizontalAlignmentRequest('CENTER'), 
                                                       'userEnteredFormat.horizontalAlignment'),
       spreadSheetBatchUpdate.getSetRowHeightRequest(this.sheetId, 21, 0, 1),
+      setNumberFormat_(this.total2Sheet, this.sumRowIdx, this.outputStartIdx, this.lastRowIdx, this.sumColIdx),
     ];
     const addConditionalFormatRuleTarget = spreadSheetBatchUpdate.getRangeGridByIdx(this.sheetId, 0, filterColIdx, this.lastRowIdx, filterColIdx);
     const addConditionalFormatRuleRequest = editConditionalFormatRuleRequest([addConditionalFormatRuleTarget,]);
