@@ -129,10 +129,10 @@ class SetValuesSetupSheet extends SetValuesSheetByYear{
       ['業務分析・DM計画書の作成・CTR登録案の作成', 1],
       ['DB作成・eCRF作成・バリデーション', 1],
       ['バリデーション報告書', 1],
-      [setAccounts, this.formulas.get('cases')],
+      [setAccounts, this.formulas.get('facilities')],
       ['入力の手引作成', 1],
       ['外部監査費用', 0],
-      ['保険料', 0],
+      ['保険料', Number.isSafeInteger(this.inputData.get('保険料')) ? 1 : null],
       ['治験薬管理（中央）', this.inputData.get('治験薬管理') === 'あり' ? 1 : null],
       ['プロジェクト管理', trialInfo.get('setupTerm')],
     ];

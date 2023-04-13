@@ -6,7 +6,7 @@ function myFunction(){
   const test = new Map([
                    [commonInfo.get('trialTypeItemName'), '医師主導治験'],
                    ['目標症例数', 30],
-                   ['施設数', 20],
+                   [commonInfo.get('facilitiesItemName'), 20],
                    ['CRF項目数', 500],
                    ['症例登録開始年', '2023年'],
                    ['症例登録開始月', '4月'],
@@ -23,6 +23,7 @@ function myFunction(){
                    ['効安事務局設置', 'あり'],
                    ['キックオフミーティング', 'あり'],
                    ['治験薬管理', 'あり'],
+                   ['保険料', 1000000],
                  ]);
   createSpreadsheet(test);
 }

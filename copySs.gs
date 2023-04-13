@@ -23,7 +23,12 @@ function createSpreadsheet(inputData){
                                                    0, 
                                                    [[now]]),
   ];
-  const setItemsRequest = setItemsSheet_(ss.newSs, ss.items);
+  ss.newSs = Sheets.Spreadsheets.get(ss.newSs.spreadsheetId);
+  const setItemsRequest = setItemsSheet_(ss.newSs, inputData);
+  if (!setItemsRequest){
+    console.log('error: setItemsSheet_');
+    return;
+  }
   const createTemplateRequest = createTemplate_(ss.newSs, ss.template, ss.items);
   const requestsArray = [
                          setTrialRequest,
@@ -145,7 +150,7 @@ function editTrialTerm_(inputData){
 function setTrialSheet_(inputData, sheetId){
   const monthsCount = (trialInfo.get('closingEnd').getFullYear() * 12 + trialInfo.get('closingEnd').getMonth())
                        - (trialInfo.get('setupStart').getFullYear() * 12 + trialInfo.get('setupStart').getMonth());
-  const targetItems = [commonInfo.get('trialTypeItemName'), '目標症例数', '施設数', 'CRF項目数'];  
+  const targetItems = [commonInfo.get('trialTypeItemName'), '目標症例数', commonInfo.get('facilitiesItemName'), 'CRF項目数'];  
   const targetItemValues = targetItems.map(key => [inputData.get(key)]);
   const sourceOfFunds = inputData.get(commonInfo.get('sourceOfFundsTextItemName')) === commonInfo.get('commercialCompany') ? 1.5 : 1;
   const requests = [
@@ -173,26 +178,57 @@ function setTrialSheet_(inputData, sheetId){
 }
 /**
  * Re-set the formulas on the copied Items sheet.
- * @param {string} sheetId Sheet Id.
+ * @param {Object} ss The sheet object.
+ * @param {Object} inputData Map object of the information entered from the form.
  * @return {Object} request object.
  */
-function setItemsSheet_(ss, items){
+function setItemsSheet_(ss, inputData){
+  const itemsSheet = ss.sheets.filter(x => x.properties.title === itemsInfo.get('sheetName'));
+  if (itemsSheet.length !== 1){
+    return;
+  }
+  const items = itemsSheet[0];
+  // 保険料とかは単価の設定がいる
+  const secondaryItemValue = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${itemsInfo.get('sheetName')}!B1:B85`);
+  if (secondaryItemValue.length !== 1){
+    return;
+  }
+  const secondaryItem = secondaryItemValue[0].values;
+  const setPriceTarget = ['保険料'];
+  const setPriceTargetNameAndIdx = setPriceTarget.map(itemText => {
+    const idxArray = secondaryItem.map((x, idx) => x[0] === itemText ? idx: null).filter(x => x);
+    return idxArray.length === 1 ? [itemText, idxArray[0]] : null; 
+  }).filter(x => x);
+  const setPriceTargetNameAndIdxMap = new Map(setPriceTargetNameAndIdx);
   itemsInfo.set('sheet', items);
-  const sheetId = items.properties.sheetId;
-  const sheetName = items.properties.title;
   const itemsColIdxList = itemsInfo.get('colItemNameAndIdx');
   const formulaColsIdx = [
     itemsColIdxList.get('secondaryItem'),
     itemsColIdxList.get('price'),
     itemsColIdxList.get('baseUnitPrice'),
   ];
-  const requests = formulaColsIdx.map(formulaColIdx => {
+  const setFormulaRequest = formulaColsIdx.map(formulaColIdx => {
     const colString = commonGas.getColumnStringByIndex(formulaColIdx);
-    const setItems = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${sheetName}!${colString}:${colString}`, 'FORMULA')[0].values.map(x => x.length === 1 ? x : ['']);
-    return spreadSheetBatchUpdate.getRangeSetValueRequest(sheetId, 
+    const setItems = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${items.properties.title}!${colString}:${colString}`, 'FORMULA')[0].values.map(x => x.length === 1 ? x : ['']);
+    return spreadSheetBatchUpdate.getRangeSetValueRequest(items.properties.sheetId, 
                                                           0, 
                                                           formulaColIdx, 
                                                           setItems);
   });
+  const setPriceRequest = setPriceTarget.map(itemText => {
+    if (Number.isSafeInteger(inputData.get(itemText))){
+      const targetRowIdx = setPriceTargetNameAndIdxMap.get(itemText); 
+      return spreadSheetBatchUpdate.getRangeSetValueRequest(items.properties.sheetId, 
+                                                            targetRowIdx, 
+                                                            itemsColIdxList.get('price'), 
+                                                            [[inputData.get(itemText)]]);
+    } else {
+      return null;
+    }
+  }).filter(x => x);
+  let requests = [...setFormulaRequest];
+  if (setPriceRequest.length > 0){
+    requests.push(...setPriceRequest);
+  }
   return requests;                                                                           
 }
