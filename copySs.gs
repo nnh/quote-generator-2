@@ -70,8 +70,7 @@ function createSpreadsheet(inputData){
       targetTotal.push(year);
     }
   });
-  // Registrationの開始、終了年を取得する
-  const test = targetYears.length;
+  // Get the start and end year of the registration.
   trialInfo.set('registrationStartYear', trialInfo.get('trialStart').getMonth() === 3 ? targetYears[1] : targetYears[0]);
   trialInfo.set('registrationEndYear', trialInfo.get('trialEnd').getMonth() === 2 ? targetYears[targetYears.length - 2] : targetYears[targetYears.length - 1]);
   trialInfo.set('registrationYearsCount', trialInfo.get('registrationEndYear') - trialInfo.get('registrationStartYear') + 1);  
@@ -147,7 +146,6 @@ function editTrialTerm_(inputData){
   trialInfo.set('cases', inputData.get('目標症例数'));
   trialInfo.set('facilities', inputData.get(commonInfo.get('facilitiesItemName')));
 }
-
 /**
  * Set the Trial sheet values from the information entered.
  * @param {Object} inputData Map object of the information entered from the form.
@@ -195,7 +193,7 @@ function setItemsSheet_(ss, inputData){
     return;
   }
   const items = itemsSheet[0];
-  // 保険料とかは単価の設定がいる
+  // Corresponding to items for which unit prices need to be set (e.g., insurance premiums).
   const secondaryItemValue = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${itemsInfo.get('sheetName')}!B1:B85`);
   if (secondaryItemValue.length !== 1){
     return;
@@ -209,14 +207,6 @@ function setItemsSheet_(ss, inputData){
       ['症例登録毎の支払', '症例登録'],
     ]
   );
-//  const setPriceTarget = ['保険料', '試験開始準備費用', '症例最終報告書提出毎の支払', '症例登録毎の支払'];
-/*
-  const setPriceTargetNameAndIdx = setPriceTarget.map(itemText => {
-    const idxArray = secondaryItem.map((x, idx) => x[0] === itemText ? idx: null).filter(x => x);
-    return idxArray.length === 1 ? [itemText, idxArray[0]] : null; 
-  }).filter(x => x);
-  const setPriceTargetNameAndIdxMap = new Map(setPriceTargetNameAndIdx);
-*/
   const setPriceTargetNameAndIdxMap = new Map();
   setPriceTarget.forEach((itemName, inputTitleName) => {
     const idxArray = secondaryItem.map((x, idx) => x[0] === itemName ? idx: null).filter(x => x);
@@ -239,17 +229,6 @@ function setItemsSheet_(ss, inputData){
                                                           formulaColIdx, 
                                                           setItems);
   });
-  /*const setPriceRequest = setPriceTarget.map(itemText => {
-    if (Number.isSafeInteger(inputData.get(itemText))){
-      const targetRowIdx = setPriceTargetNameAndIdxMap.get(itemText); 
-      return spreadSheetBatchUpdate.getRangeSetValueRequest(items.properties.sheetId, 
-                                                            targetRowIdx, 
-                                                            itemsColIdxList.get('price'), 
-                                                            [[inputData.get(itemText)]]);
-    } else {
-      return null;
-    }
-  }).filter(x => x);*/
   let setPriceRequest = [];
   setPriceTargetNameAndIdxMap.forEach((targetRowIdx, itemName) => 
     setPriceRequest.push(
