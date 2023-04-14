@@ -51,6 +51,17 @@ class SetValuesSheetByYear{
   }
 }
 class SetValuesRegistrationSheet extends SetValuesSheetByYear{
+  constructor(inputData, ss){
+    super(inputData, ss);
+    // interim analysis
+    this.interimAnalysisCount = null;
+    this.interimYears = null;
+    if (Number.isSafeInteger(this.inputData.get('中間解析に必要な図表数'))){
+      this.interimAnalysisCount = this.inputData.get('中間解析に必要な図表数');
+      this.interimYears = this.inputData.has('中間解析の頻度') ? this.inputData.get('中間解析の頻度').map(x => x.replace(/年/, '')).filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) : null;
+      this.interimFirstYear = this.interimYears.length > 0 ? this.interimYears[0] : null;
+    }
+  }
   getMonthDiff(startDate, endDate){
     const monthUnit = 1000 * 60 * 60 * 24 * 30;
     return Math.trunc(Math.abs(endDate - startDate) / monthUnit);
@@ -62,12 +73,7 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
         ['ロジカルチェック、マニュアルチェック、クエリ対応', 'ロジカルチェック、マニュアルチェック、クエリ対応'],
       ]
     );
-    // 症例登録とかの対応
-    if (year === trialInfo.get('registrationStartYear')){
-      registrationDivisionInfo.forEach((_, itemName) => {
-
-      });
-    }
+    const interimAnalysisFlag = this.interimAnalysisCount && this.interimYears.filter(x => x === String(year)).length > 0;
     // Obtain the number of months of registration for the relevant year.
     const targetSheetStartDay = new Date(year, 3, 1);
     const targetSheetEndDay = new Date(parseInt(year) + 1, 2, 31);
@@ -83,7 +89,6 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
                           : trialInfo.get('trialEnd');
     const registrationMonth = thisYearStart ? this.getMonthDiff(thisYearStart, thisYearEnd) : null;
     const crb = this.inputData.get('CRB申請') === 'あり';
-    const interimAnalysisFlag = this.inputData.get('中間解析業務の依頼') === 'あり';
     const itemNameAndCount = [
       ['名古屋医療センターCRB申請費用(初年度)', crb ? 1 : null],
       ['名古屋医療センターCRB申請費用(2年目以降)', crb ? 1 : null],
@@ -91,8 +96,9 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
       ['施設監査費用', Number.isSafeInteger(this.inputData.get('監査対象施設数')) ? this.getDivisionCount_(this.inputData.get('監査対象施設数'), year) : null],
       ['症例モニタリング・SAE対応', Number.isSafeInteger(this.inputData.get('1例あたりの実地モニタリング回数')) ? this.getDivisionCount_(this.inputData.get('1例あたりの実地モニタリング回数') * trialInfo.get('cases'), year): null],
       ['開始前モニタリング・必須文書確認', Number.isSafeInteger(this.inputData.get('年間1施設あたりの必須文書実地モニタリング回数')) ? this.getDivisionCount_(this.inputData.get('年間1施設あたりの必須文書実地モニタリング回数') * trialInfo.get('facilities') * trialInfo.get('registrationYearsCount'), year): null],
-      ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', interimAnalysisFlag ? 1 : null],
-      [interimAnalysis, interimAnalysisFlag ? this.inputData.get('中間解析に必要な図表数') : null],
+      // If the interim analysis is performed more than once, set it once for the first year only.
+      ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', interimAnalysisFlag && this.interimFirstYear === year ? 1 : null],
+      [interimAnalysis, interimAnalysisFlag ? this.interimAnalysisCount : null],
       ['中間解析報告書作成（出力結果＋表紙）', interimAnalysisFlag ? 1 : null],
       ['データクリーニング', interimAnalysisFlag ? 1 : null],
       ['症例登録', Number.isSafeInteger(this.inputData.get('症例登録毎の支払')) ? this.getDivisionCount_(trialInfo.get('cases'), year) : null],
