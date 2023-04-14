@@ -92,7 +92,11 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     const itemNameAndCount = [
       ['名古屋医療センターCRB申請費用(初年度)', crb ? 1 : null],
       ['名古屋医療センターCRB申請費用(2年目以降)', crb ? 1 : null],
-      ['治験薬運搬', this.inputData.get('治験薬運搬') === 'あり' ? this.formulas.get('facilities') : null],
+      ['治験薬運搬', this.inputData.get('治験薬運搬') === 'あり' 
+        ? trialInfo.get('registrationStartYear') <= year && year <= trialInfo.get('registrationEndYear')
+           ? this.formulas.get('facilities') 
+           : null
+        : null],
       ['施設監査費用', Number.isSafeInteger(this.inputData.get('監査対象施設数')) ? this.getDivisionCount_(this.inputData.get('監査対象施設数'), year) : null],
       ['症例モニタリング・SAE対応', Number.isSafeInteger(this.inputData.get('1例あたりの実地モニタリング回数')) ? this.getDivisionCount_(this.inputData.get('1例あたりの実地モニタリング回数') * trialInfo.get('cases'), year): null],
       ['開始前モニタリング・必須文書確認', Number.isSafeInteger(this.inputData.get('年間1施設あたりの必須文書実地モニタリング回数')) ? this.getDivisionCount_(this.inputData.get('年間1施設あたりの必須文書実地モニタリング回数') * trialInfo.get('facilities') * trialInfo.get('registrationYearsCount'), year): null],

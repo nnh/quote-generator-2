@@ -52,6 +52,8 @@ function getTrialsInfo_(){
   info.set('registrationStartYear', null);
   info.set('registrationEndYear', null)
   info.set('registrationYearsCount', null);
+  info.set('commentStartRowIdx', 11);
+  info.set('commentEndRowIdx', 25);
   info.set('discountRateAddress', 'B47');
   info.set('taxAddress', 'B45');
   info.set('sheetName', 'Trial');

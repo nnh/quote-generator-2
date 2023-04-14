@@ -11,12 +11,12 @@ function createSpreadsheet(inputData){
                           [0, templateInfo.get('sheetName')],
                           ...copySheetNames.map((sheetName, idx) => [copySheets[idx].sheetId, sheetName]),
                          ].map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));  
-  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest([renameRequests]), ss.newSs.spreadsheetId);
+  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(renameRequests), ss.newSs.spreadsheetId);
   // Get the spreadsheet object again because the added sheet is not reflected.
   ss.newSs = Sheets.Spreadsheets.get(ss.newSs.spreadsheetId);
   [ss.items, ss.trial, ss.quotationRequest] = copySheetNames.map(x => ss.newSs.sheets.filter(sheet => sheet.properties.title === x)[0]);
   editTrialTerm_(inputData);
-  const setTrialRequest = setTrialSheet_(inputData, ss.trial.properties.sheetId);
+  const setTrialRequest = setTrialSheet_(inputData, ss.trial.properties.sheetId, ss.newSs);
   const quotationRequestRequests = [
     spreadSheetBatchUpdate.getRangeSetValueRequest(ss.quotationRequest.properties.sheetId, 
                                                    1, 
@@ -87,7 +87,18 @@ function createSpreadsheet(inputData){
   });
   const setFilterTotal = new SetFilterTotalSheet(inputData, ss.newSs)
   const filterRequestTotal = targetTotal.map(year => setFilterTotal.exec_(year));
-  const filterRequests = [...filterRequestsYears, ...filterRequestTotal];
+  const moveSheetRequest = ss.newSs.sheets.map(sheet => {
+    const sheetId = sheet.properties.sheetId;
+    return sheet.properties.title === commonInfo.get('totalSheetName') 
+      ? spreadSheetBatchUpdate.moveSheetRequest(sheetId, 0)
+      : sheet.properties.title === commonInfo.get('total2SheetName')
+        ? spreadSheetBatchUpdate.moveSheetRequest(sheetId, 1)
+        : !new RegExp(sheet.properties.title).test(/^[0-9]{4}$/) 
+          ? spreadSheetBatchUpdate.moveSheetRequest(sheetId)
+          : null;
+  }).filter(x => x);
+  spreadSheetBatchUpdate.moveSheetRequest(0, 3);
+  const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest];
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), ss.newSs.spreadsheetId);
 }
 /**
@@ -150,12 +161,24 @@ function editTrialTerm_(inputData){
  * Set the Trial sheet values from the information entered.
  * @param {Object} inputData Map object of the information entered from the form.
  * @param {number} sheetId
+ * @param {Object} ss The spreadsheet object.
  * @return {Object} request object.
  */
-function setTrialSheet_(inputData, sheetId){
+function setTrialSheet_(inputData, sheetId, ss){
   const monthsCount = (trialInfo.get('closingEnd').getFullYear() * 12 + trialInfo.get('closingEnd').getMonth())
                        - (trialInfo.get('setupStart').getFullYear() * 12 + trialInfo.get('setupStart').getMonth());
-  const targetItems = [commonInfo.get('trialTypeItemName'), '目標症例数', commonInfo.get('facilitiesItemName'), 'CRF項目数'];  
+  let commentList = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${trialInfo.get('sheetName')}!B${getNumber_(trialInfo.get('commentStartRowIdx'))}:B${getNumber_(trialInfo.get('commentEndRowIdx'))}`, 'FORMULA')[0].values;
+  const crfItemName = 'CRF項目数';
+  const targetItems = [commonInfo.get('trialTypeItemName'), '目標症例数', commonInfo.get('facilitiesItemName'), crfItemName];  
+  // If there is CDISC compliance, multiply the number of CRF items by 7.
+  if (inputData.has('CDISC対応')){
+    inputData.set(crfItemName, `=${inputData.get(crfItemName)} * 7`);
+    commentList = commentList.map(
+      x => x[0] === '="CRFのべ項目数を一症例あたり"&$B$30&"項目と想定しております。"' 
+        ?['="CDISC SDTM変数へのプレマッピングを想定し、CRFのべ項目数を一症例あたり"&$B$30&"項目と想定しております。"']
+        : x
+    );
+  }
   const targetItemValues = targetItems.map(key => [inputData.get(key)]);
   const sourceOfFunds = inputData.get(commonInfo.get('sourceOfFundsTextItemName')) === commonInfo.get('commercialCompany') ? 1.5 : 1;
   const requests = [
@@ -167,17 +190,21 @@ function setTrialSheet_(inputData, sheetId){
                                                     [
                                                       Utilities.formatDate(trialInfo.get('setupStart'), 'JST', 'yyyy/MM/dd'), 
                                                       Utilities.formatDate(trialInfo.get('closingEnd'), 'JST', 'yyyy/MM/dd'), 
-                                                      '=datedif(D40,(E40+1), "m")'
+                                                      `=datedif(D${getNumber_(trialInfo.get('trialTermsAddress').get('rowIdx'))},(E${getNumber_(trialInfo.get('trialTermsAddress').get('rowIdx'))}+1), "m")`
                                                     ]
                                                    ]),
     spreadSheetBatchUpdate.getRangeSetValueRequest(sheetId, 
-                                                   26, 
+                                                   trialInfo.get('commentEndRowIdx') + 1, 
                                                    1, 
                                                    targetItemValues),
     spreadSheetBatchUpdate.getRangeSetValueRequest(sheetId, 
                                                    43, 
                                                    1, 
                                                    [[sourceOfFunds]]),
+    spreadSheetBatchUpdate.getRangeSetValueRequest(sheetId, 
+                                                   trialInfo.get('commentStartRowIdx'), 
+                                                   1, 
+                                                   commentList),
   ];
   return requests;
 }
