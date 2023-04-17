@@ -93,7 +93,17 @@ function createSpreadsheet(inputData=null){
   });
   const setFilterTotal = new SetFilterTotalSheet(inputData, ss.newSs)
   const filterRequestTotal = targetTotal.map(year => setFilterTotal.exec_(year));
-  const moveSheetRequest = ss.newSs.sheets.map(sheet => {
+  const moveSheetRequest = setMoveSheetRequest_(ss.newSs);
+  const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest];
+  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), ss.newSs.spreadsheetId);
+}
+/**
+ * Move the work sheet backward.
+ * @param {Object} ss The spreadsheet object.
+ * @return {Object} request object.
+ */
+function setMoveSheetRequest_(ss){
+  return ss.sheets.map(sheet => {
     const sheetId = sheet.properties.sheetId;
     return sheet.properties.title === commonInfo.get('totalSheetName') 
       ? spreadSheetBatchUpdate.moveSheetRequest(sheetId, 0)
@@ -103,9 +113,6 @@ function createSpreadsheet(inputData=null){
           ? spreadSheetBatchUpdate.moveSheetRequest(sheetId)
           : null;
   }).filter(x => x);
-  spreadSheetBatchUpdate.moveSheetRequest(0, 3);
-  const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest];
-  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), ss.newSs.spreadsheetId);
 }
 /**
  * Copy the template sheet by the number of contract years, total, total2.
