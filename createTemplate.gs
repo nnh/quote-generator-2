@@ -19,7 +19,7 @@ function createTemplate_(ss, template, items){
                                                                         templateInfo.get('startColIdx'),
                                                                         headValues);
   const outputBodyStartRowNumber = getNumber_(templateInfo.get('headStartRowIdx')) + headValues.length + 1;
-  const editTemplateFormulas = new EditTemplateFormulas();
+  const editTemplateFormulas = new EditTemplateFormulas(items);
   const itemsTemplateRowDiff = getNumber_(templateInfo.get('bodyStartRowIdx') - itemsInfo.get('bodyStartRowIdx'));
   const itemsRangesValues = editItemValues_(itemsSheetValues);
   const amountCol = commonGas.getColumnStringByIndex(templateInfo.get('colItemNameAndIdx').get('amount'));
@@ -210,8 +210,8 @@ function setColNamesInfo_(ss, targetMap){
  * Create a list of functions to be set up on the template sheet.
  */
 class EditTemplateFormulas{
-  constructor(){
-    this.items = itemsInfo.get('sheet');
+  constructor(items){
+    this.items = items;
     this.itemsSheetName = this.items.properties.title;
     this.countCol = commonGas.getColumnStringByIndex(templateInfo.get('colItemNameAndIdx').get('count')); 
   }
