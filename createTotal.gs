@@ -42,7 +42,7 @@ class CreateTotalSheet{
    * @return {Object} Request body.
    */
   editTotal2Sheet_(){
-    // Delete columns D and after and add years + 3 columns.
+    // Delete columns
     this.outputStartIdx = templateInfo.get('colItemNameAndIdx').get('price');
     this.sumColIdx = this.yearList.length + this.outputStartIdx + 1;
     this.sheetId = this.total2Sheet.properties.sheetId;
@@ -76,7 +76,7 @@ class CreateTotalSheet{
       }
     });
     let bodyRowsArray = [];
-    for (let i = 6; i <= this.total2Sheet.properties.gridProperties.rowCount; i++){
+    for (let i = 6; i <= this.total2Sheet.properties.gridProperties.rowCount + 1; i++){
       bodyRowsArray.push(i);
     }
     const outputStartColName = colNamesConstant[getNumber_(this.outputStartIdx)];
@@ -135,7 +135,7 @@ class CreateTotalSheet{
                                                       spreadSheetBatchUpdate.getHorizontalAlignmentRequest('CENTER'), 
                                                       'userEnteredFormat.horizontalAlignment'),
       spreadSheetBatchUpdate.getSetRowHeightRequest(this.sheetId, 21, 0, 1),
-      setNumberFormat_(this.total2Sheet, this.sumRowIdx, this.outputStartIdx, this.lastRowIdx, this.sumColIdx),
+      setNumberFormat_(this.total2Sheet, this.sumRowIdx, this.outputStartIdx, this.lastRowIdx - 1, this.sumColIdx),
     ];
     const addConditionalFormatRuleTarget = spreadSheetBatchUpdate.getRangeGridByIdx(this.sheetId, 0, filterColIdx, this.lastRowIdx, filterColIdx);
     const addConditionalFormatRuleRequest = editConditionalFormatRuleRequest([addConditionalFormatRuleTarget,]);
