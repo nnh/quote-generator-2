@@ -78,31 +78,26 @@ function createSpreadsheet(inputData=null){
     }
     return res;
   });
-return;
-  const request2 = spreadSheetBatchUpdate.editBatchUpdateRequest([targetYearsRenameRequests, totalSheetRequest]);
-  spreadSheetBatchUpdate.execBatchUpdate(request2, newSs.spreadsheetId);
-return;
-  const setFilterTotal = new SetFilterTotalSheet(inputData, ss.newSs)
-  const filterRequestTotal = targetTotal.map(year => setFilterTotal.exec_(year));
-  const moveSheetRequest = setMoveSheetRequest_(newSs);
+  const setFilterTotal = new SetFilterTotalSheet(inputData, newSs)
+  const filterRequestTotal = [commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName')].map(year => setFilterTotal.exec_(year));
+  const moveSheetRequest = setMoveSheetRequest_(newSs, [commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName'), ...targetYears.map(x => String(x))]);
   const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest];
-  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), ss.newSs.spreadsheetId);
+  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), newSs.spreadsheetId);
 }
 /**
  * Move the work sheet backward.
  * @param {Object} ss The spreadsheet object.
  * @return {Object} request object.
  */
-function setMoveSheetRequest_(ss){
-  const res = ss.sheets.map(sheet => {
-    const sheetId = sheet.properties.sheetId;
-    return sheet.properties.title === commonInfo.get('totalSheetName') 
-      ? spreadSheetBatchUpdate.moveSheetRequest(sheetId, 0)
-      : sheet.properties.title === commonInfo.get('total2SheetName')
-        ? spreadSheetBatchUpdate.moveSheetRequest(sheetId, 1)
-        : !new RegExp(sheet.properties.title).test(/^[0-9]{4}$/) 
-          ? spreadSheetBatchUpdate.moveSheetRequest(sheetId)
-          : null;
+function setMoveSheetRequest_(ss, targetSheetNames){
+  const sheets = Sheets.Spreadsheets.get(ss.spreadsheetId).sheets;
+  const res = sheets.map(sheet => {
+    const idx = targetSheetNames.indexOf(sheet.properties.title);
+    if (idx > -1){
+      return spreadSheetBatchUpdate.moveSheetRequest(sheet.properties.sheetId, idx);      
+    } else {
+      return null;
+    }
   }).filter(x => x);
   return res;
 }
