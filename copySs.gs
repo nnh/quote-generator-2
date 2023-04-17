@@ -7,18 +7,49 @@ function createSpreadsheet(inputData=null){
     console.log('The information submitted on the form is missing.');
     return;
   }
-  const ss = {};
+  const templateFolder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('templateFolderId'));
+  if (!templateFolder){
+    return;
+  }
+  const tempFiles = templateFolder.getFilesByName('Quote Template for nmc oscr');
+  if (!tempFiles){
+    return;
+  }
+  const templateFile = tempFiles.next();
+  if (templateFile.getId() !== PropertiesService.getScriptProperties().getProperty('templateFileId')){
+    return;
+  }
   const now = driveCommon.todayYyyymmdd();
-  ss.newSs = spreadSheetCommon.createNewSpreadSheet(`Quote ${inputData.get('試験実施番号')} ${now}`);
+  const newFile = templateFile.makeCopy(`Quote ${inputData.get('試験実施番号')} ${now}`, DriveApp.getRootFolder());
+  const newSs = Sheets.Spreadsheets.get(newFile.getId());
+  const targetSheetsName = ['Total', 'Total2', 'Items', 'Setup', 'Trial', 'Quote', 'Quotation Request'];
+  const sheets = new Map();
+  const tempDeleteSheetRequests = newSs.sheets.map(sheet => {
+    const checkTarget = targetSheetsName.filter(sheetName => sheetName === sheet.properties.title).some(x => x);
+    if (checkTarget){
+      return;
+    }
+    sheets.set(sheet.properties.title, sheet.properties.sheetId);
+    const request = spreadSheetBatchUpdate.editDeleteSheetRequest(sheet.properties.sheetId);
+    return request;
+  }).filter(x => x);
+  const renameRequests = spreadSheetBatchUpdate.editRenameSheetRequest(sheets.get('Setup'), templateInfo.get('sheetName'));
+  const deleteSheetRequests = spreadSheetBatchUpdate.editBatchUpdateRequest([...tempDeleteSheetRequests, renameRequests]);
+  spreadSheetBatchUpdate.execBatchUpdate(deleteSheetRequests, newSs.spreadsheetId);
+return;
+
+
+  const ss = {};
+  //ss.newSs = spreadSheetCommon.createNewSpreadSheet(`Quote ${inputData.get('試験実施番号')} ${now}`);
   ss.template = ss.newSs.sheets[0];
   const sheetIdMap = spreadSheetCommon.getSheetIdMap(Sheets.Spreadsheets.get(PropertiesService.getScriptProperties().getProperty('templateFileId')));
   // Copy the 'Items', 'Trial', and 'Quotation Request' sheets from the source file.
   const copySheetNames = [itemsInfo.get('sheetName'), trialInfo.get('sheetName'), 'Quotation Request'];
   const copySheets = copySheetNames.map(x => spreadSheetCommon.copySheet(PropertiesService.getScriptProperties().getProperty('templateFileId'), ss.newSs, sheetIdMap.get(x)));
-  const renameRequests = [
-                          [0, templateInfo.get('sheetName')],
-                          ...copySheetNames.map((sheetName, idx) => [copySheets[idx].sheetId, sheetName]),
-                         ].map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));  
+//  const renameRequests = [
+//                          [0, templateInfo.get('sheetName')],
+//                          ...copySheetNames.map((sheetName, idx) => [copySheets[idx].sheetId, sheetName]),
+//                         ].map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));  
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(renameRequests), ss.newSs.spreadsheetId);
   // Get the spreadsheet object again because the added sheet is not reflected.
   ss.newSs = Sheets.Spreadsheets.get(ss.newSs.spreadsheetId);
