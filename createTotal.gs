@@ -3,27 +3,27 @@
  */
 class CreateTotalSheet{
   /**
-   * @param {Object} ss Spreadsheet object.
-   * @param {string[]} yearList Array of sheet names.
-   * @param {Object} template Sheet object.
+   * @param {Object} ss The spreadsheet object.
+   * @param {Object} targets The map object of the sheets.
    */
   constructor(ss, targets){
     this.ss = ss;
     this.yearList = [];
-    this.targetSheetList = [];
-    targets.forEach((value, key) => {
-      if (/\d{4}/.test(key)){
-        this.yearList.push(key);
-        this.targetSheetList.push(value);
-      } else if (key === commonInfo.get('totalSheetName')){
-        this.totalSheet = value;
-      } else if (key === commonInfo.get('total2SheetName')){
-        this.total2Sheet = value;
-      }
+    targets.forEach((_, sheetName) => {
+      this.yearList.push(sheetName)
     });
-    this.template = ss.sheets.filter(x => x.properties.title === templateInfo.get('sheetName'))[0];    
+    this.totalSheet = this.getSheet(commonInfo.get('totalSheetName'));
+    this.total2Sheet = this.getSheet(commonInfo.get('total2SheetName'));
+    this.templateSheet = this.getSheet(commonInfo.get('templateSheetName'));
     this.totalHeadText = '【見積明細：総期間】';
     this.countColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))];
+  }
+  getSheet(sheetName){
+    const sheet = this.ss.sheets.filter(x => x.properties.title === sheetName);
+    if (sheet.length !== 1){
+      return null;
+    }
+    return sheet[0];
   }
   /**
    * Edit total, total2 sheet.

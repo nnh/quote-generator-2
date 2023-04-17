@@ -27,104 +27,64 @@ function createSpreadsheet(inputData=null){
   const tempDeleteSheetRequests = newSs.sheets.map(sheet => {
     const checkTarget = targetSheetsName.filter(sheetName => sheetName === sheet.properties.title).some(x => x);
     if (checkTarget){
+      sheets.set(sheet.properties.title, sheet.properties.sheetId);
       return;
     }
-    sheets.set(sheet.properties.title, sheet.properties.sheetId);
     const request = spreadSheetBatchUpdate.editDeleteSheetRequest(sheet.properties.sheetId);
     return request;
   }).filter(x => x);
   const renameRequests = spreadSheetBatchUpdate.editRenameSheetRequest(sheets.get('Setup'), templateInfo.get('sheetName'));
-  const deleteSheetRequests = spreadSheetBatchUpdate.editBatchUpdateRequest([...tempDeleteSheetRequests, renameRequests]);
-  spreadSheetBatchUpdate.execBatchUpdate(deleteSheetRequests, newSs.spreadsheetId);
-return;
-
-
-  const ss = {};
-  //ss.newSs = spreadSheetCommon.createNewSpreadSheet(`Quote ${inputData.get('試験実施番号')} ${now}`);
-  ss.template = ss.newSs.sheets[0];
-  const sheetIdMap = spreadSheetCommon.getSheetIdMap(Sheets.Spreadsheets.get(PropertiesService.getScriptProperties().getProperty('templateFileId')));
-  // Copy the 'Items', 'Trial', and 'Quotation Request' sheets from the source file.
-  const copySheetNames = [itemsInfo.get('sheetName'), trialInfo.get('sheetName'), 'Quotation Request'];
-  const copySheets = copySheetNames.map(x => spreadSheetCommon.copySheet(PropertiesService.getScriptProperties().getProperty('templateFileId'), ss.newSs, sheetIdMap.get(x)));
-//  const renameRequests = [
-//                          [0, templateInfo.get('sheetName')],
-//                          ...copySheetNames.map((sheetName, idx) => [copySheets[idx].sheetId, sheetName]),
-//                         ].map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));  
-  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(renameRequests), ss.newSs.spreadsheetId);
-  // Get the spreadsheet object again because the added sheet is not reflected.
-  ss.newSs = Sheets.Spreadsheets.get(ss.newSs.spreadsheetId);
-  [ss.items, ss.trial, ss.quotationRequest] = copySheetNames.map(x => ss.newSs.sheets.filter(sheet => sheet.properties.title === x)[0]);
-  const setTrialRequest = setTrialSheet_(inputData, ss.trial.properties.sheetId, ss.newSs);
-  const setQuotationRequestRequests = [
-    spreadSheetBatchUpdate.getRangeSetValueRequest(ss.quotationRequest.properties.sheetId, 
-                                                   1, 
-                                                   0, 
-                                                   [[now]]),
-  ];
-  ss.newSs = Sheets.Spreadsheets.get(ss.newSs.spreadsheetId);
-  const setItemsRequest = setItemsSheet_(ss.newSs, inputData);
+  const setQuotationRequestRequests = spreadSheetBatchUpdate.getRangeSetValueRequest(
+    sheets.get('Quotation Request'), 
+    1, 
+    0, 
+    [[now]]
+  );
+  const setTemplateRequests = spreadSheetBatchUpdate.getRangeSetValueRequest(
+    sheets.get('Setup'), 
+    1, 
+    1, 
+    [['']]
+  );
+  const setTrialRequest = setTrialSheet_(inputData, sheets.get('Trial'), newSs);
+  const setItemsRequest = setItemsSheet_(newSs, inputData);
   if (!setItemsRequest){
     console.log('error: setItemsSheet_');
     return;
   }
-  const createTemplateRequest = createTemplate_(ss.newSs, ss.template, ss.items);
-  const requestsArray = [
-                         setTrialRequest,
-                         setQuotationRequestRequests,
-                         setItemsRequest,
-                         createTemplateRequest,
-                        ];
-  const requests = spreadSheetBatchUpdate.editBatchUpdateRequest(requestsArray);
-  // Fix the template and then copy the sheets for each year, total, total2.
-  spreadSheetBatchUpdate.execBatchUpdate(requests, ss.newSs.spreadsheetId);
-  // Set up formulas individually only for project management.
-  const projectManagement = new ProjectManagement(ss.newSs);
-  const projectManagementPriceRequest = projectManagement.setTemplate_(ss.template.properties.sheetId);
-  const numberFormatRequest = setNumberFormat_(ss.template, projectManagement.getRowIdx(), templateInfo.get('colItemNameAndIdx').get('price'), projectManagement.getRowIdx(), templateInfo.get('colItemNameAndIdx').get('price'));
-  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest([projectManagementPriceRequest, numberFormatRequest]), ss.newSs.spreadsheetId);
   // Create years, total, total2 sheet.
-  const targetYearsSheet = createYearsAndTotalSheet_(ss.newSs, ss.template);
+  const targetYearsSheet = createYearsAndTotalSheet_(newSs, sheets.get('Setup'));
   const targetYearsRename = Array.from(targetYearsSheet.keys()).map(key => [targetYearsSheet.get(key).sheetId, String(key)]);
   const targetYearsRenameRequests = targetYearsRename.map(x => spreadSheetBatchUpdate.editRenameSheetRequest(x[0], x[1]));
-  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(targetYearsRenameRequests), ss.newSs.spreadsheetId);
-  // Get the spreadsheet object again because the added sheet is not reflected.
-  ss.newSs = Sheets.Spreadsheets.get(ss.newSs.spreadsheetId);
-  targetYearsSheet.forEach((_, sheetName) => targetYearsSheet.set(sheetName, ss.newSs.sheets.filter(sheet => sheet.properties.title === String(sheetName))[0]));
-  const totalSheetRequest = new CreateTotalSheet(ss.newSs, targetYearsSheet).exec();
-  const totalRequestsArray = [
-                               totalSheetRequest,
-                             ];
-  const totalRequests = spreadSheetBatchUpdate.editBatchUpdateRequest(totalRequestsArray);
-  spreadSheetBatchUpdate.execBatchUpdate(totalRequests, ss.newSs.spreadsheetId);
-  // Edit the sheet for each fiscal year.
+  targetYearsSheet.forEach((sheet, sheetName) => sheets.set(sheetName, sheet.sheetId));
+  const totalSheetRequest = new CreateTotalSheet(newSs, targetYearsSheet).exec();
+  const request1 = spreadSheetBatchUpdate.editBatchUpdateRequest([...tempDeleteSheetRequests, renameRequests, setQuotationRequestRequests, setTemplateRequests, setTrialRequest, setItemsRequest, targetYearsRenameRequests, totalSheetRequest]);
+  spreadSheetBatchUpdate.execBatchUpdate(request1, newSs.spreadsheetId);
   let targetYears = [];
-  let targetTotal = [];
-  targetYearsSheet.forEach((_, year) => {
-    const targetSheetCheck = /^\d{4}$/.test(String(year));
-    if (targetSheetCheck){
-      targetYears.push(year);
-    } else {
-      targetTotal.push(year);
-    }
-  });
+  targetYearsSheet.forEach((_, year) => targetYears.push(year));
   // Get the start and end year of the registration.
   trialInfo.set('registrationStartYear', trialInfo.get('trialStart').getMonth() === 3 ? targetYears[1] : targetYears[0]);
   trialInfo.set('registrationEndYear', trialInfo.get('trialEnd').getMonth() === 2 ? targetYears[targetYears.length - 2] : targetYears[targetYears.length - 1]);
   trialInfo.set('registrationYearsCount', trialInfo.get('registrationEndYear') - trialInfo.get('registrationStartYear') + 1);  
-  const setValuesRegistration = new SetValuesRegistrationSheet(inputData, ss.newSs);
+  const setValuesRegistration = new SetValuesRegistrationSheet(inputData, newSs);
+  // Edit the sheet for each fiscal year.
   const filterRequestsYears = targetYears.map((year, idx) => {
     let res = setValuesRegistration.exec_(year);
     if (idx === 0){
-      const _ = new SetValuesSetupSheet(inputData, ss.newSs).exec_(year);
+      const _ = new SetValuesSetupSheet(inputData, newSs).exec_(year);
     }
     if (idx === targetYears.length - 1){
-      const _ = new SetValuesClosingSheet(inputData, ss.newSs).exec_(year);
+      const _ = new SetValuesClosingSheet(inputData, newSs).exec_(year);
     }
     return res;
   });
+return;
+  const request2 = spreadSheetBatchUpdate.editBatchUpdateRequest([targetYearsRenameRequests, totalSheetRequest]);
+  spreadSheetBatchUpdate.execBatchUpdate(request2, newSs.spreadsheetId);
+return;
   const setFilterTotal = new SetFilterTotalSheet(inputData, ss.newSs)
   const filterRequestTotal = targetTotal.map(year => setFilterTotal.exec_(year));
-  const moveSheetRequest = setMoveSheetRequest_(ss.newSs);
+  const moveSheetRequest = setMoveSheetRequest_(newSs);
   const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest];
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), ss.newSs.spreadsheetId);
 }
@@ -134,7 +94,7 @@ return;
  * @return {Object} request object.
  */
 function setMoveSheetRequest_(ss){
-  return ss.sheets.map(sheet => {
+  const res = ss.sheets.map(sheet => {
     const sheetId = sheet.properties.sheetId;
     return sheet.properties.title === commonInfo.get('totalSheetName') 
       ? spreadSheetBatchUpdate.moveSheetRequest(sheetId, 0)
@@ -144,20 +104,21 @@ function setMoveSheetRequest_(ss){
           ? spreadSheetBatchUpdate.moveSheetRequest(sheetId)
           : null;
   }).filter(x => x);
+  return res;
 }
 /**
  * Copy the template sheet by the number of contract years, total, total2.
  * @param {Object} ss Spreadsheet object.
- * @param {Object} template Sheet object.
+ * @param {number} template The template sheet id.
  * @return Sheet object.
  */
 function createYearsAndTotalSheet_(ss, template){
   const startYear = trialInfo.get('setupStart').getFullYear();
   const endYear = trialInfo.get('trialEnd').getMonth() === 2 ? trialInfo.get('closingEnd').getFullYear() : trialInfo.get('trialEnd').getFullYear();
   let targetYears = [...Array(endYear - startYear + 1)].map((_, idx) => startYear + idx);
-  targetYears.push(commonInfo.get('totalSheetName'));
-  targetYears.push(commonInfo.get('total2SheetName'));
+  //targetYears.push(commonInfo.get('totalSheetName'));
+  //targetYears.push(commonInfo.get('total2SheetName'));
   const targets = new Map();
-  targetYears.forEach(year => targets.set(year, spreadSheetCommon.copySheet(ss.spreadsheetId, ss, template.properties.sheetId)));
+  targetYears.forEach(year => targets.set(year, spreadSheetCommon.copySheet(ss.spreadsheetId, ss, template)));
   return targets;
 }
