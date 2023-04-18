@@ -112,7 +112,6 @@ class CreateTotalSheet{
     // Column width setting
     const yearsColWidths = 81;
     const colWidths = [25, 38, 447, ...this.yearList.map(_ => yearsColWidths), yearsColWidths, 18, 35];
-    const filterColIdx = colWidths.length - 1;
     const setColWidthRequest = colWidths.map((width, idx) => spreadSheetBatchUpdate.getSetColWidthRequest(this.sheetId, width, idx, idx + 1));
     // Border setting
     const bordersRequest = this.setBorders_();
@@ -137,9 +136,7 @@ class CreateTotalSheet{
       spreadSheetBatchUpdate.getSetRowHeightRequest(this.sheetId, 21, 0, 1),
       setNumberFormat_(this.total2Sheet, this.sumRowIdx, this.outputStartIdx, this.lastRowIdx - 1, this.sumColIdx),
     ];
-    const addConditionalFormatRuleTarget = spreadSheetBatchUpdate.getRangeGridByIdx(this.sheetId, 0, filterColIdx, this.lastRowIdx, filterColIdx);
-    const addConditionalFormatRuleRequest = editConditionalFormatRuleRequest([addConditionalFormatRuleTarget,]);
-    return [delColRequest, insertColRequest, insertRowRequest, ...setBodyRequest, ...delRowsRequest, ...setColWidthRequest, bordersRequest, formatRequest, ...addConditionalFormatRuleRequest];
+    return [delColRequest, insertColRequest, insertRowRequest, ...setBodyRequest, ...delRowsRequest, ...setColWidthRequest, bordersRequest, formatRequest];
   }
   setBorders_(){
     let request = [];

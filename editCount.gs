@@ -64,7 +64,8 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
   }
   getMonthDiff(startDate, endDate){
     const monthUnit = 1000 * 60 * 60 * 24 * 30;
-    return Math.trunc(Math.abs(endDate - startDate) / monthUnit);
+    const res = Math.trunc(Math.abs(endDate - startDate) / monthUnit);
+    return res > 0 ? res : null;
   }
   editValues(year){
     const [interimAnalysis, centralMonitoring] = this.getItemNameByTrialType_(commonInfo.get('investigatorInitiatedTrialFlag'), 
