@@ -46,8 +46,17 @@ class SetValuesSheetByYear{
     return;
   }
   getItemNameByTrialType_(trialType, itemList){
-    const targetIdx = trialType === trialType ? 0 : 1;
+    const targetIdx = trialType ? 0 : 1;
     return itemList.map(x => x[targetIdx]);
+  }
+    setValueOrNull_(itemName, value){
+    if (!this.inputData.has(itemName)){
+      return null;
+    }
+    if (!Number.isSafeInteger(this.inputData.get(itemName))){
+      return null;
+    }
+    return this.inputData.get(itemName) > 0 ? value : null;  
   }
 }
 class SetValuesRegistrationSheet extends SetValuesSheetByYear{
@@ -57,7 +66,7 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     this.interimAnalysisCount = null;
     this.interimYears = null;
     if (Number.isSafeInteger(this.inputData.get('中間解析に必要な図表数'))){
-      this.interimAnalysisCount = this.inputData.get('中間解析に必要な図表数');
+      this.interimAnalysisCount = this.setValueOrNull_('中間解析に必要な図表数', this.inputData.get('中間解析に必要な図表数'));
       this.interimYears = this.inputData.has('中間解析の頻度') ? this.inputData.get('中間解析の頻度').map(x => x.replace(/年/, '')).filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) : null;
       this.interimFirstYear = this.interimYears.length > 0 ? this.interimYears[0] : null;
     }
@@ -91,22 +100,26 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     const registrationMonth = thisYearStart ? this.getMonthDiff(thisYearStart, thisYearEnd) : null;
     const crb = this.inputData.get('CRB申請') === 'あり';
     const itemNameAndCount = [
-      ['名古屋医療センターCRB申請費用(初年度)', crb ? 1 : null],
-      ['名古屋医療センターCRB申請費用(2年目以降)', crb ? 1 : null],
+      ['名古屋医療センターCRB申請費用(初年度)', crb 
+        ? trialInfo.get('registrationStartYear') === year ? 1 : null 
+        : null],
+      ['名古屋医療センターCRB申請費用(2年目以降)', crb 
+        ? trialInfo.get('registrationStartYear') < year && year <= trialInfo.get('registrationEndYear') ? 1 : null
+        : null],
       ['治験薬運搬', this.inputData.get('治験薬運搬') === 'あり' 
         ? trialInfo.get('registrationStartYear') <= year && year <= trialInfo.get('registrationEndYear')
            ? this.formulas.get('facilities') 
            : null
         : null],
-      ['施設監査費用', Number.isSafeInteger(this.inputData.get('監査対象施設数')) ? this.getDivisionCount_(this.inputData.get('監査対象施設数'), year) : null],
-      ['症例モニタリング・SAE対応', Number.isSafeInteger(this.inputData.get('1例あたりの実地モニタリング回数')) ? this.getDivisionCount_(this.inputData.get('1例あたりの実地モニタリング回数') * trialInfo.get('cases'), year): null],
-      ['開始前モニタリング・必須文書確認', Number.isSafeInteger(this.inputData.get('年間1施設あたりの必須文書実地モニタリング回数')) ? this.getDivisionCount_(this.inputData.get('年間1施設あたりの必須文書実地モニタリング回数') * trialInfo.get('facilities') * trialInfo.get('registrationYearsCount'), year): null],
+      ['施設監査費用', this.setValueOrNull_('監査対象施設数', this.getDivisionCount_(this.inputData.get('監査対象施設数'), year))],
+      ['症例モニタリング・SAE対応', this.setValueOrNull_('1例あたりの実地モニタリング回数', this.getDivisionCount_(this.inputData.get('1例あたりの実地モニタリング回数') * trialInfo.get('cases'), year))],
+      ['開始前モニタリング・必須文書確認', this.setValueOrNull_('年間1施設あたりの必須文書実地モニタリング回数', this.getDivisionCount_(this.inputData.get('年間1施設あたりの必須文書実地モニタリング回数') * trialInfo.get('facilities') * trialInfo.get('registrationYearsCount'), year))],
       // If the interim analysis is performed more than once, set it once for the first year only.
       ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', interimAnalysisFlag && this.interimFirstYear === year ? 1 : null],
       [interimAnalysis, interimAnalysisFlag ? this.interimAnalysisCount : null],
       ['中間解析報告書作成（出力結果＋表紙）', interimAnalysisFlag ? 1 : null],
       ['データクリーニング', interimAnalysisFlag ? 1 : null],
-      ['症例登録', Number.isSafeInteger(this.inputData.get('症例登録毎の支払')) ? this.getDivisionCount_(trialInfo.get('cases'), year) : null],
+      ['症例登録', this.setValueOrNull_('症例登録毎の支払', this.getDivisionCount_(trialInfo.get('cases'), year))],
       [centralMonitoring, registrationMonth],
       ['安全性管理事務局業務', this.inputData.get('安全性管理事務局設置') === '設置・委託する' ? registrationMonth : null],
       ['効果安全性評価委員会事務局業務', this.inputData.get('効安事務局設置') === '設置・委託する' ? registrationMonth : null],
@@ -151,18 +164,18 @@ class SetValuesSetupSheet extends SetValuesSheetByYear{
       ['事務局運営（試験開始前）', commonInfo.get('clinicalTrialsOfficeFlag') ? trialInfo.get('setupTerm') : null],
       [officeIrbStr, commonInfo.get('investigatorInitiatedTrialFlag') ? this.formulas.get('facilities') : null],
       ['薬剤対応', commonInfo.get('investigatorInitiatedTrialFlag') ? this.formulas.get('facilities') : null],
-      ['モニタリング準備業務（関連資料作成）', Number.isSafeInteger(this.inputData.get('1例あたりの実地モニタリング回数')) ? 1 : null],
+      ['モニタリング準備業務（関連資料作成）', this.setValueOrNull_('1例あたりの実地モニタリング回数', 1)],
       ['EDCライセンス・データベースセットアップ', 1],
       ['業務分析・DM計画書の作成・CTR登録案の作成', 1],
       ['DB作成・eCRF作成・バリデーション', 1],
       ['バリデーション報告書', 1],
       [setAccounts, this.formulas.get('facilities')],
       ['入力の手引作成', 1],
-      ['外部監査費用', Number.isSafeInteger(this.inputData.get('監査対象施設数')) ? 1 : null],
-      ['保険料', Number.isSafeInteger(this.inputData.get('保険料')) ? 1 : null],
+      ['外部監査費用', this.setValueOrNull_('監査対象施設数', 1)],
+      ['保険料', this.setValueOrNull_('保険料', 1)],
       ['治験薬管理（中央）', this.inputData.get('治験薬管理') === 'あり' ? 1 : null],
       ['プロジェクト管理', trialInfo.get('setupTerm')],
-      ['試験開始準備費用', Number.isSafeInteger(this.inputData.get('試験開始準備費用')) ? this.formulas.get('facilities') : null]
+      ['試験開始準備費用', this.setValueOrNull_('試験開始準備費用', this.formulas.get('facilities'))],
     ];
     return itemNameAndCount;
   }
@@ -191,8 +204,8 @@ class SetValuesClosingSheet extends SetValuesSheetByYear{
       [finalAnalysis, finalAnalysisTableCount],
       ['最終解析報告書作成（出力結果＋表紙）', finalAnalysisTableCount ? 1 :null],
       [csr, csrCount],
-      ['症例報告', Number.isSafeInteger(this.inputData.get('症例最終報告書提出毎の支払')) ? setValuesSheetByYear.formulas.get('cases') : null],
-      ['外部監査費用', Number.isSafeInteger(this.inputData.get('監査対象施設数')) ? 1 : null],
+      ['症例報告', this.setValueOrNull_('症例最終報告書提出毎の支払', this.formulas.get('cases'))],
+      ['外部監査費用', this.setValueOrNull_('監査対象施設数', 1)],
       ['プロジェクト管理', trialInfo.get('closingTerm')],
     ];
     return itemNameAndCount;
