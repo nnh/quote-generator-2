@@ -20,14 +20,14 @@ function setPropertiesByInputData_(inputData){
 function editTrialTerm_(inputData){
   try{
     const trialStartYear = inputData.get(`${trialInfo.get('trialStartText')}${trialInfo.get('yearText')}`).replace(trialInfo.get('yearText'), '');
-    const trialStartMonth = inputData.get(`${trialInfo.get('trialStartText')}${trialInfo.get('monthText')}`).replace(trialInfo.get('monthText'), '') - 1;
+    const trialStartMonth = inputData.get(`${trialInfo.get('trialStartText')}${trialInfo.get('monthText')}`).replace(trialInfo.get('monthText'), '');
     const trialEndYear = inputData.get(`${trialInfo.get('trialEndText')}${trialInfo.get('yearText')}`).replace(trialInfo.get('yearText'), '');
     const trialEndMonth = inputData.get(`${trialInfo.get('trialEndText')}${trialInfo.get('monthText')}`).replace(trialInfo.get('monthText'), '');
     const target = [commonInfo.get('trialType').get('investigatorInitiatedTrial'), commonInfo.get('trialType').get('specifiedClinicalTrial')];
     const setupTerm = target.some(x => inputData.get(commonInfo.get('trialTypeItemName')) === x) ? 6 : 3; 
     const closingTerm = target.some(x => inputData.get(commonInfo.get('trialTypeItemName')) === x) ? 6 : 3; 
     const trialStart = new Date(trialStartYear, trialStartMonth, 1);
-    const trialEnd = new Date(trialEndYear, trialEndMonth, 0);
+    const trialEnd = new Date(trialEndYear, Number(trialEndMonth) + 1, 0);
     const setupStart = new Date(trialStart.getFullYear(), trialStart.getMonth() - setupTerm, trialStart.getDate());
     const closingEnd = new Date(trialEnd.getFullYear(), trialEnd.getMonth() + closingTerm + 1, 0);
     trialInfo.set('trialStart', trialStart);
