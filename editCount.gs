@@ -67,8 +67,15 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     this.interimYears = null;
     if (Number.isSafeInteger(this.inputData.get('中間解析に必要な図表数'))){
       this.interimAnalysisCount = this.setValueOrNull_('中間解析に必要な図表数', this.inputData.get('中間解析に必要な図表数'));
-      this.interimYears = this.inputData.has('中間解析の頻度') ? this.inputData.get('中間解析の頻度').map(x => x.replace(/年/, '')).filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) : null;
-      this.interimFirstYear = this.interimYears.length > 0 ? this.interimYears[0] : null;
+      const tempInterim = this.inputData.has('中間解析の頻度') 
+        ? /年/.test(this.inputData.get('中間解析の頻度')) ? this.inputData.get('中間解析の頻度') : null
+        :null;
+      this.interimYears = tempInterim 
+        ? this.inputData.get('中間解析の頻度').map(x => x.replace(/年/, '')).filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) 
+        : null;
+      this.interimFirstYear = this.interimYears 
+        ? this.interimYears.length > 0 ? this.interimYears[0] : null
+        : null;
     }
   }
   getMonthDiff(startDate, endDate){
@@ -104,7 +111,7 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
         ? trialInfo.get('registrationStartYear') === year ? 1 : null 
         : null],
       ['名古屋医療センターCRB申請費用(2年目以降)', crb 
-        ? trialInfo.get('registrationStartYear') < year && year <= trialInfo.get('registrationEndYear') ? 1 : null
+        ? trialInfo.get('registrationStartYear') < year && year <= trialInfo.get('registrationEndYear') && registrationMonth > 6 ? 1 : null
         : null],
       ['治験薬運搬', this.inputData.get('治験薬運搬') === 'あり' 
         ? trialInfo.get('registrationStartYear') <= year && year <= trialInfo.get('registrationEndYear')
