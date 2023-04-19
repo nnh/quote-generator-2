@@ -3,8 +3,9 @@ function createSpreadsheet(inputData=null){
     console.log('No information was submitted from the form.');
     return;
   }
-  if (!setPropertiesByInputData_(inputData)){
-    console.log('The information submitted on the form is missing.');
+  const resSetProperties = setPropertiesByInputData_(inputData);
+  if (!resSetProperties){
+    console.log(resSetProperties);
     return;
   }
   const templateFolder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('templateFolderId'));

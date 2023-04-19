@@ -28,6 +28,9 @@ function editTrialTerm_(inputData){
     const closingTerm = target.some(x => inputData.get(commonInfo.get('trialTypeItemName')) === x) ? 6 : 3; 
     const trialStart = new Date(trialStartYear, trialStartMonth, 1);
     const trialEnd = new Date(trialEndYear, Number(trialEndMonth) + 1, 0);
+    if (trialStart >= trialEnd){
+      throw new Error('The end date must be after the start date.');
+    }
     const setupStart = new Date(trialStart.getFullYear(), trialStart.getMonth() - setupTerm, trialStart.getDate());
     const closingEnd = new Date(trialEnd.getFullYear(), trialEnd.getMonth() + closingTerm + 1, 0);
     trialInfo.set('trialStart', trialStart);
@@ -39,7 +42,7 @@ function editTrialTerm_(inputData){
     trialInfo.set('cases', inputData.get('目標症例数'));
     trialInfo.set('facilities', inputData.get(commonInfo.get('facilitiesItemName')));
   } catch (error){
-    return false;
+    return error;
   }
   return true;
 }
