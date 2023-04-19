@@ -150,6 +150,8 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
                           : trialInfo.get('trialEnd');
     const registrationMonth = thisYearStart ? this.getMonthDiff(thisYearStart, thisYearEnd) : null;
     const crb = this.inputData.get('CRB申請') === 'あり';
+    const caseMonitaringCount = this.setValueOrNull_('1例あたりの実地モニタリング回数', this.getDivisionCount_(this.inputData.get('1例あたりの実地モニタリング回数') * trialInfo.get('cases'), year));
+    const facilityMonitaringCount = this.setValueOrNull_('年間1施設あたりの必須文書実地モニタリング回数', this.getDivisionCount_(this.inputData.get('年間1施設あたりの必須文書実地モニタリング回数') * trialInfo.get('facilities') * trialInfo.get('registrationYearsCount'), year));
     const itemNameAndCount = [
       ['名古屋医療センターCRB申請費用(初年度)', crb 
         ? trialInfo.get('registrationStartYear') === year ? 1 : null 
@@ -163,8 +165,8 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
            : null
         : null],
       ['施設監査費用', this.setValueOrNull_('監査対象施設数', this.getDivisionCount_(this.inputData.get('監査対象施設数'), year))],
-      ['症例モニタリング・SAE対応', this.setValueOrNull_('1例あたりの実地モニタリング回数', this.getDivisionCount_(this.inputData.get('1例あたりの実地モニタリング回数') * trialInfo.get('cases'), year))],
-      ['開始前モニタリング・必須文書確認', this.setValueOrNull_('年間1施設あたりの必須文書実地モニタリング回数', this.getDivisionCount_(this.inputData.get('年間1施設あたりの必須文書実地モニタリング回数') * trialInfo.get('facilities') * trialInfo.get('registrationYearsCount'), year))],
+      ['症例モニタリング・SAE対応', caseMonitaringCount],
+      ['開始前モニタリング・必須文書確認', registrationMonth > 6 || trialInfo.get('registrationStartYear') === year ? facilityMonitaringCount : null],
       // If the interim analysis is performed more than once, set it once for the first year only.
       ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', interimAnalysisFlag && this.interimFirstYear === year ? 1 : null],
       [interimAnalysis, interimAnalysisFlag ? this.interimAnalysisCount : null],
