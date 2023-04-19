@@ -67,11 +67,10 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     this.interimYears = null;
     if (Number.isSafeInteger(this.inputData.get('中間解析に必要な図表数'))){
       this.interimAnalysisCount = this.setValueOrNull_('中間解析に必要な図表数', this.inputData.get('中間解析に必要な図表数'));
-      const tempInterim = this.inputData.has('中間解析の頻度') 
-        ? /年/.test(this.inputData.get('中間解析の頻度')) ? this.inputData.get('中間解析の頻度') : null
-        :null;
+      const tempInterim = this.inputData.has('中間解析の頻度')
+        ? this.inputData.get('中間解析の頻度').split(', ').map(x => x.replace('年', '')).filter(x => /^[0-9]{4}$/.test(x)) : null; 
       this.interimYears = tempInterim 
-        ? this.inputData.get('中間解析の頻度').map(x => x.replace(/年/, '')).filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) 
+        ? tempInterim.filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) 
         : null;
       this.interimFirstYear = this.interimYears 
         ? this.interimYears.length > 0 ? this.interimYears[0] : null
