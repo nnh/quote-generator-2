@@ -1,3 +1,8 @@
+/**
+ * Create a quotation using the information entered from the form.
+ * @param {Object} inputData Map object of the information entered from the form.
+ * @return none.
+ */
 function createSpreadsheet(inputData=null){
   if (!inputData){
     console.log('No information was submitted from the form.');
@@ -112,8 +117,6 @@ function createYearsAndTotalSheet_(ss, template){
   const startYear = trialInfo.get('setupStart').getFullYear();
   const endYear = trialInfo.get('trialEnd').getMonth() === 2 ? trialInfo.get('closingEnd').getFullYear() : trialInfo.get('trialEnd').getFullYear();
   let targetYears = [...Array(endYear - startYear + 1)].map((_, idx) => startYear + idx);
-  //targetYears.push(commonInfo.get('totalSheetName'));
-  //targetYears.push(commonInfo.get('total2SheetName'));
   const targets = new Map();
   targetYears.forEach(year => targets.set(year, spreadSheetCommon.copySheet(ss.spreadsheetId, ss, template)));
   return targets;

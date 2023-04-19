@@ -1,4 +1,11 @@
+/**
+ * Edit the sheet for each fiscal year.
+ */
 class SetValuesSheetByYear{
+  /**
+   * @param {Object} inputData Map object of the information entered from the form.
+   * @param {Object} ss The spreadsheet object.
+   */
   constructor(inputData, ss){
     this.formulas = new Map([
       ['cases', '=Trial!$B$28'],
@@ -8,6 +15,11 @@ class SetValuesSheetByYear{
     this.inputData = inputData;
     this.ss = ss;
   }
+  /**
+   * Set the count and configure the filter settings.
+   * @param {number} year The target year.
+   * @return {Object} request object.
+   */
   exec_(year){
     this.appSheet = SpreadsheetApp.openById(this.ss.spreadsheetId).getSheetByName(year);
     const outputData = this.getRowNumberAndCount_(year);
@@ -18,6 +30,11 @@ class SetValuesSheetByYear{
     const filterRequest = spreadSheetBatchUpdate.getBasicFilterRequest(['0'], templateInfo.get('colItemNameAndIdx').get('filter'), filterRange);
     return filterRequest;
   }
+  /**
+   * Returns a two-dimensional array of row numbers and count.
+   * @param {number} year The target year.
+   * @return {string[][]} two-dimensional array of row numbers and count.
+   */
   getRowNumberAndCount_(year){
     this.itemNameAndCount = this.editValues(year);
     const [itemNameIdx, countIdx] = [0, 1];
@@ -33,6 +50,11 @@ class SetValuesSheetByYear{
     });
     return outputValues;
   }
+  /**
+   * Returns a two-dimensional array of row numbers and count.
+   * @param {number} year The target year.
+   * @return {string[][]} two-dimensional array of row numbers and count.
+   */
   setSheetValues_(values){
     values.forEach((value, idx) => {
       if (value[0]){
@@ -42,14 +64,29 @@ class SetValuesSheetByYear{
       }
     });
   }
+  /**
+   * dummy function
+   */
   editValues(){
     return;
   }
+  /**
+   * Set item names for items with different item names depending on the test type.
+   * @param {boolean} trialType true for investigator-initiated trials, false otherwise.
+   * @param {string[][]} itemList Array of item names.
+   * @return {string[][]} itemList Array of item names.
+   */
   getItemNameByTrialType_(trialType, itemList){
     const targetIdx = trialType ? 0 : 1;
     return itemList.map(x => x[targetIdx]);
   }
-    setValueOrNull_(itemName, value){
+  /**
+   * Returns the value if it is greater than or equal to 0, otherwise null.
+   * @param {string} itemName The item name.
+   * @param {number} value Value to be returned.
+   * @return {number}
+   */
+  setValueOrNull_(itemName, value){
     if (!this.inputData.has(itemName)){
       return null;
     }
@@ -60,6 +97,10 @@ class SetValuesSheetByYear{
   }
 }
 class SetValuesRegistrationSheet extends SetValuesSheetByYear{
+  /**
+   * @param {Object} inputData Map object of the information entered from the form.
+   * @param {Object} ss The spreadsheet object.
+   */
   constructor(inputData, ss){
     super(inputData, ss);
     // interim analysis
@@ -77,11 +118,22 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
         : null;
     }
   }
+  /**
+   * Obtain the difference of the month.
+   * @param {Object} startDate The date object.
+   * @param {Object} endDate The date object.
+   * @return {number} The difference of the month.
+   */
   getMonthDiff(startDate, endDate){
     const monthUnit = 1000 * 60 * 60 * 24 * 30;
     const res = Math.trunc(Math.abs(endDate - startDate) / monthUnit);
     return res > 0 ? res : null;
   }
+  /**
+   * Set the count.
+   * @param {number} year The target year.
+   * @return {string[][]} two-dimensional array of item name and count.
+   */
   editValues(year){
     const [interimAnalysis, centralMonitoring] = this.getItemNameByTrialType_(commonInfo.get('investigatorInitiatedTrialFlag'), 
       [
@@ -135,6 +187,12 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     ];
     return itemNameAndCount;
   }
+  /**
+   * Processing of items to be divided equally on an annual basis.
+   * @param {string} inputData The target count.
+   * @param {number} year The target year.
+   * @return {number} Count that year.
+   */
   getDivisionCount_(inputData, year){
     if (!Number.isSafeInteger(inputData)){
       return null;
@@ -145,6 +203,11 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     const count = Math.floor(inputData / trialInfo.get('registrationYearsCount'));
     return year === trialInfo.get('registrationEndYear') ? inputData - count * (trialInfo.get('registrationYearsCount') - 1) : count;
   }
+  /**
+   * Set values in cells.
+   * @param {string[][]} A two-dimensional array of values to be set.
+   * @return none.
+   */
   setSheetValues_(values){
     const targetRange = this.appSheet.getRange(1, getNumber_(templateInfo.get('colItemNameAndIdx').get('count')), values.length, 1);
     const targetValue = targetRange.getValues().map((x, idx) => x !== '' && values[idx] !== '' ? [x + values[idx]] : [values[idx]]); 
@@ -152,6 +215,11 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
   }
 }
 class SetValuesSetupSheet extends SetValuesSheetByYear{
+  /**
+   * Set the count.
+   * @param none.
+   * @return {string[][]} two-dimensional array of item name and count.
+   */
   editValues(){
     const [officeIrbStr, setAccounts] = this.getItemNameByTrialType_(commonInfo.get('investigatorInitiatedTrialFlag'), 
       [
@@ -187,6 +255,11 @@ class SetValuesSetupSheet extends SetValuesSheetByYear{
   }
 }
 class SetValuesClosingSheet extends SetValuesSheetByYear{
+  /**
+   * Set the count.
+   * @param none.
+   * @return {string[][]} two-dimensional array of item name and count.
+   */
   editValues(){
     const [finalAnalysis, csr] = this.getItemNameByTrialType_(commonInfo.get('investigatorInitiatedTrialFlag'), 
       [
@@ -217,6 +290,11 @@ class SetValuesClosingSheet extends SetValuesSheetByYear{
   }
 }
 class SetFilterTotalSheet extends SetValuesSheetByYear{
+  /**
+   * Set the filter.
+   * @param none.
+   * @return {Object} request object.
+   */
   exec_(year){
     this.appSheet = SpreadsheetApp.openById(this.ss.spreadsheetId).getSheetByName(year);
     const filterCol = year === commonInfo.get('total2SheetName') ? this.appSheet.getLastColumn() - 1 : templateInfo.get('colItemNameAndIdx').get('filter');

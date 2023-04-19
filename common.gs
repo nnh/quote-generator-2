@@ -1,7 +1,4 @@
 const colNamesConstant = [null, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ'];
-/**
- * 共通情報
- */
 function getCommonInfo_(){
   const info = new Map();
   info.set('facilitiesItemName', '実施施設数');
@@ -18,9 +15,6 @@ function getCommonInfo_(){
   info.set('templateSheetName', 'Setup');
   return info;
 }
-/**
- * Trialsの列情報とか
- */
 function getTrialsInfo_(){
   const info = new Map();
   info.set('trialStartText', '症例登録開始');
@@ -51,9 +45,6 @@ function getTrialsInfo_(){
   info.set('sheetName', 'Trial');
   return info;
 }
-/**
- * itemsの列情報とか
- */
 function getItemsInfo_(){
   const info = new Map();
   const colItemNameAndIdx = new Map([
@@ -68,9 +59,6 @@ function getItemsInfo_(){
   info.set('sheetName', 'Items');
   return info;
 }
-/**
- * テンプレートファイルの列情報とか
- */
 function getTemplateInfo_(){
   const info = new Map();
   const colItemNameAndIdx = new Map([
@@ -96,7 +84,6 @@ function getRowAndColLength_(array){
 }
 function getNumber_(idx){
   return idx + 1;
-
 }
 /**
  * Set conditional formatting.

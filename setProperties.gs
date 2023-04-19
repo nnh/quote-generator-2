@@ -15,7 +15,7 @@ function setPropertiesByInputData_(inputData){
 /**
  * Calculate the contract start end date.
  * @param {Object} inputData Map object of the information entered from the form.
- * @return {boolean}
+ * @return {Object} Returns an error object if an error occurs. If no error occurred, return true.
  */
 function editTrialTerm_(inputData){
   try{

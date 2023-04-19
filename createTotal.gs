@@ -18,6 +18,11 @@ class CreateTotalSheet{
     this.totalHeadText = '【見積明細：総期間】';
     this.countColName = colNamesConstant[getNumber_(templateInfo.get('colItemNameAndIdx').get('count'))];
   }
+  /**
+   * Returns a sheet object with the corresponding sheet name. If it does not exist, null is returned.
+   * @param {string} sheetName Name of the target sheet.
+   * @return {Object} The sheet object.
+   */
   getSheet(sheetName){
     const sheet = this.ss.sheets.filter(x => x.properties.title === sheetName);
     if (sheet.length !== 1){
@@ -138,6 +143,11 @@ class CreateTotalSheet{
     ];
     return [delColRequest, insertColRequest, insertRowRequest, ...setBodyRequest, ...delRowsRequest, ...setColWidthRequest, bordersRequest, formatRequest];
   }
+  /**
+   * set border.
+   * @param none.
+   * @return {Object} Request body.
+   */
   setBorders_(){
     let request = [];
     const borderStyle = spreadSheetBatchUpdate.createBorderStyle();
