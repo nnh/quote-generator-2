@@ -25,7 +25,7 @@ class SetValuesSheetByYear{
         ? tempInterim.filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) 
         : null;
       this.interimFirstYear = this.interimYears 
-        ? this.interimYears.length > 0 ? this.interimYears[0] : null
+        ? this.interimYears.length > 0 ? Number(this.interimYears[0]) : null
         : null;
     }
   }
@@ -160,7 +160,7 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
         ? trialInfo.get('registrationStartYear') < year && year <= trialInfo.get('registrationEndYear') && registrationMonth > 6 ? 1 : null
         : null],
       ['治験薬運搬', this.inputData.get('治験薬運搬') === 'あり' 
-        ? trialInfo.get('registrationStartYear') <= year && year <= trialInfo.get('registrationEndYear')
+        ? registrationMonth > 6 || trialInfo.get('registrationStartYear') === year
            ? this.formulas.get('facilities') 
            : null
         : null],
@@ -273,9 +273,7 @@ class SetValuesClosingSheet extends SetValuesSheetByYear{
       ['監査対応', commonInfo.get('clinicalTrialsOfficeFlag') && commonInfo.get('investigatorInitiatedTrialFlag') ? 1 : null],
       ['データベース固定作業、クロージング', 1],
       ['症例検討会資料作成', this.inputData.get('症例検討会') === 'あり' ? 1 : null],
-      ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', finalAnalysisTableCount 
-        ? this.interimAnalysisCount > 0 ? 2 : 1 
-        :null],
+      ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', finalAnalysisTableCount ? 1 :null],
       [finalAnalysis, finalAnalysisTableCount],
       ['最終解析報告書作成（出力結果＋表紙）', finalAnalysisTableCount ? 1 :null],
       [csr, csrCount],
