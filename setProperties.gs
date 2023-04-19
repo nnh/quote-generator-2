@@ -26,8 +26,8 @@ function editTrialTerm_(inputData){
     const target = [commonInfo.get('trialType').get('investigatorInitiatedTrial'), commonInfo.get('trialType').get('specifiedClinicalTrial')];
     const setupTerm = target.some(x => inputData.get(commonInfo.get('trialTypeItemName')) === x) ? 6 : 3; 
     const closingTerm = target.some(x => inputData.get(commonInfo.get('trialTypeItemName')) === x) ? 6 : 3; 
-    const trialStart = new Date(trialStartYear, trialStartMonth, 1);
-    const trialEnd = new Date(trialEndYear, Number(trialEndMonth) + 1, 0);
+    const trialStart = new Date(trialStartYear, trialStartMonth - 1, 1);
+    const trialEnd = new Date(trialEndYear, Number(trialEndMonth), 0);
     if (trialStart >= trialEnd){
       throw new Error('The end date must be after the start date.');
     }
