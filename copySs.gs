@@ -1,3 +1,7 @@
+const commonInfo = getCommonInfo_();
+const trialInfo = getTrialsInfo_();
+const itemsInfo = getItemsInfo_();
+const templateInfo = getTemplateInfo_();
 /**
  * Create a quotation using the information entered from the form.
  * @param {Object} inputData Map object of the information entered from the form.
