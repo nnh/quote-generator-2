@@ -1,5 +1,5 @@
 function myFunction(){
-  const test = forTest_(22);
+  const test = forTest_(4);
   createSpreadsheet(test);
 }
 function forTest_(targetRowIndex = 1){

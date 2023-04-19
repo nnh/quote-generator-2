@@ -14,6 +14,20 @@ class SetValuesSheetByYear{
     ]);
     this.inputData = inputData;
     this.ss = ss;
+    // interim analysis
+    this.interimAnalysisCount = null;
+    this.interimYears = null;
+    if (Number.isSafeInteger(this.inputData.get('中間解析に必要な図表数'))){
+      this.interimAnalysisCount = this.setValueOrNull_('中間解析に必要な図表数', this.inputData.get('中間解析に必要な図表数'));
+      const tempInterim = this.inputData.has('中間解析の頻度')
+        ? this.inputData.get('中間解析の頻度').split(', ').map(x => x.replace('年', '')).filter(x => /^[0-9]{4}$/.test(x)) : null; 
+      this.interimYears = tempInterim 
+        ? tempInterim.filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) 
+        : null;
+      this.interimFirstYear = this.interimYears 
+        ? this.interimYears.length > 0 ? this.interimYears[0] : null
+        : null;
+    }
   }
   /**
    * Set the count and configure the filter settings.
@@ -97,27 +111,6 @@ class SetValuesSheetByYear{
   }
 }
 class SetValuesRegistrationSheet extends SetValuesSheetByYear{
-  /**
-   * @param {Object} inputData Map object of the information entered from the form.
-   * @param {Object} ss The spreadsheet object.
-   */
-  constructor(inputData, ss){
-    super(inputData, ss);
-    // interim analysis
-    this.interimAnalysisCount = null;
-    this.interimYears = null;
-    if (Number.isSafeInteger(this.inputData.get('中間解析に必要な図表数'))){
-      this.interimAnalysisCount = this.setValueOrNull_('中間解析に必要な図表数', this.inputData.get('中間解析に必要な図表数'));
-      const tempInterim = this.inputData.has('中間解析の頻度')
-        ? this.inputData.get('中間解析の頻度').split(', ').map(x => x.replace('年', '')).filter(x => /^[0-9]{4}$/.test(x)) : null; 
-      this.interimYears = tempInterim 
-        ? tempInterim.filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) 
-        : null;
-      this.interimFirstYear = this.interimYears 
-        ? this.interimYears.length > 0 ? this.interimYears[0] : null
-        : null;
-    }
-  }
   /**
    * Obtain the difference of the month.
    * @param {Object} startDate The date object.
@@ -278,7 +271,9 @@ class SetValuesClosingSheet extends SetValuesSheetByYear{
       ['監査対応', commonInfo.get('clinicalTrialsOfficeFlag') && commonInfo.get('investigatorInitiatedTrialFlag') ? 1 : null],
       ['データベース固定作業、クロージング', 1],
       ['症例検討会資料作成', this.inputData.get('症例検討会') === 'あり' ? 1 : null],
-      ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', finalAnalysisTableCount ? 1 :null],
+      ['統計解析計画書・出力計画書・解析データセット定義書・解析仕様書作成', finalAnalysisTableCount 
+        ? this.interimAnalysisCount > 0 ? 2 : 1 
+        :null],
       [finalAnalysis, finalAnalysisTableCount],
       ['最終解析報告書作成（出力結果＋表紙）', finalAnalysisTableCount ? 1 :null],
       [csr, csrCount],
