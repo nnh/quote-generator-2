@@ -139,7 +139,7 @@ class SetHiddenSheetRequest extends UpdateSheetPropertiesRequest{
  * @return Sheet object.
  */
 function createYearsAndTotalSheet_(ss, template){
-  const startYear = trialInfo.get('setupStart').getFullYear();
+  const startYear = trialInfo.get('setupStart').getMonth() < 3 ? trialInfo.get('setupStart').getFullYear() - 1 : trialInfo.get('setupStart').getFullYear();
   const endYear = trialInfo.get('trialEnd').getMonth() === 2 ? trialInfo.get('closingEnd').getFullYear() : trialInfo.get('trialEnd').getFullYear();
   let targetYears = [...Array(endYear - startYear + 1)].map((_, idx) => startYear + idx);
   const targets = new Map();
