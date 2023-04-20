@@ -90,7 +90,7 @@ function createSpreadsheet(inputData=null){
   });
   const setFilterTotal = new SetFilterTotalSheet(inputData, newSs)
   const filterRequestTotal = [commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName')].map(year => setFilterTotal.exec_(year));
-  const moveSheetRequest = setMoveSheetRequest_(newSs, [commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName'), ...targetYears.map(x => String(x))]);
+  const moveSheetRequest = new SetMoveSheetRequest(newSs).updateSheetPropertiesRequest_([commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName'), ...targetYears.map(x => String(x))]);
   const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest];
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), newSs.spreadsheetId);
 }
@@ -99,17 +99,27 @@ function createSpreadsheet(inputData=null){
  * @param {Object} ss The spreadsheet object.
  * @return {Object} request object.
  */
-function setMoveSheetRequest_(ss, targetSheetNames){
-  const sheets = Sheets.Spreadsheets.get(ss.spreadsheetId).sheets;
-  const res = sheets.map(sheet => {
+class UpdateSheetPropertiesRequest{
+  constructor(ss){
+    this.sheets = Sheets.Spreadsheets.get(ss.spreadsheetId).sheets;
+  }
+  updateSheetPropertiesRequest_(targetSheetNames){
+    const res = this.sheets.map(sheet => this.callSpreadsheetBatchUpdate_(sheet, targetSheetNames)).filter(x => x);
+    return res;
+  }
+  callSpreadsheetBatchUpdate_(){
+    return null;
+  }
+}
+class SetMoveSheetRequest extends UpdateSheetPropertiesRequest{
+  callSpreadsheetBatchUpdate_(sheet, targetSheetNames){
     const idx = targetSheetNames.indexOf(sheet.properties.title);
     if (idx > -1){
       return spreadSheetBatchUpdate.moveSheetRequest(sheet.properties.sheetId, idx);      
     } else {
       return null;
     }
-  }).filter(x => x);
-  return res;
+  }
 }
 /**
  * Copy the template sheet by the number of contract years, total, total2.
