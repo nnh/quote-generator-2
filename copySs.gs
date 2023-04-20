@@ -91,7 +91,8 @@ function createSpreadsheet(inputData=null){
   const setFilterTotal = new SetFilterTotalSheet(inputData, newSs)
   const filterRequestTotal = [commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName')].map(year => setFilterTotal.exec_(year));
   const moveSheetRequest = new SetMoveSheetRequest(newSs).updateSheetPropertiesRequest_([commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName'), ...targetYears.map(x => String(x))]);
-  const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest];
+  const hiddenSheetRequest = new SetHiddenSheetRequest(newSs).updateSheetPropertiesRequest_(['Quotation Request', templateInfo.get('sheetName')]);
+  const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest, ...hiddenSheetRequest];
   spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), newSs.spreadsheetId);
 }
 /**
@@ -116,6 +117,16 @@ class SetMoveSheetRequest extends UpdateSheetPropertiesRequest{
     const idx = targetSheetNames.indexOf(sheet.properties.title);
     if (idx > -1){
       return spreadSheetBatchUpdate.moveSheetRequest(sheet.properties.sheetId, idx);      
+    } else {
+      return null;
+    }
+  }
+}
+class SetHiddenSheetRequest extends UpdateSheetPropertiesRequest{
+  callSpreadsheetBatchUpdate_(sheet, targetSheetNames){
+    const idx = targetSheetNames.indexOf(sheet.properties.title);
+    if (idx > -1){
+      return spreadSheetBatchUpdate.hiddenSheetRequest(sheet.properties.sheetId, true);      
     } else {
       return null;
     }
