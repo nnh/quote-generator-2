@@ -13,8 +13,8 @@ function createSpreadsheet(inputData=null){
     return;
   }
   const resSetProperties = setPropertiesByInputData_(inputData);
-  if (!resSetProperties){
-    console.log(resSetProperties);
+  if (resSetProperties !== null){
+    console.log(`${resSetProperties.name}:${resSetProperties.message}`);
     return;
   }
   const templateFolder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('templateFolderId'));

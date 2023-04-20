@@ -1,16 +1,16 @@
 /**
  * Set the properties.
  * @param {Object} inputData Map object of the information entered from the form.
- * @return {boolean}
+ * @return {Object}
  */
 function setPropertiesByInputData_(inputData){
-  if (!editTrialTerm_(inputData)){
-    return false;
+  let res = null;
+  res = editTrialTerm_(inputData);
+  if (res !== null){
+    return res;
   }
-  if (!setPropertiesByTrialType_(inputData)){
-    return false;
-  } 
-  return true;
+  res = setPropertiesByTrialType_(inputData);
+  return res;
 }
 /**
  * Calculate the contract start end date.
@@ -28,7 +28,7 @@ function editTrialTerm_(inputData){
     const closingTerm = target.some(x => inputData.get(commonInfo.get('trialTypeItemName')) === x) ? 6 : 3; 
     const trialStart = new Date(trialStartYear, trialStartMonth - 1, 1);
     const trialEnd = new Date(trialEndYear, Number(trialEndMonth), 0);
-    if (trialStart >= trialEnd){
+    if (trialStart.getTime() >= trialEnd.getTime()){
       throw new Error('The end date must be after the start date.');
     }
     const setupStart = new Date(trialStart.getFullYear(), trialStart.getMonth() - setupTerm, trialStart.getDate());
@@ -44,12 +44,12 @@ function editTrialTerm_(inputData){
   } catch (error){
     return error;
   }
-  return true;
+  return null;
 }
 /**
  * Configure settings for each TrialType.
  * @param {Object} inputData The map object of the information entered from the form.
- * @return {boolean}
+ * @return {Object}
  */
 function setPropertiesByTrialType_(inputData){
   try{
@@ -57,11 +57,11 @@ function setPropertiesByTrialType_(inputData){
     commonInfo.set('specifiedClinicalTrialFlag', inputData.get(commonInfo.get('trialTypeItemName')) === commonInfo.get('trialType').get('specifiedClinicalTrial'));
     // Establishment of secretariat operation: Add if the presence of company source or coordinating secretariat is "Yes" or if it is an investigator-initiated clinical trial.
     const clinicalTrialsOfficeFlag = inputData.get(commonInfo.get('sourceOfFundsTextItemName')) === commonInfo.get('commercialCompany') ||
-                                   inputData.get('調整事務局の有無') === 'あり' ||
+                                   inputData.get('調整事務局設置の有無') === 'あり' ||
                                    commonInfo.get('investigatorInitiatedTrialFlag');
     commonInfo.set('clinicalTrialsOfficeFlag', clinicalTrialsOfficeFlag);
   } catch (error){
-    return false;
+    return error;
   }
-  return true;
+  return null;
 }
