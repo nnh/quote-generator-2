@@ -104,7 +104,10 @@ class SetValuesSheetByYear{
     if (!this.inputData.has(itemName)){
       return null;
     }
-    if (!Number.isSafeInteger(this.inputData.get(itemName))){
+    if (!parseInt(this.inputData.get(itemName))){
+      return null;
+    }
+    if (!Number.isSafeInteger(parseInt(this.inputData.get(itemName)))){
       return null;
     }
     return this.inputData.get(itemName) > 0 ? value : null;  

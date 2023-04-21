@@ -34,7 +34,7 @@ function setItemsSheet_(ss, inputData){
   const setPriceTargetNameAndIdxMap = new Map();
   setPriceTarget.forEach((itemName, inputTitleName) => {
     const idxArray = secondaryItem.map((x, idx) => x[0] === itemName ? idx: null).filter(x => x);
-    if (idxArray.length === 1 && Number.isSafeInteger(inputData.get(inputTitleName))){
+    if (idxArray.length === 1 && Number.isSafeInteger(parseInt(inputData.get(inputTitleName)))){
       setPriceTargetNameAndIdxMap.set(inputTitleName, idxArray[0]);
     } 
   });
@@ -52,7 +52,7 @@ function setItemsSheet_(ss, inputData){
       spreadSheetBatchUpdate.getRangeSetValueRequest(items.properties.sheetId, 
                                                      targetRowIdx, 
                                                      itemsColIdxList.get('price'), 
-                                                     [[inputData.get(itemName)]])
+                                                     [[parseInt(inputData.get(itemName))]])
     )
   );
   let requests = [...setFormulaRequest];
