@@ -5,30 +5,28 @@ const templateInfo = getTemplateInfo_();
 /**
  * Create a quotation using the information entered from the form.
  * @param {Object} inputData Map object of the information entered from the form.
- * @return none.
+ * @return {string||Object} Returns fileName for normal completion, otherwise returns an error object.
  */
 function createSpreadsheet(inputData=null){
   resCheckInputData = checkInputData_(inputData);
   if (resCheckInputData !== null){
-    console.log(`${resCheckInputData.name}:${resCheckInputData.message}`);
-    return;
+    return resCheckInputData;
   }
   const resSetProperties = setPropertiesByInputData_(inputData);
   if (resSetProperties !== null){
-    console.log(`${resSetProperties.name}:${resSetProperties.message}`);
-    return;
+    return resSetProperties;
   }
   const templateFolder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('templateFolderId'));
   if (!templateFolder){
-    return;
+    return new Error(`The property 'templateFolderId' is incorrectly set.`);
   }
   const tempFiles = templateFolder.getFilesByName('Quote Template for nmc oscr');
   if (!tempFiles){
-    return;
+    return new Error(`Spreadsheet 'Quote Template for nmc oscr' not found.`);
   }
   const templateFile = tempFiles.next();
   if (templateFile.getId() !== PropertiesService.getScriptProperties().getProperty('templateFileId')){
-    return;
+    return new Error(`The property 'templateFileId' is incorrectly set.`);
   }
   const now = driveCommon.todayYyyymmdd();
   const newFile = templateFile.makeCopy(`Quote ${inputData.get('試験実施番号')} ${now}`, DriveApp.getRootFolder());
@@ -70,7 +68,11 @@ function createSpreadsheet(inputData=null){
   targetYearsSheet.forEach((sheet, sheetName) => sheets.set(sheetName, sheet.sheetId));
   const totalSheetRequest = new CreateTotalSheet(newSs, targetYearsSheet).exec();
   const request1 = spreadSheetBatchUpdate.editBatchUpdateRequest([...tempDeleteSheetRequests, renameRequests, setQuotationRequestRequests, setTemplateRequests, setTrialRequest, setItemsRequest, targetYearsRenameRequests, totalSheetRequest]);
-  spreadSheetBatchUpdate.execBatchUpdate(request1, newSs.spreadsheetId);
+  try{
+    spreadSheetBatchUpdate.execBatchUpdate(request1, newSs.spreadsheetId);
+  } catch (error){
+    return error;
+  }
   let targetYears = [];
   targetYearsSheet.forEach((_, year) => targetYears.push(year));
   // Get the start and end year of the registration.
@@ -94,7 +96,13 @@ function createSpreadsheet(inputData=null){
   const moveSheetRequest = new SetMoveSheetRequest(newSs).updateSheetPropertiesRequest_([commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName'), ...targetYears.map(x => String(x))]);
   const hiddenSheetRequest = new SetHiddenSheetRequest(newSs).updateSheetPropertiesRequest_(['Quotation Request', templateInfo.get('sheetName')]);
   const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest, ...hiddenSheetRequest];
-  spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), newSs.spreadsheetId);
+  try{
+    spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), newSs.spreadsheetId);
+  } catch (error){
+    return error;
+  }
+  // Return file name for completion.
+  return newSs.properties.title;
 }
 /**
  * Move the work sheet backward.
