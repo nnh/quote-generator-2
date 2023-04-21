@@ -2,6 +2,8 @@ const colNamesConstant = [null, 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'
 function getCommonInfo_(){
   const info = new Map();
   info.set('facilitiesItemName', '実施施設数');
+  info.set('crfItemName', 'CRF項目数');
+  info.set('casesItemName', '目標症例数');
   info.set('trialTypeItemName', '試験種別');
   info.set('sourceOfFundsTextItemName', '原資');
   info.set('commercialCompany', '営利企業原資（製薬企業等）');

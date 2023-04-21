@@ -8,8 +8,9 @@ const templateInfo = getTemplateInfo_();
  * @return none.
  */
 function createSpreadsheet(inputData=null){
-  if (!inputData){
-    console.log('No information was submitted from the form.');
+  resCheckInputData = checkInputData_(inputData);
+  if (resCheckInputData !== null){
+    console.log(`${resCheckInputData.name}:${resCheckInputData.message}`);
     return;
   }
   const resSetProperties = setPropertiesByInputData_(inputData);
@@ -145,4 +146,26 @@ function createYearsAndTotalSheet_(ss, template){
   const targets = new Map();
   targetYears.forEach(year => targets.set(year, spreadSheetCommon.copySheet(ss.spreadsheetId, ss, template)));
   return targets;
+}
+/**
+ * Check input values.
+ * @param {Object} inputData Map object of the information entered from the form.
+ * @return {Object} Returns an error object or Null.
+ */
+function checkInputData_(inputData){
+  if (!inputData){
+    return new Error('No information was submitted from the form.');
+  }
+  // If the target number of cases, number of facilities, or number of CRF items is not an integer greater than 1, set 1 and continue the process.
+  const target = [commonInfo.get('facilitiesItemName'), commonInfo.get('crfItemName'), commonInfo.get('casesItemName')];
+  const res = target.map(itemName => {
+    if (!inputData.has(itemName)){
+      return itemName;
+    }
+    if (!Number.isSafeInteger(inputData.get(itemName)) || inputData.get(itemName) < 1){
+      inputData.set(itemName, 1);
+    }
+    return null;
+  });
+  return !res.every(x => x === null) ? new Error(`There is no ${res.join(', ')} in the input field.`) : null;
 }

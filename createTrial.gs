@@ -9,8 +9,8 @@ function setTrialSheet_(inputData, sheetId, ss){
   const monthsCount = (trialInfo.get('closingEnd').getFullYear() * 12 + trialInfo.get('closingEnd').getMonth())
                        - (trialInfo.get('setupStart').getFullYear() * 12 + trialInfo.get('setupStart').getMonth());
   let commentList = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${trialInfo.get('sheetName')}!B${getNumber_(trialInfo.get('commentStartRowIdx'))}:B${getNumber_(trialInfo.get('commentEndRowIdx'))}`, 'FORMULA')[0].values;
-  const crfItemName = 'CRF項目数';
-  const targetItems = [commonInfo.get('trialTypeItemName'), '目標症例数', commonInfo.get('facilitiesItemName'), crfItemName];  
+  const crfItemName = commonInfo.get('crfItemName');
+  const targetItems = [commonInfo.get('trialTypeItemName'), commonInfo.get('casesItemName'), commonInfo.get('facilitiesItemName'), crfItemName];  
   // If there is CDISC compliance, multiply the number of CRF items by 7.
   if (inputData.has('CDISC対応')){
     if (inputData.get('CDISC対応') === 'あり'){
