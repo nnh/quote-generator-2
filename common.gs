@@ -119,3 +119,14 @@ function setNumberFormat_(sheet, startRow=0, startCol=templateInfo.get('colItemN
                   ];
   return request;
 }
+/**
+ * Returns form input information as a Map object.
+ * @param {Object} formResponse a formResponse object.
+ * @return {Object} a Map object.
+ */
+function getItemsFromFormRequests(formResponse){
+  const itemResponses = formResponse.getItemResponses();
+  const items = itemResponses.map(item => [item.getItem().getTitle(), isNaN(Number(item.getResponse())) ? item.getResponse() : Number(item.getResponse())]);
+  const res = new Map(items);
+  return res;
+}

@@ -21,8 +21,5 @@ function forTestByForm_(targetIdx = 0){
   const form = FormApp.openById(PropertiesService.getScriptProperties().getProperty('formId'));
   const formResponses = form.getResponses();
   const formResponse = formResponses[targetIdx];
-  const itemResponses = formResponse.getItemResponses();
-  const items = itemResponses.map(item => [item.getItem().getTitle(), isNaN(Number(item.getResponse())) ? item.getResponse() : Number(item.getResponse())]);
-  const res = new Map(items);
-  return res;
+  return getItemsFromFormRequests(formResponse);
 }
