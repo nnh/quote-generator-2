@@ -17,10 +17,11 @@ class SetValuesSheetByYear{
     // interim analysis
     this.interimAnalysisCount = null;
     this.interimYears = null;
+    const test = this.inputData.get('中間解析の頻度');
     if (Number.isSafeInteger(this.inputData.get('中間解析に必要な図表数'))){
       this.interimAnalysisCount = this.setValueOrNull_('中間解析に必要な図表数', this.inputData.get('中間解析に必要な図表数'));
       const tempInterim = this.inputData.has('中間解析の頻度')
-        ? this.inputData.get('中間解析の頻度').split(', ').map(x => x.replace('年', '')).filter(x => /^[0-9]{4}$/.test(x)) : null; 
+        ? this.inputData.get('中間解析の頻度').map(x => x.replace('年', '')).filter(x => /^[0-9]{4}$/.test(x)) : null; 
       this.interimYears = tempInterim 
         ? tempInterim.filter(x => trialInfo.get('registrationStartYear') <= x && x <= trialInfo.get('registrationEndYear')) 
         : null;
@@ -104,10 +105,7 @@ class SetValuesSheetByYear{
     if (!this.inputData.has(itemName)){
       return null;
     }
-    if (!parseInt(this.inputData.get(itemName))){
-      return null;
-    }
-    if (!Number.isSafeInteger(parseInt(this.inputData.get(itemName)))){
+    if (!Number.isSafeInteger(this.inputData.get(itemName))){
       return null;
     }
     return this.inputData.get(itemName) > 0 ? value : null;  
