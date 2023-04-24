@@ -196,7 +196,7 @@ class SetValuesRegistrationSheet extends SetValuesSheetByYear{
     if (year < trialInfo.get('registrationStartYear') || trialInfo.get('registrationEndYear') < year){
       return null;
     }
-    const count = Math.floor(inputData / trialInfo.get('registrationYearsCount'));
+    const count = Math.floor(inputData / trialInfo.get('registrationYearsCount')) > 0 ? Math.floor(inputData / trialInfo.get('registrationYearsCount')) : 1;
     return year === trialInfo.get('registrationEndYear') ? inputData - count * (trialInfo.get('registrationYearsCount') - 1) : count;
   }
   /**
