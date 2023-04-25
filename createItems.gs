@@ -10,8 +10,15 @@ function setItemsSheet_(ss, inputData){
     return;
   }
   const items = itemsSheet[0];
+  const itemsColIdxList = itemsInfo.get('colItemNameAndIdx');
+  const formulaColsIdx = [
+    itemsColIdxList.get('secondaryItem'),
+    itemsColIdxList.get('price'),
+    itemsColIdxList.get('baseUnitPrice'),
+  ];
+  const secondaryItemColName = colNamesConstant[getNumber_(itemsColIdxList.get('secondaryItem'))];
   // Corresponding to items for which unit prices need to be set (e.g., insurance premiums).
-  const secondaryItemValue = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${itemsInfo.get('sheetName')}!B1:B85`);
+  const secondaryItemValue = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${itemsInfo.get('sheetName')}!${secondaryItemColName}1:${secondaryItemColName}${items.properties.gridProperties.rowCount}`);
   if (secondaryItemValue.length !== 1){
     return;
   }
@@ -27,16 +34,10 @@ function setItemsSheet_(ss, inputData){
   const setPriceTargetNameAndIdxMap = new Map();
   setPriceTarget.forEach((itemName, inputTitleName) => {
     const idxArray = secondaryItem.map((x, idx) => x[0] === itemName ? idx: null).filter(x => x);
-    if (idxArray.length === 1 && Number.isSafeInteger(inputData.get(inputTitleName))){
+    if (idxArray.length === 1 && Number.isSafeInteger(parseInt(inputData.get(inputTitleName)))){
       setPriceTargetNameAndIdxMap.set(inputTitleName, idxArray[0]);
     } 
   });
-  const itemsColIdxList = itemsInfo.get('colItemNameAndIdx');
-  const formulaColsIdx = [
-    itemsColIdxList.get('secondaryItem'),
-    itemsColIdxList.get('price'),
-    itemsColIdxList.get('baseUnitPrice'),
-  ];
   const setFormulaRequest = formulaColsIdx.map(formulaColIdx => {
     const colString = commonGas.getColumnStringByIndex(formulaColIdx);
     const setItems = spreadSheetBatchUpdate.rangeGetValue(ss.spreadsheetId, `${items.properties.title}!${colString}:${colString}`, 'FORMULA')[0].values.map(x => x.length === 1 ? x : ['']);
@@ -51,7 +52,7 @@ function setItemsSheet_(ss, inputData){
       spreadSheetBatchUpdate.getRangeSetValueRequest(items.properties.sheetId, 
                                                      targetRowIdx, 
                                                      itemsColIdxList.get('price'), 
-                                                     [[inputData.get(itemName)]])
+                                                     [[parseInt(inputData.get(itemName))]])
     )
   );
   let requests = [...setFormulaRequest];
