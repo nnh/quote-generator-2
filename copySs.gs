@@ -32,7 +32,7 @@ function createSpreadsheet(inputData=null){
   const outputFolder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('outputFolderId'));
   const newFile = templateFile.makeCopy(`Quote ${inputData.get('試験実施番号')} ${now}`, outputFolder);
   const newSs = Sheets.Spreadsheets.get(newFile.getId());
-  const targetSheetsName = ['Total', 'Total2', 'Items', 'Setup', 'Trial', 'Quote', 'Quotation Request'];
+  const targetSheetsName = ['Total', 'Total2', 'Items', 'Setup', 'Trial', 'Quote', 'Quotation Request', 'PrimaryItems'];
   const sheets = new Map();
   const tempDeleteSheetRequests = newSs.sheets.map(sheet => {
     const checkTarget = targetSheetsName.filter(sheetName => sheetName === sheet.properties.title).some(x => x);
@@ -95,7 +95,7 @@ function createSpreadsheet(inputData=null){
   const setFilterTotal = new SetFilterTotalSheet(inputData, newSs)
   const filterRequestTotal = [commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName')].map(year => setFilterTotal.exec_(year));
   const moveSheetRequest = new SetMoveSheetRequest(newSs).updateSheetPropertiesRequest_([commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName'), ...targetYears.map(x => String(x))]);
-  const hiddenSheetRequest = new SetHiddenSheetRequest(newSs).updateSheetPropertiesRequest_(['Quotation Request', templateInfo.get('sheetName')]);
+  const hiddenSheetRequest = new SetHiddenSheetRequest(newSs).updateSheetPropertiesRequest_(['PrimaryItems', 'Quotation Request', templateInfo.get('sheetName')]);
   const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest, ...hiddenSheetRequest];
   try{
     spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), newSs.spreadsheetId);
