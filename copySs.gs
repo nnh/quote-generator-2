@@ -96,7 +96,10 @@ function createSpreadsheet(inputData=null){
   const filterRequestTotal = [commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName')].map(year => setFilterTotal.exec_(year));
   const moveSheetRequest = new SetMoveSheetRequest(newSs).updateSheetPropertiesRequest_([commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName'), ...targetYears.map(x => String(x))]);
   const hiddenSheetRequest = new SetHiddenSheetRequest(newSs).updateSheetPropertiesRequest_(['PrimaryItems', 'Quotation Request', templateInfo.get('sheetName')]);
-  const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest, ...hiddenSheetRequest];
+  const quoteFilterCol = 5;
+  const quoteFilterRange = spreadSheetBatchUpdate.getRangeGridByIdx(SpreadsheetApp.openById(newSs.spreadsheetId).getSheetByName('Quote').getSheetId(), 10, quoteFilterCol, null, quoteFilterCol);
+  const quoteFilterRequest = spreadSheetBatchUpdate.getBasicFilterRequest(['0'], quoteFilterCol, quoteFilterRange);
+  const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest, ...hiddenSheetRequest, quoteFilterRequest];
   try{
     spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), newSs.spreadsheetId);
   } catch (error){
