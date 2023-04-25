@@ -29,7 +29,8 @@ function createSpreadsheet(inputData=null){
     return new Error(`The property 'templateFileId' is incorrectly set.`);
   }
   const now = driveCommon.todayYyyymmdd();
-  const newFile = templateFile.makeCopy(`Quote ${inputData.get('試験実施番号')} ${now}`, DriveApp.getRootFolder());
+  const outputFolder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('outputFolderId'));
+  const newFile = templateFile.makeCopy(`Quote ${inputData.get('試験実施番号')} ${now}`, outputFolder);
   const newSs = Sheets.Spreadsheets.get(newFile.getId());
   const targetSheetsName = ['Total', 'Total2', 'Items', 'Setup', 'Trial', 'Quote', 'Quotation Request'];
   const sheets = new Map();
@@ -47,7 +48,7 @@ function createSpreadsheet(inputData=null){
     sheets.get('Quotation Request'), 
     1, 
     0, 
-    [[now]]
+    [['quote-generator-2']]
   );
   const setTemplateRequests = spreadSheetBatchUpdate.getRangeSetValueRequest(
     sheets.get('Setup'), 
@@ -101,8 +102,8 @@ function createSpreadsheet(inputData=null){
   } catch (error){
     return error;
   }
-  // Return file name for completion.
-  return newSs.properties.title;
+  // Returns file name and URL for editing.
+  return `${newSs.properties.title}|||${newSs.spreadsheetUrl}`;
 }
 /**
  * Move the work sheet backward.

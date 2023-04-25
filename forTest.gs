@@ -34,8 +34,8 @@ function forTest_(targetRowIndex = 1){
   return items;
 }
 function execTestByForm(){
-  const startIndex = 0;
-  const endIndex = 24;
+  const startIndex = 1;
+  const endIndex = 1;
   for (let i = startIndex; i <= endIndex; i++){
     try{
       const test = forTestByForm_(i);
@@ -58,6 +58,6 @@ function forTestEditForm_(targetIdx = 0){
   return formResponse;
 }
 function forTestEditForm(){
-  const formResponse = forTestEditForm_(25);
+  const formResponse = forTestEditForm_(2);
   console.log(formResponse.getEditResponseUrl());
 }
