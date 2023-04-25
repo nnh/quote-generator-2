@@ -51,3 +51,13 @@ function forTestByForm_(targetIdx = 0){
   const formResponse = formResponses[targetIdx];
   return getItemsFromFormRequests(formResponse);
 }
+function forTestEditForm_(targetIdx = 0){
+  const form = FormApp.openById(PropertiesService.getScriptProperties().getProperty('formId'));
+  const formResponses = form.getResponses();
+  const formResponse = formResponses[targetIdx];
+  return formResponse;
+}
+function forTestEditForm(){
+  const formResponse = forTestEditForm_(25);
+  console.log(formResponse.getEditResponseUrl());
+}
