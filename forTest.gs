@@ -51,13 +51,14 @@ function forTestByForm_(targetIdx = 0){
   const formResponse = formResponses[targetIdx];
   return getItemsFromFormRequests(formResponse);
 }
-function forTestEditForm_(targetIdx = 0){
+function forTestEditForm(){
   const form = FormApp.openById(PropertiesService.getScriptProperties().getProperty('formId'));
   const formResponses = form.getResponses();
-  const formResponse = formResponses[targetIdx];
-  return formResponse;
-}
-function forTestEditForm(){
-  const formResponse = forTestEditForm_(2);
-  console.log(formResponse.getEditResponseUrl());
+  const startIndex = 0;
+  const endIndex = 27;
+  for (let i = startIndex; i <= endIndex; i++){
+    const formResponse = formResponses[i];
+    console.log(formResponse.getItemResponses()[3].getResponse());
+    console.log(formResponse.getEditResponseUrl());
+  }
 }
