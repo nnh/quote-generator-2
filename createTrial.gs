@@ -48,6 +48,20 @@ function setTrialSheet_(inputData, sheetId, ss){
                                                    trialInfo.get('commentStartRowIdx'), 
                                                    1, 
                                                    commentList),
+    spreadSheetBatchUpdate.getRangeSetValueRequest(sheetId, 
+                                                   3, 
+                                                   1, 
+                                                   [[inputData.get('見積発行先') !== 0 ? inputData.get('見積発行先') : '見積発行先']]),
+    spreadSheetBatchUpdate.getRangeSetValueRequest(sheetId, 
+                                                   5, 
+                                                   1, 
+                                                   [
+                                                     [Utilities.formatDate(new Date(), 'JST', 'yyyy/MM/dd')],
+                                                     [''],
+                                                     [inputData.get('研究代表者名') !== 0 ? inputData.get('研究代表者名') : '研究代表者名'],
+                                                     [inputData.get('試験課題名') !== 0 ? inputData.get('試験課題名') : '試験課題名'],
+                                                     [inputData.get('試験実施番号')],
+                                                   ]),
   ];
   return requests;
 }

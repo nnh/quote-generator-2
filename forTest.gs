@@ -34,8 +34,8 @@ function forTest_(targetRowIndex = 1){
   return items;
 }
 function execTestByForm(){
-  const startIndex = 0;
-  const endIndex = 24;
+  const startIndex = 1;
+  const endIndex = 1;
   for (let i = startIndex; i <= endIndex; i++){
     try{
       const test = forTestByForm_(i);
@@ -50,4 +50,15 @@ function forTestByForm_(targetIdx = 0){
   const formResponses = form.getResponses();
   const formResponse = formResponses[targetIdx];
   return getItemsFromFormRequests(formResponse);
+}
+function forTestEditForm(){
+  const form = FormApp.openById(PropertiesService.getScriptProperties().getProperty('formId'));
+  const formResponses = form.getResponses();
+  const startIndex = 0;
+  const endIndex = 27;
+  for (let i = startIndex; i <= endIndex; i++){
+    const formResponse = formResponses[i];
+    console.log(formResponse.getItemResponses()[3].getResponse());
+    console.log(formResponse.getEditResponseUrl());
+  }
 }

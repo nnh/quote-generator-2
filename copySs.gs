@@ -29,9 +29,10 @@ function createSpreadsheet(inputData=null){
     return new Error(`The property 'templateFileId' is incorrectly set.`);
   }
   const now = driveCommon.todayYyyymmdd();
-  const newFile = templateFile.makeCopy(`Quote ${inputData.get('試験実施番号')} ${now}`, DriveApp.getRootFolder());
+  const outputFolder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('outputFolderId'));
+  const newFile = templateFile.makeCopy(`Quote ${inputData.get('試験実施番号')} ${now}`, outputFolder);
   const newSs = Sheets.Spreadsheets.get(newFile.getId());
-  const targetSheetsName = ['Total', 'Total2', 'Items', 'Setup', 'Trial', 'Quote', 'Quotation Request'];
+  const targetSheetsName = ['Total', 'Total2', 'Items', 'Setup', 'Trial', 'Quote', 'Quotation Request', 'PrimaryItems'];
   const sheets = new Map();
   const tempDeleteSheetRequests = newSs.sheets.map(sheet => {
     const checkTarget = targetSheetsName.filter(sheetName => sheetName === sheet.properties.title).some(x => x);
@@ -47,7 +48,7 @@ function createSpreadsheet(inputData=null){
     sheets.get('Quotation Request'), 
     1, 
     0, 
-    [[now]]
+    [['quote-generator-2']]
   );
   const setTemplateRequests = spreadSheetBatchUpdate.getRangeSetValueRequest(
     sheets.get('Setup'), 
@@ -94,15 +95,18 @@ function createSpreadsheet(inputData=null){
   const setFilterTotal = new SetFilterTotalSheet(inputData, newSs)
   const filterRequestTotal = [commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName')].map(year => setFilterTotal.exec_(year));
   const moveSheetRequest = new SetMoveSheetRequest(newSs).updateSheetPropertiesRequest_([commonInfo.get('totalSheetName'), commonInfo.get('total2SheetName'), ...targetYears.map(x => String(x))]);
-  const hiddenSheetRequest = new SetHiddenSheetRequest(newSs).updateSheetPropertiesRequest_(['Quotation Request', templateInfo.get('sheetName')]);
-  const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest, ...hiddenSheetRequest];
+  const hiddenSheetRequest = new SetHiddenSheetRequest(newSs).updateSheetPropertiesRequest_(['PrimaryItems', 'Quotation Request', templateInfo.get('sheetName')]);
+  const quoteFilterCol = 5;
+  const quoteFilterRange = spreadSheetBatchUpdate.getRangeGridByIdx(SpreadsheetApp.openById(newSs.spreadsheetId).getSheetByName('Quote').getSheetId(), 10, quoteFilterCol, null, quoteFilterCol);
+  const quoteFilterRequest = spreadSheetBatchUpdate.getBasicFilterRequest(['0'], quoteFilterCol, quoteFilterRange);
+  const filterRequests = [...filterRequestsYears, ...filterRequestTotal, ...moveSheetRequest, ...hiddenSheetRequest, quoteFilterRequest];
   try{
     spreadSheetBatchUpdate.execBatchUpdate(spreadSheetBatchUpdate.editBatchUpdateRequest(filterRequests), newSs.spreadsheetId);
   } catch (error){
     return error;
   }
-  // Return file name for completion.
-  return newSs.properties.title;
+  // Returns file name and URL for editing.
+  return `${newSs.properties.title}|||${newSs.spreadsheetUrl}`;
 }
 /**
  * Move the work sheet backward.
