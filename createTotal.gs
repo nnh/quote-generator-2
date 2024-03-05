@@ -73,7 +73,7 @@ class CreateTotalSheet{
       if (value[0] !== ''){
         primaryRowIndex.push(idx);
       }
-      if (value[0] === '割引後合計'){
+      if (value[0] === '特別値引後合計'){
         discountedSumRowIdx = idx;
       }
       if (value[0] === '合計' && value[1] === '（税抜）'){
